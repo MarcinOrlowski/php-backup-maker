@@ -13,7 +13,7 @@
 
  Development history:
  ------------------------
-            - v4.1 - dropped -volnum-size and -volset-seqno due to mkisofs'
+ 2004.08.18 - v4.1 - dropped -volnum-size and -volset-seqno due to mkisofs'
                      announement as read on their mailing list:
                      http://lists.berlios.de/pipermail/cdrecord-support/2004-July/003768.html
                    - PDM now interceprs mkisofs', cdrecord's, growisofs'
@@ -253,4 +253,4 @@
 
 
 --
-$Id: CHANGES,v 1.43 2004/08/13 18:12:17 carl-os Exp $
+$Id: CHANGES,v 1.44 2004/08/18 12:03:47 carl-os Exp $
