@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.49 2003/05/24 16:25:16 carl-os Exp $
+// $Id: pdm.php,v 1.50 2003/07/25 14:37:48 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION"				, "3.3" );
+define( "SOFTWARE_VERSION"				, "3.4" );
 define( "SOFTWARE_VERSION_BETA"		, TRUE );
 define( "SOFTWARE_VERSION_BETA_STR"	, " beta");
 define( "SOFTWARE_URL"					, "http://freshmeat.net/projects/pdm" );
@@ -30,7 +30,7 @@ if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 
 /***************************************************************************
 **
-** $Id: pdm.php,v 1.49 2003/05/24 16:25:16 carl-os Exp $
+** $Id: pdm.php,v 1.50 2003/07/25 14:37:48 carl-os Exp $
 **
 ** (C) Copyright 2003-2003 * All rights reserved
 **     Marcin Orlowski <carlos@wfmh.org.pl>
@@ -1482,15 +1482,24 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 		// lets scan $source_dir and subdirectories
 		// and look for files...
-		$a = trim( `find $source_dir/ -depth -type f -print` );
+		$modes = array('f'=>'regular files','l'=>'symbolic links');
 
-		if( $a != "" )
+		$empty_counter = count($modes);
+		foreach( $modes AS $scan_mode=>$scan_mode_name )
 			{
-			$files_tmp = explode("\n", $a);
-			$files = array_merge_recursive( $files, $files_tmp );
+			$a = trim( `find $source_dir/ -depth -type $scan_mode -print` );
+
+			if( $a != "" )
+				{
+				$files_tmp = explode("\n", $a);
+				$files = array_merge_recursive( $files, $files_tmp );
+				}
+			else
+				$empty_counter++;
 			}
-		else
-			printf("Looks empty?");
+
+		if( $empty_counter == 0 )
+			printf("Directory seems to be empty.");
 
 		echo "\n";
 		}
