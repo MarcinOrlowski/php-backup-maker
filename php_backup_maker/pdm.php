@@ -4,7 +4,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.2 2003/01/13 02:20:50 carl-os Exp $
+// $Id: pdm.php,v 1.3 2003/01/13 02:45:51 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -89,18 +89,25 @@ function GetInput()
 //{{{ MakeDir					.
 function MakeDir( $path )
 {
+//	printf("MakeDir: '%s'\n", $path);
+
 	$tmp = explode("/", $path);
-	$dir = "";
+	$dir = "/";
 	for( $i=0; $i<count($tmp); $i++ )
 		{
 		if( $tmp[$i] != "" )
 			$dir .= sprintf("%s/", $tmp[$i]);
 
+printf("%s", $dir);
 		if( $dir != "" )
 			{
 			if( file_exists( $dir ) === FALSE )
 				mkdir( $dir, 0700 );
+			else
+				printf( "E");
 			}
+
+		printf("\n");
 		}
 }
 //}}}
@@ -198,7 +205,8 @@ mode - specify method of CD set creation. Available modes:
 src  - source directory (i.e. "data/") which you are going
        to process and backup
 dest - destination directory where CD sets will be created.
-       If ommited, current directory will be used (".")
+       If ommited, your current working directory will be
+       used
 '
 );
 
@@ -317,7 +325,10 @@ function Abort( $rc=10 )
 	// geting user params...
 	$COPY_MODE		= $argv[1];
 	$source_dir		= $argv[2];
-	$DESTINATION	= ($argc == 4) ? $argv[3] : ".";
+	$DESTINATION	= ($argc == 4) ? $argv[3] : getenv("PWD");
+
+	// go to dest dir...
+	chdir( $DESTINATION );
 
 
 	// some precomputations...
@@ -511,7 +522,7 @@ function Abort( $rc=10 )
 
 
 	// ok, let's move the files into CD sets
-	printf("Creating CD sets (mode: %s)...\n", $COPY_MODE);
+	printf("Creating CD sets (mode: %s) in '%s'...\n", $COPY_MODE, $DESTINATION);
 	$cnt = count($tossed);
 	foreach( $tossed AS $file )
 		{
@@ -600,7 +611,7 @@ function Abort( $rc=10 )
 		printf("Writting index files and CD stamps...\n");
 		for($i=1; $i<=$total_cds; $i++ )
 			{
-			$fh = @fopen( sprintf("%s/index.txt", $set_name), "wb+");
+			$fh = @fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
 			if( $fh )
 				{
 				fputs( $fh, $cdindex );
@@ -608,11 +619,11 @@ function Abort( $rc=10 )
 				}
 			else
 				{
-				printf("*** Can't write index to '%s'\n", $set_name);
+				printf("*** Can't write index to '%s/%s'\n", $DESTINATION, $set_name);
 				}
 
 			// CD stamps
-			$fh = fopen( sprintf("%s/THIS_IS_CD_%d_OF_%d", $set_name, $i, $total_cds), "wb+");
+			$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
 			if( $fh )
 				{
 				fputs( $fh, sprintf("Out Core: %s", $out_core) );
