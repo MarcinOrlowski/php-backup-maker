@@ -20,6 +20,6 @@ cd ..
 tar -zcvf "pdm-${1}.tgz" pdm_${1}
 md5sum -b /tmp/pdm-${1}.tgz >/tmp/pdm-${1}.md5sum
 
-lukemftp -d -u ftp://upload.sf.net/incoming/ pdm-${1}.md5sum  pdm-${1}.tgz
+lukemftp -u ftp://upload.sf.net/incoming/ pdm-${1}.md5sum  pdm-${1}.tgz
 
 cd ${CUR}
