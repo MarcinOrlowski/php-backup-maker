@@ -7,6 +7,10 @@
 
  Development history:
  ------------------------
+            - v2.4 - fixed incorrect KB defition (was 10 times too big).
+                     Fortunately there's no inpact as this was mostly
+                     never used. Reported by Jörg Schwiemann
+
  2003.01.23 - v2.3 - removed debug code that <ough> went to public
                      2.2 release making it rather useless unless one
                      manally had fixed the code. Sorry for the inconvenience.
@@ -117,4 +121,4 @@
 
 
 --
-$Id: CHANGES,v 1.13 2003/01/22 20:11:39 carl-os Exp $
+$Id: CHANGES,v 1.14 2003/01/24 14:05:13 carl-os Exp $
