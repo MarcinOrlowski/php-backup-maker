@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.19 2003/02/08 14:10:47 carl-os Exp $
+// $Id: pdm.php,v 1.20 2003/02/11 10:29:25 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -1247,12 +1247,10 @@ function AbortIfNoTool( $tool )
 				$cdindex .= sprintf("%3d | %s\n", $i, $entry);
 
 			$cdindex .= "\n";
-			}
 
-		printf("Writting index files and CD stamps...\n");
-		for($i=1; $i<=$total_cds; $i++ )
-			{
-			$fh = @fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
+
+			// writting index and stamps...
+			$fh = fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
 			if( $fh )
 				{
 				fputs( $fh, $cdindex );
@@ -1264,6 +1262,7 @@ function AbortIfNoTool( $tool )
 				}
 
 			// CD stamps
+			printf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds);
 			$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
 			if( $fh )
 				{

@@ -14,6 +14,9 @@
                      it's not going to write anything (mostly in -mode=test)
                    - "mode" switch is now optional. When not specified, PDM
                      falls back to "test" as default mode
+                   - PDM used to write index files and THIS_IS_CD_x_OF_y
+                     markers to the last set only, while it should for each
+                     of them
 
  2003.01.23 - v2.3 - removed debug code that <ough> went to public
                      2.2 release making it rather useless unless one
@@ -125,4 +128,4 @@
 
 
 --
-$Id: CHANGES,v 1.16 2003/02/08 14:01:15 carl-os Exp $
+$Id: CHANGES,v 1.17 2003/02/11 10:29:25 carl-os Exp $
