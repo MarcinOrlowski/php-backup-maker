@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.31 2003/03/31 21:02:35 carl-os Exp $
+// $Id: pdm.php,v 1.32 2003/04/04 10:58:42 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -1227,7 +1227,7 @@ function filematch_ereg( $pattern, $str )
 	// let's check if file will fit... Prior v2.1 we had this nicely done in one pass
 	// with the above preprocessing, but due to skipping feature we need to slow things
 	// down at the moment
-	printf("  Checking filesize limits...\n");
+	printf("  Checking filesize limits (using %s media)...\n", SizeStr( $MEDIA_SPECS[ $MEDIA ]["capacity"] ));
 
 	$files_to_spit = array();
 	$split_active = $cCLI->IsOptionSet('split');
@@ -1245,7 +1245,7 @@ function filematch_ereg( $pattern, $str )
 			else
 				{
 				// we have to give up all the files bigger than the CD capacity
-				printf("  *** File %s is too big (%d bytes)\n", $val, $size );
+				printf("  *** File \"%s\" is too big (%s)\n", $entry['name'], SizeStr($entry['size']) );
 				$fatal_errors++;
 				}
 			}
