@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.44 2003/05/24 13:41:39 carl-os Exp $
+// $Id: pdm.php,v 1.45 2003/05/24 14:30:48 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -29,7 +29,7 @@ if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 
 /***************************************************************************
 **
-** $Id: pdm.php,v 1.44 2003/05/24 13:41:39 carl-os Exp $
+** $Id: pdm.php,v 1.45 2003/05/24 14:30:48 carl-os Exp $
 **
 ** (C) Copyright 2003-2003 * All rights reserved
 **     Marcin Orlowski <carlos@wfmh.org.pl>
@@ -467,6 +467,11 @@ if( $argc >= 1 )
 					"ereg-pattern"	=> array('long'	=> 'ereg-pattern',
 													'info'	=> 'Simmilar to "pattern" but uses plain regular expression without any shell pattern support.'
 													),
+					'update-check'	=> array('long'	=> 'update',
+													'short'	=> 'u',
+													'info'	=> 'Checks for available updates (requires internet connection)',
+													'switch'	=> TRUE
+													),
 
 					"help-mode"		=> array('long'	=> 'help-mode',
 													'info'	=> 'Shows more information about available work modes.',
@@ -829,6 +834,44 @@ function ShowMediaHelp()
 }
 //}}}
 
+//{{{ UpdateCheck							.
+function UpdateCheck()
+{
+	$site = 'http://unc.dl.sourceforge.net/sourceforge/pdm/pdm_latest_version.txt';
+
+	printf("\n");
+	
+	if( ini_get('allow_url_fopen') == "1" )
+		{
+		printf("Checking for available updates... Wait...\n");
+
+		$fh = @fopen( $site, 'rb+' );
+		if( $fh )
+			{
+			$version = trim(fgets( $fh ));
+			fclose( $fh );
+
+			if( version_compare( sprintf("%s.0",$version), sprintf("%s.0", SOFTWARE_VERSION), ">") )
+				printf("   Version %s is now available\n", $version );
+			else
+				printf("   You're up to date.\n");
+			}
+		else
+			{
+			printf("FATAL: Can't open '%s'.\n", $site);
+			}
+		}
+	else
+		{
+		printf("FATAL: This option requires allow_fopen_url be enabled.\n");
+		printf("       Check your php.ini and enable it (it's no security\n");
+		printf("       issue to have it enabled for CLI PHP version\n");
+		}
+
+	printf("\n");
+}
+//}}}
+
 //{{{ CleanUp								.
 function CleanUp( $force=FALSE )
 {
@@ -1133,6 +1176,12 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	if( $cCLI->IsOptionSet("help-mode") )
 		{
 		ShowModeHelp();
+		Abort( 0 );
+		}
+
+	if( $cCLI->IsOptionSet('update-check') )
+		{
+		UpdateCheck();
 		Abort( 0 );
 		}
 

@@ -28,9 +28,12 @@
                    - added multi argument handling (thanks to newer
                      version of CLI class). Now you can specify more
                      than one source dirs at once (duplicates entries
-                     are handled once).
+                     are handled once)
                    - fixed the way PDM used to handle absolute source
-                     paths.
+                     paths
+                   - added check-for-new-version feature. Requires
+                     internet connection and php.ini/allow_fopen_url
+                     enabled
 							
  2003.05.15 - v3.2 - mkisofs and cdrecord are now enabled by default,
                      which let you use full featured PDM just out of
@@ -217,4 +220,4 @@
 
 
 --
-$Id: CHANGES,v 1.37 2003/05/24 13:37:58 carl-os Exp $
+$Id: CHANGES,v 1.38 2003/05/24 14:30:48 carl-os Exp $
