@@ -4,7 +4,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.7 2003/01/14 14:50:29 carl-os Exp $
+// $Id: pdm.php,v 1.8 2003/01/14 14:53:11 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -13,7 +13,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.1 beta" );
+define( "SOFTWARE_VERSION", "2.1" );
 
 // for source formatted with tab spacing = 3
 
