@@ -2,10 +2,10 @@
 <?php
 /* vim: set tabstop=3 shiftwidth=3: */
 
-// don't remove this. I don't expect you see any warning/error in my code ;-)
+// don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.22 2003/02/22 20:12:34 carl-os Exp $
+// $Id: pdm.php,v 1.23 2003/02/24 23:43:31 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -414,12 +414,42 @@ if( $argc >= 1 )
 
 /** No modyfications below this line are definitely required ******************/
 
-	$KNOWN_MODES = array("test"	=> "",
-								"link"	=> "w",
-								"copy"	=> "w",
-								"move"	=> "w",
-								"iso"		=> "w",
-								"burn"	=> "w");
+	$KNOWN_MODES = array("test"		=> array("write"			=> FALSE,
+															"mkisofs"		=> FALSE,
+															"cdrecord"		=> FALSE,
+															"RemoveSets"	=> FALSE
+															),
+								"link"		=> array("write"			=> TRUE,
+															"mkisofs"		=> FALSE,
+															"cdrecord"		=> FALSE,
+															"RemoveSets"	=> FALSE
+															),
+								"copy"		=> array("write"			=> TRUE,
+															"mkisofs"		=>	FALSE,
+															"cdrecord"		=> FALSE,
+															"RemoveSets"	=> FALSE
+															),
+								"move"		=> array("write"			=> TRUE,
+															"mkisofs"		=> FALSE,
+															"cdrecord"		=> FALSE,
+															"RemoveSets"	=> FALSE
+															),
+								"iso"			=> array("write"			=> TRUE,
+															"mkisofs"		=> TRUE,
+															"cdrecord"		=> FALSE,
+															"RemoveSets"	=> TRUE
+															),
+								"burn"		=> array("write"			=> TRUE,
+															"mkisofs"		=> TRUE,
+															"cdrecord"		=> FALSE,
+															"RemoveSets"	=> TRUE
+															),
+								"burn-iso"	=> array("write"			=> TRUE,
+															"mkisofs"		=> TRUE,
+															"cdrecord"		=> TRUE,
+															"RemoveSets"	=> TRUE
+															)
+								);
 
 /******************************************************************************/
 
@@ -468,20 +498,30 @@ if( $argc >= 1 )
 														)
 								);
 
+
+
+	define("ANSWER_NO"		, 0 );
+	define("ANSWER_YES"     , 1 );
+	define("ANSWER_ABORT"	, 2 );
+
+
 //{{{ GetYN						.
-function GetYN( $default_reponse=FALSE, $prompt="" )
+function GetYN( $default_reponse=FALSE, $prompt="", $append_keys=TRUE )
 {
 	if( $default_reponse )
-		return( GetYes( $prompt ) );
+		return( GetYes( $prompt, $append_keys ) );
 	else
-		return( GetNo( $prompt ) );
+		return( GetNo( $prompt, $append_keys ) );
 }
 //}}}
 //{{{   GetNo					.
-function GetNo( $prompt="" )
+function GetNo( $prompt="", $append_keys = TRUE )
 {
 	if( $prompt=="" )
-		$prompt="Do you want to proceed [y/N]: ";
+		$prompt="Do you want to proceed [N]o/[y]es/[a]bort: ";
+	else
+		if( $append_keys )
+			$prompt .= $prompt . " [N]o/[y]es/[a]bort]: ";
 
 	while( TRUE )
 		{
@@ -489,17 +529,22 @@ function GetNo( $prompt="" )
 		$answer = strtolower( GetInput() );
 
 		if( $answer == 'y' )
-			return( TRUE );
+			return( ANSWER_YES );
 		if( ($answer == 'n') || ($answer == "") )
-			return( FALSE );
+			return( ANSWER_NO );
+		if( $answer == 'a' )
+			return( ANSWER_ABORT );
 		}
 }
 //}}}
 //{{{   GetYes					.
-function GetYes( $prompt="" )
+function GetYes( $prompt="", $append_keys=TRUE )
 {
 	if( $prompt == "" )
-		$prompt="Do you want to proceed [Y/n]: ";
+		$prompt="Do you want to proceed [Y]es/[n]o/[a]bort: ";
+	else
+		if( $append_keys )
+			$prompt .= $prompt . " [Y]es/[n]o/[a]bort: ";
 
 	while( TRUE )
 		{
@@ -507,9 +552,11 @@ function GetYes( $prompt="" )
 		$answer = strtolower( GetInput() );
 
 		if( ($answer == 'y') || ($answer == "") )
-			return( TRUE );
-		if( $answer == 'n')
-			return( FALSE );
+			return( ANSWER_YES );
+		if( $answer == 'n' )
+			return( ANSWER_NO );
+		if( $answer == 'a' )
+			return( ANSWER_ABORT );
 		}
 }
 //}}}
@@ -619,23 +666,29 @@ function ShowModeHelp()
 	printf('
 mode - specify method of CD set creation. Available modes:
 
-       "test" - is you want to see how many CDs you
-                need to store you data, try this
-       "move" - moves source files into destination CD
-                set directory
-       "copy" - copies files into destination CD set
-                directory. Needs as much free disk space
-                as source data takes
-       "link" - creates symbolic links to source data
-                in destination directory. NOTE: some
-                CD burning software needs to be ordered
-                to follow symlinks, otherwise you burn
-                no data!
-       "iso"  - acts as "link" described above, but
-                additionally creates ISO image files for
-                each CD created. Requires mkisofs and
-                as much free disk space as source takes
-       "burn" - burns CD sets on-the-fly.
+       "test"     - is you want to see how many CDs you
+                    need to store you data, try this
+       "move"     - moves source files into destination CD
+                    set directory
+       "copy"     - copies files into destination CD set
+                    directory. Needs as much free disk space
+                    as source data takes
+       "link"     - creates symbolic links to source data
+                    in destination directory. NOTE: some
+                    CD burning software needs to be ordered
+                    to follow symlinks, otherwise you burn
+                    no data!
+       "iso"      - acts as "link" described above, but
+                    additionally creates ISO image files for
+                    each CD created. Requires mkisofs and
+                    as much free disk space as source takes
+       "burn"     - burns CD sets on-the-fly.
+       "burn-iso" - compines "iso" and "burn" modes. It 1st
+                    creates full iso image, and then burns
+                    it. Usefull for those whow for any reason
+                    are unbable to enjoy on-the-fly burning
+                    offerred by "burn" mode. Use this one if
+                    your hardware really disallows "burn" mode
 
 ');
 
@@ -659,13 +712,13 @@ function ShowMediaHelp()
 //{{{ CleanUp								.
 function CleanUp( $force=FALSE )
 {
-	global $COPY_MODE, $total_cds, $OUT_CORE;
+	global $KNOWN_MODES, $COPY_MODE, $total_cds, $OUT_CORE;
 
 	// probably not set yet?
 	if( ($total_cds < 1) || ($OUT_CORE=="") )
 		return;
 
-	if( ($COPY_MODE=="iso") || ($COPY_MODE=="burn") )
+	if( $KNOWN_MODES[$COPY_MODE]['write'] )
 		{
 		switch( $force )
 			{
@@ -675,7 +728,7 @@ function CleanUp( $force=FALSE )
 
 			default:
 				printf("\nCleaning up temporary data...\n");
-				$do_clean = GetYN(TRUE, "  Clean temporary directories? [Y/n]: ");
+				$do_clean = (GetYN(TRUE, "  Clean temporary directories? [Y/n]: ", FALSE) == ANSWER_YES);
 				break;
 			}
 
@@ -840,7 +893,7 @@ function AbortIfNoTool( $tool )
 			printf("NOTE: It seems your %s is outdated.\n", $config_array["config_file"]);
 			printf("      This PDM version offers bigger configurability.\n");
 			printf("      Please check 'pdm.ini.orig' to find out what's new\n\n");
-			if( GetYN( FALSE ) == FALSE )
+			if( GetYN( FALSE ) != ANSWER_YES )
 				Abort();
 			}
 
@@ -879,7 +932,7 @@ function AbortIfNoTool( $tool )
 	// uf copy mode requires any writting, we need to check if we
 	// would be able to write anything to given destdir
 	// otherwise we don't care if are write-enabled
-	if( $KNOWN_MODES[ $COPY_MODE ] == "w" )
+	if( $KNOWN_MODES[ $COPY_MODE ]['write'] == TRUE )
 		$dirs[ $DESTINATION ] = "w";
 	
 	foreach( $dirs AS $dir=>$opt )
@@ -911,7 +964,7 @@ function AbortIfNoTool( $tool )
 
 
 	// let's check if we can allow given mode
-	if( $COPY_MODE == "iso" )
+	if( $KNOWN_MODES[$COPY_MODE]['mkisofs'] )
 		{
 		if( $config["MKISOFS"]["enabled"] == FALSE )
 			{
@@ -925,7 +978,7 @@ function AbortIfNoTool( $tool )
 			}
 		}
 
-	if( ($COPY_MODE == "burn") || ($COPY_MODE == "iso") )
+	if( $KNOWN_MODES[$COPY_MODE]['cdrecord'] )
 		{
 		if( $config["CDRECORD"]["enabled"] == FALSE )
 			{
@@ -950,7 +1003,7 @@ function AbortIfNoTool( $tool )
 			Abort();
 			}
 
-		if( $COPY_MODE == "iso" )
+		if( $KNOWN_MODES [$COPY_MODE]['mkisofs'] == "iso" )
 			{
 			if( file_exists( sprintf("%s.iso", $name) ) )
 				{
@@ -1164,7 +1217,7 @@ function AbortIfNoTool( $tool )
 
 
 	printf("I'm about to create CD sets from your data (mode: '%s')\n", $COPY_MODE);
-	if( GetYN(TRUE) == FALSE)
+	if( GetYN(TRUE) != ANSWER_YES )
 		Abort();
 
 
@@ -1209,6 +1262,7 @@ function AbortIfNoTool( $tool )
 			case "link":
 			case "iso":
 			case "burn":
+			case "burn-iso":
 				MakeDir( $dest_dir );
 				$tmp = explode("/", $src);
 				$prefix = "./";
@@ -1231,7 +1285,7 @@ function AbortIfNoTool( $tool )
 
 	// let's write the index file, so it'd be easier to find given file later on
 	printf("Building index files...\n");
-	if( $COPY_MODE != "test" )
+	if( $KNOWN_MODES[$COPY_MODE]['write'] )
 		{
 		$cdindex  = "\n Created by PDM: http://freshmeat.net/projects/pdm\n";
 		$cdindex .= sprintf(" Create date: %s, %s\n\n", date("Y.m.d"), date("H:m:s"));
@@ -1268,7 +1322,6 @@ function AbortIfNoTool( $tool )
 				}
 
 			// CD stamps
-			printf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds);
 			$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
 			if( $fh )
 				{
@@ -1279,10 +1332,10 @@ function AbortIfNoTool( $tool )
 		}
 
 
-	if( ($COPY_MODE=="iso") || ($COPY_MODE=="burn") )
+	if( ($COPY_MODE=="iso") || ($COPY_MODE=="burn") || ($COPY_MODE=="burn-iso") )
 		{
 		printf("\nI'm about to process CD sets (mode '%s') in '%s' directory\n", $COPY_MODE, $DESTINATION);
-		if( GetYN(TRUE) == FALSE)
+		if( GetYN(TRUE) != ANSWER_YES )
 			Abort();
 
 
@@ -1298,6 +1351,7 @@ function AbortIfNoTool( $tool )
 
 				$MKISOFS_PARAMS = sprintf("-follow-links -joliet -rock -full-iso9660-filenames -allow-multidot -V %s", $vol_name);
 
+
 				switch( $COPY_MODE )
 					{
 					case "iso":
@@ -1308,26 +1362,62 @@ function AbortIfNoTool( $tool )
 						}
 						break;
 
+					case 'burn-iso':
 					case "burn":
 						{
+						if( $COPY_MODE == "burn" )
+							$_type = "on-the-fly";
+						else
+							$_type = "via ISO image";
+						
 						do
 							{
-							printf("\nAttemting to burn %s (#%d CD of %d) on-the-fly (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds);
-							if( GetYN(TRUE) )
+							printf("\nAttemting to burn %s (#%d CD of %d) %s (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds, $_type);
+							switch( GetYN(TRUE) )
 								{
-								$mkisofs  = sprintf("mkisofs %s %s", $MKISOFS_PARAMS, $src_name);
-								$cdrecord = sprintf("cdrecord -fs=%dm -v driveropts=burnfree speed=0 gracetime=2 -eject -dev=%s - ", $config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
-								$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
+								case ANSWER_YES:
+									if( $COPY_MODE == "burn-iso" )
+										{
+										// making temporary iso image 1st
+										$cmd = sprintf("mkisofs %s -output %s %s", $MKISOFS_PARAMS, $out_name, $src_name);
+										printf("Creating: %s of %s\n", $out_name, $src_name );
+										system( $cmd );
+										}
 
-								$code = system( $burn_cmd );
-								printf("\nThe '%s' has been burnt.\n\n", $src_name);
+									// burn baby! burn!
+									$mkisofs  = sprintf("mkisofs %s %s", $MKISOFS_PARAMS, $src_name);
+									$cdrecord = sprintf("cdrecord -fs=%dm -v driveropts=burnfree speed=0 gracetime=2 -eject -dev=%s - ",
+																$config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
+									$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
 
-								$burn_again = GetYN( FALSE, sprintf("Do you want to burn '%s' again? [y/N]", $src_name) );
-								}
-							else
-								{
-								printf(" ** Skipped...\n");
-								$burn_again = FALSE;
+									$code = system( $burn_cmd );
+									printf("\nThe '%s' has been burnt.\n\n", $src_name);
+
+									$burn_again = GetYN( FALSE, sprintf("Do you want to burn '%s' again?", $src_name) );
+
+									switch( $burn_again )
+										{
+										case ANSWER_YES:
+											break;
+
+										case ANSWER_NO:
+											unlink( $out_name );
+											break;
+											
+										case ANSWER_ABORT:
+											unlink( $out_name );
+											Abort();
+											break;
+										}
+									break;
+
+								case ANSWER_NO:
+									printf(" ** Skipped...\n");
+									$burn_again = FALSE;
+									break;
+
+								case ANSWER_ABORT:
+									Abort();
 								}
 							}
 							while( $burn_again );
@@ -1341,8 +1431,7 @@ function AbortIfNoTool( $tool )
 			switch( $COPY_MODE )
 				{
 				case "burn":
-					$repeat_process = GetYN(FALSE, sprintf("\nDo you want to %s all the %d sets again [y/N]?", $COPY_MODE, $total_cds) );
-					;
+					$repeat_process = GetYN(FALSE, sprintf("\nDo you want to %s all the %d sets again?", $COPY_MODE, $total_cds) );
 					break;
 
 				default:
@@ -1352,12 +1441,16 @@ function AbortIfNoTool( $tool )
 
 
 			}
-			while( $repeat_process );
+			while( $repeat_process == ANSWER_YES );
+
+		if( $repeat_process == ANSWER_ABORT )
+			Abort();
 
 		}
 
 	// cleaning temporary data files...
-	CleanUp();
+	if( $KNOWN_MODES[$COPY_MODE]['RemoveSets'] )
+		CleanUp();
 
 	printf("\nDone.\n\n");
 
