@@ -4,7 +4,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.4 2003/01/13 02:47:26 carl-os Exp $
+// $Id: pdm.php,v 1.5 2003/01/13 02:48:35 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -101,8 +101,6 @@ function MakeDir( $path )
 			{
 			if( file_exists( $dir ) === FALSE )
 				mkdir( $dir, 0700 );
-			else
-				printf( "E");
 			}
 		}
 }
