@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.25 2003/03/06 20:49:21 carl-os Exp $
+// $Id: pdm.php,v 1.26 2003/03/07 15:32:22 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -531,7 +531,7 @@ function GetNo( $prompt="", $append_keys = TRUE )
 		$prompt="Do you want to proceed [N]o/[y]es/[a]bort: ";
 	else
 		if( $append_keys )
-			$prompt .= $prompt . " [N]o/[y]es/[a]bort]: ";
+			$prompt = $prompt . " [N]o/[y]es/[a]bort]: ";
 
 	while( TRUE )
 		{
@@ -554,7 +554,7 @@ function GetYes( $prompt="", $append_keys=TRUE )
 		$prompt="Do you want to proceed [Y]es/[n]o/[a]bort: ";
 	else
 		if( $append_keys )
-			$prompt .= $prompt . " [Y]es/[n]o/[a]bort: ";
+			$prompt = $prompt . " [Y]es/[n]o/[a]bort: ";
 
 	while( TRUE )
 		{
@@ -827,7 +827,7 @@ function filematch_ereg( $pattern, $str )
 	// setting up fake wrapper - using wrapper speeds upi further processing
 	// as we don't need any comparisions for each call, which would punish
 	// us whenever number of processing files exceeds 10 ;)
-	$FILEMATCH_WRAPPER = filematch_fnmatch;
+	$FILEMATCH_WRAPPER = filematch_fake;
 
 /******************************************************************************/
 
@@ -941,7 +941,7 @@ function filematch_ereg( $pattern, $str )
 	// pattern uses fnmatch() which is PHP 4.3.0+ enabled only
 	if( $cCLI->IsOptionSet("pattern") )
 		{
-		if( (version_compare( phpversion(), $VERSION_FNMATCH , "<") ) )
+		if( (version_compare( phpversion(), $VERSION_FNMATCH, "<") ) )
 			{
 			printf("ERROR: pattern matching requires PHP %s or higher\n", $VERSION_FNMATCH);
 			printf("       Please upgrade or use 'ereg-pattern' instead.\n");
@@ -971,8 +971,11 @@ function filematch_ereg( $pattern, $str )
 	// no defaults here, as in case of no option specified we got filematch_fake() wrapper in use
 	if( $cCLI->IsOptionSet("pattern") )
 		$PATTERN	= $cCLI->GetOptionArg("pattern");
-	if( $cCLI->IsOptionSet("ereg-pattern") )
-		$PATTERN = $cCLI->GetOptionArg("ereg-pattern");
+	else
+		if( $cCLI->IsOptionSet("ereg-pattern") )
+			$PATTERN = $cCLI->GetOptionArg("ereg-pattern");
+		else
+			$PATTERN = "";
 		
 	
 
