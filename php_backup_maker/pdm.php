@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.26 2003/03/07 15:32:22 carl-os Exp $
+// $Id: pdm.php,v 1.27 2003/03/07 15:37:00 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -677,12 +677,12 @@ function ShowModeHelp()
 mode - specify method of CD set creation. Available modes:
 
        "test"     - is you want to see how many CDs you
-                    need to store you data, try this
+                    need to store you data, try this,
        "move"     - moves source files into destination CD
-                    set directory
+                    set directory,
        "copy"     - copies files into destination CD set
                     directory. Needs as much free disk space
-                    as source data takes
+                    as source data takes,
        "link"     - creates symbolic links to source data
                     in destination directory. NOTE: some
                     CD burning software needs to be ordered
@@ -691,14 +691,14 @@ mode - specify method of CD set creation. Available modes:
        "iso"      - acts as "link" described above, but
                     additionally creates ISO image files for
                     each CD created. Requires mkisofs and
-                    as much free disk space as source takes
-       "burn"     - burns CD sets on-the-fly.
-       "burn-iso" - compines "iso" and "burn" modes. It 1st
-                    creates full iso image, and then burns
-                    it. Usefull for those whow for any reason
-                    are unbable to enjoy on-the-fly burning
+                    as much free disk space as source takes,
+       "burn"     - burns CD sets on-the-fly,
+       "burn-iso" - compiles "iso" and "burn" modes. First
+                    it creates full iso image, and then burns.
+                    Usefull for those who for any reason are
+                    unbable to enjoy on-the-fly burning
                     offerred by "burn" mode. Use this one if
-                    your hardware really disallows "burn" mode
+                    your hardware really disallows "burn" mode.
 
 ');
 

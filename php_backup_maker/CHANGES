@@ -1,5 +1,5 @@
 
- PHP Dump Maker
+ PDM - PHP Dump Maker
  --------------------------------------------------
  Written by Marcin Orlowski <carlos@wfmh.org.pl>
  Home page: http://freshmeat.net/projects/pdm/
@@ -150,4 +150,4 @@
 
 
 --
-$Id: CHANGES,v 1.22 2003/03/06 20:51:17 carl-os Exp $
+$Id: CHANGES,v 1.23 2003/03/07 15:37:00 carl-os Exp $
