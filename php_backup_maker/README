@@ -4,7 +4,7 @@ PDM? What a jerky name...
 
 PDM stands for PHP Dump Maker. I (formerly as "php backup maker")
 wrote it as a quick solution to my 'why-there-is-not-useful-backup-tool'
-problem I've encountered one day wishing to backup some GB of my 
+problem I've encountered one day wishing to backup some GB of my
 data to CD "my way{tm}". As it started to be useful, I decided
 to give it a public release, to both help one having similar problems
 I had and to give my small contribution to Open Source movement
@@ -29,10 +29,11 @@ Features
 -------------------------------------
 
  - multivolume backups,
- - various capacity media support (any known CD),
+ - various capacity media support,
+ - support for CD and DVD burning,
  - file splitting for files bigger than media capacity,
  - multi source backup,
- - on-the-fly CD burning,
+ - on-the-fly CD/DVD burning,
  - ISO image creation,
  - optimised code to speed up ISO-over-NFS creation,
  - automatic text index creation,
@@ -60,6 +61,8 @@ Optional:
    if you want to burn any CDs with this script
    (you need to configure your kernel first and config
    the script - see inside for details)
+ - growisofs
+   if you want to burn DVDs you would need this software
 
 
 Configuration
@@ -129,7 +132,7 @@ in the script (I am not going to fix this in near future).
  mostly.
 
 
- enabled = Off
+ enabled = On
 
  If you want to make burning available switch this to
  "On" (w/o quotes). Make sure you got external software
@@ -158,6 +161,35 @@ in the script (I am not going to fix this in near future).
  uses. Most probably you won't ever need to touch this.
 
 
+
+
+ DVD recording (GROWISOFS section)
+ -----------------------------------
+ Plase note that if you don't plan to burn DVDs, you can ignore
+ most of these settings. Check NOTEs below for more details about
+ what to keep eye on mostly.
+
+
+ enabled = On
+
+ If you want to make burning available switch this to
+ "On" (w/o quotes). Make sure you got external software
+ like cdrecord and mkisofs installed and available.
+
+
+ device = "/dev/hdc"
+
+ if you want to burn anything you need to tell on which
+ device your DVD burner is. In contrast to cdrecord, growisofs
+ uses standard device notiation.
+
+
+ fifo_size = 10
+
+ same as FIFO queue described above
+
+
+
  File splitting
  ------------------
 
@@ -172,7 +204,7 @@ in the script (I am not going to fix this in near future).
  any function to determine how many spare bytes remains.
  PDM deals with this as follow. If buffer_size is set to
  0 or is not specified, we take 3rd part of chunk size
- or php.ini/memory_limit value, taking the lower one. 
+ or php.ini/memory_limit value, taking the lower one.
  For example, if we got 200MB file to split into 100MB
  chunks and current memory limit is set to 30MB, PDM
  will use 10MB for splitting buffer. This slows us a bit
@@ -188,7 +220,7 @@ in the script (I am not going to fix this in near future).
  buffer_size = 100 looks quite safe in this example.
 
  If you rarely need splitting, you can leave defaults.
- 
+
 
 Configuring PHP
 -------------------------------------
@@ -275,7 +307,7 @@ sets, which are produced as in "link" mode.
 File splitting
 -------------------------------------
 
-Since relese 2.6 PDM know how to handle files bigger than 
+Since relese 2.6 PDM know how to handle files bigger than
 media size. If -split option is specified PDM will hunk
 any file that exceeds media size. However current file
 splitting implementation works fine, I consider it beta
@@ -299,11 +331,11 @@ to speed things up over networked file systems. At least
 for now, PDM creates bunch of symlinks in '-dest' for
 later processing. If your '-dest' points somewhere over
 NFS it means there will be additional network traffic
-first to create these and then to read and process. 
+first to create these and then to read and process.
 But since symlinks does not waste too much diskspace,
 you may wish to do the trick and separate temporary data
 destination directory from output directory. This works
-for 'iso' mode only and let you specify target on local 
+for 'iso' mode only and let you specify target on local
 machine (i.e. /tmp) but at the same time point ISO
 destination to somewhere else (mainly over NFS). This
 significantly speeds things up - for usage examples
@@ -377,5 +409,5 @@ Author
 
 
 --
-$Id: README,v 1.17 2003/07/25 14:37:48 carl-os Exp $
+$Id: README,v 1.18 2004/08/02 06:35:00 carl-os Exp $
 
