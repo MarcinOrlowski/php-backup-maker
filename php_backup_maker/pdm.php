@@ -1,10 +1,48 @@
 #!/usr/bin/php4 -q
 <?php
+/* vim: set tabstop=3 shiftwidth=3: */
 
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.8 2003/01/14 14:53:11 carl-os Exp $
+/*
+require_once "Getopt_Util.php";
+
+//{{{ Command Line Options Array
+		$CLI = array(
+							"help"      	=> array("short"  => 'h',
+															"long"   => "help",
+															"desc"   => "Shows this help page",
+															"opt"    => 'n'
+															),
+							"help-media"	=>	array(
+															"long"	=> "help-media",
+															"desc"	=> "Show media type related help page"
+															"opt"		=> 'n'
+															),
+
+							"media"      => array("short" => 'm',
+														 "desc"  => "Specifies destination media type to be used. See help-media for details",
+														 "opt"   => 'y' ),
+
+				"source"		=> array( "short"	=> 's',
+											 "long"	=> "source",
+											 "desc"	=> "Specifies source directory (directory you want to process)",
+											 "opt"	=> 'y' ),
+
+				"desc"			=> array(	"short"	=> 'd',
+													"long"	=> "dest",
+													"desc"	=> "Specifies destination directory. If no specified, current work dir is used"
+
+				"version"   => array("short"  => 'v',
+											"long"   => "version",
+											"desc"   => "show program version",
+											"opt"    => 'n' )
+							)
+					);
+*/
+
+// $Id: pdm.php,v 1.9 2003/01/15 00:33:57 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -13,26 +51,26 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.1" );
-
-// for source formatted with tab spacing = 3
+define( "SOFTWARE_VERSION", "2.2 beta" );
 
 /******************************************************************************/
 
 	// DON'T touch this! Create ~/.pdm/pdm.ini to override defaults!
 	$min_config_version = 21;
 	$config_default = array(
-						"CONFIG"		=> array("version"			=> 0
+						"CONFIG"		=> array("version"							=> 0
 												  ),
-						"PDM"			=> array("capacity"			=> 700,
-													"reserved"			=> 4,
-													"ignore_file"		=> ".pdm_ignore",
-													"ignore_subdirs"	=> TRUE
+						"PDM"			=> array("media"								=> 700,
+													"ignore_file"						=> ".pdm_ignore",
+													"ignore_subdirs"					=> TRUE,
+													"check_files_readability"		=> TRUE
 													),
 						"CDRECORD"	=>	array("enabled"			=>	FALSE,
 													"device"				=> "1,0,0",
 													"fifo_size"			=> 10
 													),
+						"MKISOFS"	=> array("enabled"			=> FALSE
+													)
 						);
 	$config = array();
 
@@ -44,6 +82,51 @@ define( "SOFTWARE_VERSION", "2.1" );
 	$KNOWN_MODES = array("test","link","copy","move","iso","burn");
 
 /******************************************************************************/
+
+	// user name we run under
+	define("USER", getenv("USER"));
+
+	// some useful constans
+	define("GB",	1073741824); 	// 1024^3
+	define("MB",	   1048576);   // 1024^2
+	define("KB",	     10240);   // 1024^1
+
+	// according to http://www.cdrfaq.org/faq07.html#S7-6
+	// each sector is 2352 bytes, but only 2048 bytes can be used for data
+	define( "SECTOR_SIZE"					, 2352 );
+	define( "SECTOR_CAPACITY"				, 2048 );
+	define( "AVG_BYTES_PER_TOC_ENTRY"	,  400 );	// bytes per file entry in filesystem TOC
+																	// this is rough average. I don't want
+																// AI here if CDs are that cheap now...
+
+	// we reserve some space for internal CD stuff
+	define( "RESERVED_SECTORS"	, round( ((5*MB)/SECTOR_CAPACITY)+0.5), 0 );
+
+	$MEDIA_SPECS = array(	184	=> array("min"			=> 21,
+														"capacity"	=> 184.6 * MB,
+														"sectors"	=> 94500 - RESERVED_SECTORS
+														),
+									553	=>	array("min"			=> 63,
+														"capacity"	=> 553.7 * MB,
+														"sectors"	=> 283500 - RESERVED_SECTORS
+														),
+									650	=> array("min"			=> 74,
+														"capacity"	=> 650.3 * MB,
+														"sectors"	=> 333000 - RESERVED_SECTORS
+														),
+									700	=> array("min"			=> 80,
+														"capacity"	=> 703.1 * MB,
+														"sectors"	=> 360000 - RESERVED_SECTORS
+														),
+									800	=> array("min"			=> 90,
+														"capacity"	=> 791.0 * MB,
+														"sectors"	=> 405000 - RESERVED_SECTORS
+														),
+									870	=> array("min"			=> 99,
+														"capacity"	=> 870.1 * MB,
+														"sectors"	=> 445500 - RESERVED_SECTORS
+														)
+								);
 
 //{{{ GetYN						.
 function GetYN( $default_reponse=FALSE, $prompt="" )
@@ -129,20 +212,16 @@ function MakeDir( $path )
 //{{{ SizeStr					.
 function SizeStr( $file_size, $precision=-2 )
 {
-$GB = 1073741824; // 1024^3
-$MB = 1048576;    // 1024^2
-$KB = 1024;       // 1024^1
-
-	if( $file_size >= $GB )
-		$file_size = round($file_size / $GB * 100, $precision) / 100 . "GB";
+	if( $file_size >= GB )
+		$file_size = round($file_size / GB * 100, $precision) / 100 . " GB";
 	else
-		if( $file_size >= $MB )
-			$file_size = round($file_size / $MB * 100, $precision) / 100 . "MB";
+		if( $file_size >= MB )
+			$file_size = round($file_size / MB * 100, $precision) / 100 . " MB";
 		else
-			if( $file_size >= $KB )
-				$file_size = round($file_size / $KB * 100, $precision) / 100 . "KB";
+			if( $file_size >= KB )
+				$file_size = round($file_size / KB * 100, $precision) / 100 . " KB";
 			else
-				$file_size = $file_size . "B";
+				$file_size = $file_size . " B";
 
 	return( $file_size );
 }
@@ -227,6 +306,18 @@ dest - destination directory where CD sets will be created.
 
 }
 //}}}
+//{{[ ShowMediaHelp
+function ShowMediaHelp()
+{
+	global $MEDIA_SPECS;
+
+	printf("Known media types are:\n\n");
+	printf("    Type | Capacity | Mins\n");
+	printf("   ------+----------+------\n");
+	foreach( $MEDIA_SPECS AS $key=>$info )
+		printf( "    %4d | %8s | %4d\n", $key, SizeStr($info["capacity"]), $info["min"] );
+}
+//}}}
 //{{{ CleanUp					.
 function CleanUp( $force=FALSE )
 {
@@ -257,7 +348,7 @@ function CleanUp( $force=FALSE )
 				$src_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
 				$cmd = sprintf("rm -rf %s", $src_name);
 
-				printf("  Removing '%s'...\n", $src_name);
+				printf("    Removing '%s'...\n", $src_name);
 				system( $cmd );
 				}
 			}
@@ -274,6 +365,41 @@ function Abort( $rc=10 )
 	exit( $rc );
 }
 //}}}
+
+function AbortOnErrors( $error_cnt )
+{
+   if( $error_cnt > 0 )
+		{
+		printf("\n%d critical error(s) occured. Operation aborted.\n", $error_cnt );
+		Abort();
+		}
+}
+
+
+function AbortIfNoTool( $tool )
+{
+	// check if we can access cdrecord tool
+	$cmd = sprintf( "which %s", $tool );
+	$location = trim( `$cmd` );
+						
+	if( file_exists( $location ) )
+		{
+		if( !(is_executable( "$location" ) ))
+			{
+			printf("FATAL: User '%s' is unable to launch '%s' tool.\n", USER, $tool );
+			printf(  "       Make sure you belong to right group and have privileges\n");
+			Abort();
+			}
+		}
+	else
+		{
+		printf("FATAL: Can't find '%s' software. Make sure it's installed\n" . 
+		       "       and is in your \$PATH. It may be that you got insufficient\n" . 
+				 "       privileges to use this tool. Check it.\n", $tool);
+		Abort();
+		}
+}
+
 
 /******************************************************************************/
 
@@ -330,6 +456,10 @@ function Abort( $rc=10 )
 	else
 		$config = $config_array["config"];
 
+	// some tweaks
+	if( USER == "root" )
+		$config["PDM"]["check_files_readability"] = FALSE;		// makes no sense for root...
+
 
 	// some 'debug' info...
 	printf("Your memory_limit: %s, config: %s\n\n",
@@ -346,32 +476,49 @@ function Abort( $rc=10 )
 		if( GetYN( FALSE ) == FALSE )
 			Abort();
 		}
-												
+
 
 
 	// geting user params...
 	$COPY_MODE		= $argv[1];
-	$source_dir		= $argv[2];
+	$source_dir		= eregi_replace( "//+", "/", $argv[2] );
 	$DESTINATION	= ($argc == 4) ? $argv[3] : getenv("PWD");
 
 	// go to dest dir...
 	chdir( $DESTINATION );
 
 
-	// lets check if there's no sets dirs here...
-	for($i=1; $i<10; $i++)
+	// let's check if source and dest are directories...
+	$dirs = array( $source_dir=>"r", $DESTINATION=>"w" );
+	foreach( $dirs AS $dir=>$opt )
 		{
-		if( file_exists( sprintf("%s/%s_cd%02d", $DESTINATION, $OUT_CORE, $i ) ) )
+		if( !(is_dir( $dir )) )
 			{
-			printf("FATAL: Found old sets in '%s'.\n", $DESTINATION);
-			printf("       Remove them first or choose other destination.\n");
+			printf("FATAL: '%s' is not a directory or doesn't exists\n", $dir);
 			Abort();
+			}
+
+		if( strstr( $opt, 'w' ) !== FALSE )
+			{
+			if( !(is_writable( $dir )) )
+				{
+				printf("FATAL: user '%s' can't write to '%s' directory.\n", USER, $dir );
+				Abort();
+				}
+			}
+			
+		if( strstr( $opt, 'r' ) !== FALSE )
+			{
+			if( !(is_readable( $dir )) )
+				{
+				printf("FATAL: user '%s' can't read '%s' direcory.\n", USER, $dir);
+				Abort();
+				}
 			}
 		}
 
-	// some precomputations...
-	$TOTAL_PER_CD = (($config["PDM"]["capacity"] - $config["PDM"]["reserved"]) *1024*1024);
 
+	// lets check user input
 	if( array_search( $COPY_MODE, $KNOWN_MODES ) === FALSE )
 		{
 		printf("ERROR: Unknown mode: '%s'\n\n", $COPY_MODE );
@@ -379,21 +526,90 @@ function Abort( $rc=10 )
 		Abort();
 		}
 
-	// let's check if we can allow given mode
-	if( ($COPY_MODE == "burn") && ($config["CDRECORD"]["enabled"] == FALSE) )
+	if( array_key_exists( $config["PDM"]["media"], $MEDIA_SPECS ) === FALSE )
 		{
-		printf("\n*** CD burning is disabled at the moment. Enable this in pdm.ini\n");
+		printf("ERROR: Unknown media type: '%s'\n\n", $config["PDM"]["media"]);
+		ShowMediaHelp();
 		Abort();
 		}
 
 
+	// let's check if we can allow given mode
+	if( $COPY_MODE == "iso" )
+		{
+		if( $config["MKISOFS"]["enabled"] == FALSE )
+			{
+			printf("*** Creating of ISO images is disabled at the moment.\n");
+			printf("    Enable 'mkisofs' in pdm.ini\n");
+			Abort();
+			}
+		else
+			{
+			AbortIfNoTool( "mkisofs" );
+			}
+		}
+
+	if( ($COPY_MODE == "burn") || ($COPY_MODE == "iso") )
+		{
+		if( $config["CDRECORD"]["enabled"] == FALSE )
+			{
+			printf("*** CD burning is disabled at the moment.\n");
+			printf("    Enable 'cdrecord' and 'mkisofs' in pdm.ini\n");
+			Abort();
+			}
+		else
+			{
+			AbortIfNoTool( "cdrecord" );
+			}
+		}
+
+	// lets check if there's no sets or ISO images here...
+	for($i=1; $i<10; $i++)
+		{
+		$name = sprintf("%s/%s_cd%02d", $DESTINATION, $OUT_CORE, $i);
+		if( file_exists( $name ) )
+			{
+			printf("FATAL: Found old sets in '%s'.\n", $DESTINATION);
+			printf("       Remove them first or choose other destination.\n");
+			Abort();
+			}
+
+		if( $COPY_MODE == "iso" )
+			{
+			if( file_exists( sprintf("%s.iso", $name) ) )
+				{
+				printf("FATAL: Found old image '%s.iso'.\n", $name);
+				printf("       Remove or rename them first or choose other destination.\n");
+				Abort();
+				}
+			}
+		}
+
+
+
+	// media
+	printf("Target media type %d (%s of capacity)\n\n",	$config["PDM"]["media"], SizeStr($MEDIA_SPECS[ $config["PDM"]["media"] ]["capacity"]) );
+
+	
+
+
+	// Go!
 	printf("Scanning '%s'. Please wait...\n", $source_dir);
 
 	// lets scan $source_dir and subdirectories
 	// and look for files...
-	$a = `find $source_dir -depth -type f -print`;
-	$files = explode ("\n", trim($a));
-	asort($files);
+	$a = trim( `find $source_dir/ -depth -type f -print` );
+
+	if( $a != "" )
+		{
+		$files = explode ("\n", $a);
+		asort($files);
+		}
+	else
+		{
+		// find gave nothing returned...
+		$files = array();
+		}
 
 	$target = array();
 	$dirs_to_ommit = array();
@@ -420,14 +636,25 @@ function Abort( $rc=10 )
 			if( isset( $dirs_to_ommit[$dir] ) == FALSE )
 				$dirs_to_ommit[$dir] = $dir;
 
+		// if enabled, let's check if user can read this file
+		if( $config["PDM"]["check_files_readability"] )
+			if( !(is_readable( $val )) )
+				{
+				printf("  *** User '%s' can't read '%s' file...\n", USER, $val);
+				$fatal_errors++;
+				}
+
+		$file_size = filesize( $val );
 		$target[$i++] = array(	"name"	=> $name,
 										"path"	=> $dir,
-										"size"	=> filesize( $val ),
+										"size"	=> $file_size,
+										"sectors"=> round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 ),
 										"cd"		=> 0						// #of CD we move this file into
 									);
 
 		unset( $files[ $key ] );
 		}
+	AbortOnErrors( $fatal_errors );
 
 
 	// filtering out dirs we don't want to backup
@@ -439,7 +666,7 @@ function Abort( $rc=10 )
 			$reduced_cnt = 0;
 			$reduced_size = 0;
 
-			printf("    %s..\n", $dir);
+			printf("    %s/%s\n", $source_dir, $dir);
 
 			$dir_len = strlen( $dir );
 
@@ -459,7 +686,7 @@ function Abort( $rc=10 )
 				}
 			}
 
-		printf("  Filtered %s in %d files\n", SizeStr( $reduced_size ), $reduced_cnt);
+		printf("  Filtered out %s in %d files\n", SizeStr( $reduced_size ), $reduced_cnt);
 		}
 
 
@@ -469,7 +696,7 @@ function Abort( $rc=10 )
 	printf("  Checking filesize limits...\n");
 	foreach( $target AS $key=>$entry )
 		{
-		if( $entry["size"] >= $TOTAL_PER_CD )
+		if( $entry["size"] >= $MEDIA_SPECS[ $config["PDM"]["media"] ]["capacity"] )
 			{
 			// no, no, no. We won't be splitting files at the moment,
 			// we have to give up all the files bigger than the CD capacity
@@ -477,41 +704,56 @@ function Abort( $rc=10 )
 			$fatal_errors++;
 			}
 		}
-	if( $fatal_errors > 0 )
+	AbortOnErrors( $fatal_errors );
+
+
+	// I know it can be done much smarter, but I hate such 'optimalisation' which
+	// kill source readability and clearance. Too many vars in global scope
+	// sucks as well (or even more)...
+	$total_files = 0;
+	$total_size = 0;
+	foreach( $target AS $file )
 		{
-		printf("%d critical errors occured. Operation aborted.\n", $fatal_errors );
-		Abort();
+		$total_files++;
+		$total_size += $file["size"];
 		}
 
+	printf( "\n%d files (%s) remains for further processing.\n\n", $total_files, SizeStr($total_size) );
+	if( $total_files <= 0 )
+		Abort();
 
-	$current_cd = 1;
-	$cd_remaining = $TOTAL_PER_CD;						//how many bytes of current_cd we got remaining
 
-	$cnt = count($target);
-	printf("Tossing %d files...\n", $cnt);
 
+	// let's go, as long as we got something to process...
 	$tossed = array();									// here we going to have tossed files at the end
 	$stats = array();										// some brief statistics for each set we create
 
-	// let's go, as long as we got something to process...
+	$cnt = $total_files;
+	$current_cd = 1;
+	$cd_remaining = $MEDIA_SPECS[ $config["PDM"]["media"] ]["sectors"];			//how sectors of current_cd we got remaining
+
 	while( $cnt > 0 )
 		{
 		$stats[ $current_cd ]["cd"] = $current_cd;
 		$stats[ $current_cd ]["files"] = 0;
 		$stats[ $current_cd ]["bytes"] = 0;
+		$stats[ $current_cd ]["sectors"] = 0;
+		$stats[ $current_cd ]["sectors_toc"] = 0;
 
 		foreach( $target AS $key=>$file )
 			{
-			if( $file["size"] <= $cd_remaining )
+			if( $file["sectors"] <= ($cd_remaining - $stats[ $current_cd ]["sectors_toc"]) )
 				{
 				// ok, it fits here...
 				$file["cd"] = $current_cd;
 				$tossed[] = $file;
 				unset( $target[$key] );
 
-				$cd_remaining -= $file["size"];
+				$cd_remaining -= $file["sectors"];
 				$stats[ $current_cd ]["files"] ++;
 				$stats[ $current_cd ]["bytes"] += $file["size"];
+				$stats[ $current_cd ]["sectors"] += $file["sectors"];
+				$stats[ $current_cd ]["sectors_toc"] = round( ((($stats[ $current_cd ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
 
 				$cnt--;
 				if( $cnt > 1500 )
@@ -523,27 +765,26 @@ function Abort( $rc=10 )
 						$base = 1;
 
 				if( ( $cnt % $base ) == 0 )
-					printf("  CD: %3d, unprocessed files left: %5d\r", $current_cd, $cnt);
+					printf("  CD: %3d, unprocessed files left: %5d   \r", $current_cd, $cnt);
 				}
 			}
 
 		// we processed the while list of remaining files. If there're any left,
 		// we have to start a new CD set for them
 		$current_cd++;
-		$cd_remaining = $TOTAL_PER_CD;
+		$cd_remaining = $MEDIA_SPECS[ $config["PDM"]["media"] ]["sectors"];
 		}
 
 
 	$total_cds = $current_cd - 1;
 
 
-	printf("\n");
-	printf("Tossed into %d CDs...\n", $total_cds );
+	printf("%-70s\n", sprintf("Tossed into %d CDs of %s each...", $total_cds, SizeStr( $MEDIA_SPECS[$config["PDM"]["media"]]["capacity"] ) ) );
 
 
 	// tell me what we have done...
 	foreach( $stats AS $item )
-		printf("  CD: %3d, files: %6d, bytes in total: %7s (%10d bytes)\n", $item["cd"], $item["files"], SizeStr($item["bytes"]), $item["bytes"] );
+		printf("  CD: %2d, files: %5d, ISO FS: %5s + special\n", $item["cd"], $item["files"], SizeStr($item["bytes"]), SizeStr( $item["files"] * AVG_BYTES_PER_TOC_ENTRY) );
 
 	printf("\n");
 
@@ -553,7 +794,6 @@ function Abort( $rc=10 )
 		exit();
 
 
-
 	printf("I'm about to create CD sets from your data (mode: '%s')\n", $COPY_MODE);
 	if( GetYN(TRUE) == FALSE)
 		Abort();
@@ -561,7 +801,7 @@ function Abort( $rc=10 )
 
 	// ok, let's move the files into CD sets
 	printf("Creating CD sets (mode: %s) in '%s'...\n", $COPY_MODE, $DESTINATION);
-	$cnt = count($tossed);
+	$cnt = $total_files;
 	foreach( $tossed AS $file )
 		{
 		if( $cnt > 2500 )
@@ -682,18 +922,21 @@ function Abort( $rc=10 )
 
 		do
 			{
-			for( $i=1; $i<=$total_cds; $i++ )
+//			for( $i=1; $i<=$total_cds; $i++ )
+printf("\ndebug!!\n");
+$i=1;
 				{
 				$out_name = sprintf("%s_cd%02d.iso", $OUT_CORE, $i);
 				$vol_name = sprintf("%s_%d_of_%d", $OUT_CORE, $i, $total_cds);
 				$src_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
 
+				$MKISOFS_PARAMS = sprintf("-follow-links -joliet -rock -full-iso9660-filenames -allow-multidot -V %s", $vol_name);
+
 				switch( $COPY_MODE )
 					{
 					case "iso":
 						{
-						$cmd = sprintf("mkisofs -follow-links -joliet -rock -full-iso9660-filenames -allow-multidot -V %s -output %s %s",
-											$vol_name, $out_name, $src_name);
+						$cmd = sprintf("mkisofs %s -output %s %s", $MKISOFS_PARAMS, $out_name, $src_name);
 						printf("Creating: %s of %s\n", $out_name, $src_name );
 						system( $cmd );
 						}
@@ -706,7 +949,7 @@ function Abort( $rc=10 )
 							printf("\nAttemting to burn %s (#%d CD of %d) on-the-fly (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds);
 							if( GetYN(TRUE) )
 								{
-								$mkisofs  = sprintf("mkisofs -follow-links -joliet -rock -full-iso9660-filenames -allow-multidot -V %s %s", $vol_name, $src_name);
+								$mkisofs  = sprintf("mkisofs %s %s", $MKISOFS_PARAMS, $src_name);
 								$cdrecord = sprintf("cdrecord -fs=%dm -v -eject -dev=%s - ", $config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
 								$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
 
