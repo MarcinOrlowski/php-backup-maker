@@ -1,5 +1,5 @@
 ;
-; $Id: pdm.ini.orig,v 1.5 2003/04/13 16:18:13 carl-os Exp $
+; $Id: pdm.ini.orig,v 1.6 2004/08/02 06:35:00 carl-os Exp $
 ;
 ; Default config file for PDM script.
 ; 
@@ -64,12 +64,6 @@ check_files_readability = On
 ;
 [CDRECORD]
 
-; enabled [v2.0+]
-; if you want to burn anything, enable this feature first. Make sure you
-; have cdrecord and mkisofs installed and available!
-; Values: On/Off
-enabled = Off
-
 ; device [v2.0+]
 ; use "cdrecord -scanbus" to find out your device settings and put the result
 ; (i.e. for 1st CD writer it will be something like "x,0,0")
@@ -84,13 +78,17 @@ device = "1,0,0"
 fifo_size = 10
 
 
-[MKISOFS]
-; enabled [v2.2+]
-; if you want to make ISO image or burn anything, enable this feature first.
-; Make sure you have mkisofs installed and available!
-; Values: On/Off
-enabled = Off
+[GROWISOFS]
 
+; device [v4.0+]
+; growisofs needs to know where's your DVD burned. Show him using this option
+; Default points to /dev/dvd
+; NOTE: growisofs uses STANDARD device naming scheme (i.e. /dev/dvd, /dev/xxx).
+device = "/dev/dvd"
+
+
+[MKISOFS]
+; nothing at the moment
 
 [SPLIT]
 ; buffer_size [v3.0+]

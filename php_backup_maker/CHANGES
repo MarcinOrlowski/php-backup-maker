@@ -13,13 +13,27 @@
 
  Development history:
  ------------------------
-            - v3.4 - PDM now process symbolic links. As a side effect
+ 2004.07.30 - v4.0 - added preliminary (and experimental) DVD support.
+                     By using growisofs PDM is now capable of burning
+                     your data on DVD. As for now, DVD cannot be burnt
+                     on-the-fly but with burn-iso mode only. Sorry.
+                     I am about to address the remaining issues which
+                     prevents on-the-fly burn outs from working here.
+                     And please don't forget to report ANY issue you
+                     may spot concerning DVD code! See README for new
+                     .ini section information
+                   - PDM now process symbolic links. As a side effect
                      source directory scan may last a bit longer than
                      in former versions but it should not be noticeable
                      unless processing bunch of nested directories,
                      but from another hand, loosing symlinks may hurt
                      event stronger. Thanks to Jozef Riha for spotting
                      this (RFE #769543)
+                   - PDM now additionally uses volset-size and volset-seqno
+                     options of mkisofs to mark each disc of given set
+                   - fixed and improved broken -u (-update) feature
+                   - pdm.ini - all 'enabled' fields are now obsolete
+                   - added small progress bar while preparing files ;)
 
  2003.05.24 - v3.3 - added 'iso-dest' option (for 'iso' mode only) to
                      speed up ISO image creation over NFS. See README
@@ -42,7 +56,7 @@
                    - added check-for-new-version feature. Requires
                      internet connection and php.ini/allow_fopen_url
                      enabled
-							
+
  2003.05.15 - v3.2 - mkisofs and cdrecord are now enabled by default,
                      which let you use full featured PDM just out of
                      a box without need to create pdm.ini.
@@ -228,4 +242,4 @@
 
 
 --
-$Id: CHANGES,v 1.41 2003/07/26 13:16:00 carl-os Exp $
+$Id: CHANGES,v 1.42 2004/08/02 06:35:00 carl-os Exp $
