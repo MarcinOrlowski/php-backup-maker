@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.37 2003/04/26 14:27:11 carl-os Exp $
+// $Id: pdm.php,v 1.38 2003/04/26 14:32:23 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION"	, "3.1 beta" );
+define( "SOFTWARE_VERSION"	, "3.1" );
 define( "SOFTWARE_URL"		, "http://freshmeat.net/projects/pdm" );
 
 
@@ -1575,6 +1575,8 @@ function Toss( &$src, &$tossed, &$stats )
 			$src  = MakePath( $src_dir, $file["name"] );
 			$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
 			$dest = MakePath( $dest_dir, $file["name"] );
+
+			MakeDir( $dest_dir );
 				
 			switch( $COPY_MODE )
 				{
