@@ -17,7 +17,8 @@ Obligatory:
 
  - PHP interpreter <http://php.net>. This script is developed
    with PHP 4.2.x but any 4.x would do (it will fail on 3.x
-	as it uses PHP 4.x specific functions here and there).
+   as it uses PHP 4.x specific functions here and there).
+   Core installation will do. No extra modules is required.
 
 Optional:
 
@@ -25,8 +26,8 @@ Optional:
    if you want to create ISO images or burn CDs
  - cdrecord <http://freshmeat.net/projects/cdrecord>
    if you want to burn any CDs with this script
-	(you need to configure your kernel first and config
-	the script - see inside for details)
+   (you need to configure your kernel first and config
+   the script - see inside for details)
 
 
 Configuration
@@ -228,4 +229,8 @@ Author
 
  Written by Marcin Orlowski <carlos@wfmh.org.pl>
  Home page: http://freshmeat.net/projects/pdm/
-	
+
+
+--
+$Id: README,v 1.4 2003/01/14 09:13:02 carl-os Exp $
+
