@@ -5,9 +5,15 @@
  Home page: http://freshmeat.net/projects/pdm/
 
 
+ NOTE: However I did my best to make sure each release contain non
+       big bugs, they may still lurk inside. Whenever you notice
+       PDM to malfunction report this immidiately! Thanks.
+
+		 
+
  Development history:
  ------------------------
-            - v3.0 - reduced memory usage by replacing most foreach()
+ 2003.04.13 - v3.0 - reduced memory usage by replacing most foreach()
                      loops by while( list(), each() ) equivalents which
                      does not clone arrays
                    - PDM used to generate incomplete index files in
@@ -20,11 +26,13 @@
                    - fixed argc/argv issue on register_globals disabled
                      environment
                    - implemented -split feature. See README for closer
-                     details how to backup your big stuff
+                     details how to backup your big stuff feature
+							request #702555 by Thien (and lot of others ;)
                    - now correctly reports name and size of file exceeding
                      allowed media capacity
-                   - rewrote file tosser. It's now significantly faster
-                     that one known from older releases.
+                   - rewrote file tosser routine. It's now significantly
+                     faster than old one (tossing 80000 files took pdm3
+							15 seconds while pdm2 needed 27 secs).
 
  2003.03.12 - v2.5 - cdrecord is now called with additional options:
                      speed=0 (max available), burnfree=On, gracetime=2
@@ -169,4 +177,4 @@
 
 
 --
-$Id: CHANGES,v 1.27 2003/04/12 21:12:52 carl-os Exp $
+$Id: CHANGES,v 1.28 2003/04/13 15:33:22 carl-os Exp $

@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.34 2003/04/12 21:12:52 carl-os Exp $
+// $Id: pdm.php,v 1.35 2003/04/13 15:33:22 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -429,8 +429,7 @@ if( $argc >= 1 )
 													),
 						"MKISOFS"	=> array("enabled"			=> FALSE
 													),
-						"SPLIT"		=> array('buffer_size'		=> 0,
-													'temp_dir'			=> "/tmp"
+						"SPLIT"		=> array('buffer_size'		=> 0
 													),
 						);
 	$config = array();
@@ -862,7 +861,7 @@ function filematch_ereg( $pattern, $str )
 
 
 
-function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
+function FileSplit( $in, $out_array, $chunk_size, $progress_meter="" )
 {
 	global $config;
 
@@ -870,7 +869,7 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
 	
 	$step = $config['SPLIT']['buffer_size'];
 	if( $step == 0)
-		$step = min( (ini_get('memory_limit')*MB), $chunk_size)/4;
+		$step = min( (ini_get('memory_limit')*MB), $chunk_size)/3;
 
 	if( file_exists( $in ) )
 		{
@@ -893,8 +892,8 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
 
 						fwrite( $fh_out, &$buffer );
 
-						if( $progress_meter )
-							printf("    Splitting '%s' (%s to go)...\r", basename($in), SizeStr( $file_size ) );
+						if( $progress_meter!="" )
+							printf( str_replace( array("#NAME#", "#SIZE#"), array( basename($in), SizeStr($file_size)), $progress_meter ) );
 
 						unset( $buffer );
 						$read_remain -= $step;
@@ -910,7 +909,9 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
 			fclose( $fh_in );
 
 			$result = TRUE;
-			printf("\n");
+
+			if( $progress_meter != "" )
+				printf("\n");
 			}
 		else
 			{
@@ -923,6 +924,32 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
 		}
 
 	return( $result );
+}
+
+
+function MakePath()
+{
+	$cnt = func_num_args();
+	$path = "";
+
+	for($i=0; $i<$cnt; $i++ )
+		{
+		$tmp = func_get_arg($i);
+		if( $tmp != "" )
+			{
+			if( $path != "" )
+				$path .= "/";
+			$path .= $tmp;
+			}
+		}
+
+	return( eregi_replace( "//+", "/", $path) );
+}
+function MakeEntryPath( $entry )
+{
+	global $source_dir;
+
+	return( MakePath( $source_dir, $entry['path'], $entry['name'] ) );
 }
 
 
@@ -1279,7 +1306,7 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
 			$reduced_cnt = 0;
 			$reduced_size = 0;
 
-			printf("    %s/%s\n", $source_dir, $dir);
+			printf("    %s\n", MakePath( $source_dir, $dir ) );
 
 			$dir_len = strlen( $dir );
 
@@ -1299,7 +1326,7 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
 				}
 			}
 
-		printf("  Filtered out %s in %d files\n", SizeStr( $reduced_size ), $reduced_cnt);
+//		printf("  Filtered out %s in %d files\n", SizeStr( $reduced_size ), $reduced_cnt);
 		}
 
 
@@ -1312,6 +1339,7 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
 	$split_active = $cCLI->IsOptionSet('split');
 
 	// can't use foreach due its 'work-on-copy' issue
+	$big_files = 0;
 	reset( $target );
 	while( list($key, $entry) = each( $target ) )
 		{
@@ -1328,11 +1356,14 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
 			else
 				{
 				// we have to give up all the files bigger than the CD capacity
-				printf("  *** File \"%s\" is too big (%s)\n", $entry['name'], SizeStr($entry['size']) );
+				printf("  *** File \"%s\" is too big (%s)\n", MakeEntryPath( $entry ), SizeStr($entry['size']) );
 				$fatal_errors++;
+				$big_files++;
 				}
 			}
 		}
+	if( $big_files > 0 )
+		printf("\nUse -split feature to handle big files.\nSee README for more information\n");
 	AbortOnErrors( $fatal_errors );
 
 
@@ -1485,6 +1516,7 @@ function Toss( &$src, &$tossed, &$stats )
 
 
 	// Tossing...
+	printf("Tossing...\n");
 	Toss( $target, $tossed, $stats );
 
 	$tmp_split = $target_split;					// since Toss() unset()'s elements, we use tmp array, as we need target_split later on...
@@ -1542,10 +1574,10 @@ function Toss( &$src, &$tossed, &$stats )
 			if( ( $cnt % $base ) == 0 )
 				printf("To do: %10d...\r", $cnt);
 
-			$src_dir = sprintf("%s/%s", $source_dir, $file["path"] );
-			$src  = sprintf("%s%s", $src_dir, $file["name"]);
+			$src_dir = MakePath( $source_dir, $file["path"] );
+			$src  = MakePath( $src_dir, $file["name"] );
 			$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
-			$dest = sprintf("%s/%s", $dest_dir, $file["name"] );
+			$dest = MakePath( $dest_dir, $file["name"] );
 				
 			switch( $COPY_MODE )
 				{
@@ -1586,8 +1618,8 @@ function Toss( &$src, &$tossed, &$stats )
 			{
 			$src_idx = $file['source_file_index'];
 
-			$src_dir = sprintf("%s/%s", $source_dir, $file["path"] );
-			$src  = sprintf("%s%s", $src_dir, $files_to_split[ $src_idx ]["name"]);
+			$src_dir = MakePath($source_dir, $file["path"] );
+			$src  = MakePath("%s%s", $src_dir, $files_to_split[ $src_idx ]["name"]);
 			$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
 				
 			reset( $files_to_split );
@@ -1595,9 +1627,9 @@ function Toss( &$src, &$tossed, &$stats )
 				{
 				if( $spl_key == $src_idx )
 					{
-					$files_to_split[ $src_idx ]['parts'][ $file['chunk'] ] = array( 'path' => $dest_dir,
-											 																	'name'	=> $spl_file['name']
-																											);
+					$files_to_split[ $src_idx ]['parts'][ $file['chunk'] ] = array('path' => $dest_dir,
+									 																	'name' => $spl_file['name']
+																										);
 
 					 }
 				}
@@ -1608,8 +1640,11 @@ function Toss( &$src, &$tossed, &$stats )
 	reset( $files_to_split );
 	while( list($key, $file) = each( $files_to_split ) )
 		{
-		$src = sprintf("%s/%s/%s", $source_dir, $file['path'], $file['name']);
-		FileSplit( $src, $file['parts'],  $MEDIA_SPECS[ $MEDIA ]['max_file_size'], TRUE);
+		$cnt--;
+
+		$src = MakeEntryPath( $file );
+		$progress = sprintf("%3d:  Splitting '#NAME#' (#SIZE# to go)...\r", $cnt);
+		FileSplit( $src, $file['parts'],  $MEDIA_SPECS[ $MEDIA ]['max_file_size'], $progress );
 		}
 	
 	
@@ -1628,7 +1663,7 @@ function Toss( &$src, &$tossed, &$stats )
 			foreach( $tossed AS $file )
 				{
 				if( $file["cd"] == $i )
-					$tmp[] = sprintf("%s/%s", $file["path"], $file["name"] );
+					$tmp[] = MakePath( $file["path"], $file["name"] );
 				}
 
 			asort( $tmp );
