@@ -5,44 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-/*
-require_once "Getopt_Util.php";
-
-//{{{ Command Line Options Array
-		$CLI = array(
-							"help"      	=> array("short"  => 'h',
-															"long"   => "help",
-															"desc"   => "Shows this help page",
-															"opt"    => 'n'
-															),
-							"help-media"	=>	array(
-															"long"	=> "help-media",
-															"desc"	=> "Show media type related help page"
-															"opt"		=> 'n'
-															),
-
-							"media"      => array("short" => 'm',
-														 "desc"  => "Specifies destination media type to be used. See help-media for details",
-														 "opt"   => 'y' ),
-
-				"source"		=> array( "short"	=> 's',
-											 "long"	=> "source",
-											 "desc"	=> "Specifies source directory (directory you want to process)",
-											 "opt"	=> 'y' ),
-
-				"desc"			=> array(	"short"	=> 'd',
-													"long"	=> "dest",
-													"desc"	=> "Specifies destination directory. If no specified, current work dir is used"
-
-				"version"   => array("short"  => 'v',
-											"long"   => "version",
-											"desc"   => "show program version",
-											"opt"    => 'n' )
-							)
-					);
-*/
-
-// $Id: pdm.php,v 1.9 2003/01/15 00:33:57 carl-os Exp $
+// $Id: pdm.php,v 1.10 2003/01/18 17:22:49 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -52,6 +15,350 @@ require_once "Getopt_Util.php";
 //               http://wfmh.org.pl/~carlos/
 //
 define( "SOFTWARE_VERSION", "2.2 beta" );
+
+
+//{{{ class_cli
+class CLI
+{
+	var	$args;
+	var	$found_args;
+
+	var	$error_msg = "";
+
+	var	$version_str = "CLI class 1.0 by Marcin Orlowski <carlos@wfmh.org.pl>";
+
+
+	// this array describes all the fields args array should define
+	// In any of these is missing, we sert up this defaults instead
+	var	$default_fields	=	array(	"short"		=> FALSE,
+													"long"		=> FALSE,
+													"info"		=> "--- No description. Complain! ---",
+													"required"	=> FALSE,
+													"switch"		=>	FALSE,
+													"param"		=> "",
+
+													// DON'T set any of these by hand!
+													"set"			=> FALSE
+												);
+
+	var	$help_command_name = "";
+	var	$help_short_len = 0;
+	var	$help_long_len = 0;
+
+function CLI( $args="" )
+{
+	if( is_array( $args ) )
+		$this->_InitSourceArgsArray( $args );
+
+	$this->found_args = array();
+}
+
+
+function Parse( $argc, $argv, $args="" )
+{
+	$result = TRUE;
+
+	$this->help_command_name = $argv[0];
+
+	if( is_array( $args ) )
+		$this->CLI( $args );
+
+	// let's get user args...
+	$result = $this->_GetArgs( $argc, $argv );
+
+	// if no errors found, lets check'em...
+	if( $result )
+		$result = $this->_ValidateArgs();
+
+	return( $result );
+}
+
+// returns BOOL if the $key was specified...
+function IsOptionSet( $key )
+{
+	$result = FALSE;
+
+	if( isset( $this->args[$key] ) )
+		$result = $this->args[$key]['set'];
+
+	return( $result );
+}
+
+
+// returns option argument. Default is '', so it's safe
+// to call this function even agains $key is a switch
+// not a regular option
+function GetOptionArg( $key )
+{
+	$result = "";
+
+	if( isset( $this->args[$key] ) )
+		$result = $this->args[$key]['param'];
+
+	return( $result );
+}
+
+
+// produces usge page, based on $args
+function ShowHelpPage()
+{
+	$fmt = sprintf("  %%-%ds %%-%ds %%s%%s\n", ($this->help_short_len+1), ($this->help_long_len+1) );
+
+	$msg = sprintf("\nUsage: %s -opt=val -switch ...\n" .
+						"\nKnown options and switches are detailed below.\n" .
+						" [R] means the option is required,\n" .
+						" [S] stands for valueless switch, otherwise\n" .
+						"     option requires an value\n" .
+						"\n", $this->help_command_name );
+
+	foreach( $this->args AS $entry )
+		{
+		$flags  = ($entry['required']) ? "R" : "";
+		$flags .= ($entry['switch'])   ? "S" : "";
+		if( $flags != "" )
+			$flags = sprintf("[%s] ", $flags );
+
+		$short	= ($entry['short'] !== FALSE) ? (sprintf("-%s", $entry['short'])) : "";
+		$long		= ($entry['long']  !== FALSE) ? (sprintf("-%s", $entry['long']))  : "";
+
+		$msg .= sprintf( $fmt, $short, $long, $flags, $entry['info'] );
+		}
+
+	$msg .= "\n";
+	echo $msg;
+}
+
+
+/***************** PRIVATE FUNCTIONS BELOW ***********************/
+
+// here we check if source array gave by the application
+// is valid. If any filed is missing, we add it with default
+// value. The only fields that have to be specified are
+// eiher 'short' or 'long' (or both). Do NOT specify 'set'
+// or you will be punished by non-working application ;)
+function _InitSourceArgsArray( $args )
+{
+	$this->args = array();
+
+	foreach( $args AS $key=>$val )
+		{
+		$tmp = $val;
+
+		foreach( $this->default_fields AS $d_key => $d_val )
+			if( isset( $tmp[ $d_key ] ) === FALSE )
+				$tmp[ $d_key ] = $d_val;
+
+		if( ($tmp['short'] === FALSE) && ($tmp['long'] === FALSE) )
+			{
+			// bad, bad developer!
+			printf("*** DEV BUG: Missing 'short' or 'long' definition for '%s'.\n", $key);
+			exit(10);
+			}
+
+		// some measures for dinamically layouted help page
+		if( $tmp['short'] !== FALSE )
+			$this->help_short_len = max( $this->help_short_len, strlen( $tmp['short'] ) );
+
+		if( $tmp['long'] !== FALSE )
+			$this->help_long_len = max( $this->help_long_len, strlen( $tmp['long'] ) );
+
+		// arg entry is fine. Load it up
+		$this->args[ $key ] = $tmp;
+		}
+}
+
+// checks if given argumens are known, unique (precheck
+// was made in GetArgs, but we still need to check agains
+// argument givend twice, once with short and once with
+// long keyword
+function _ValidateArgs()
+{
+	$result = TRUE;
+
+	foreach( $this->args AS $key=>$entry )
+		{
+		$found = 0;
+		$found_as_key = FALSE;
+
+		if( $entry['short'] !== FALSE )
+			{
+			if( array_key_exists( $entry['short'], $this->found_args ) )
+				{
+				$found++;
+				$found_as_key = $entry['short'];
+				}
+			}
+
+		if( $entry['long'] !== FALSE )
+			{
+			if( array_key_exists( $entry['long'], $this->found_args ) )
+				{
+				$found++;
+				$found_as_key = $entry['long'];
+				}
+			}
+
+		if( $found == 0 )
+			{
+			if( $entry["required"] == TRUE )
+				{
+				$this->error_msg = sprintf("Missing required option '-%s'.", $entry['long']);
+				return( FALSE );
+				}
+			}
+		else
+			{
+			if( $found == 2 )
+				{
+				$this->error_msg = sprintf("Option '-%s' was already specified.", $entry['long']);
+				return( FALSE );
+				}
+
+			if( $entry["switch"] == FALSE )
+				{
+				if( $this->found_args[ $found_as_key ]["val"] === FALSE )
+					{
+					$this->error_msg = sprintf("Option '-%s' requires value (i.e. -%s=something.", $found_as_key, $found_as_key);
+					return( FALSE );
+					}
+				}
+			else
+				{
+				if( $this->found_args[ $found_as_key ]["val"] !== FALSE )
+					{
+					printf( "'%s' '%s'", $this->found_args[ $found_as_key ]["val"], $entry["long"] );
+					$this->error_msg = sprintf("'-%s' is just a switch, and does not require any value.", $found_as_key);
+					return( FALSE );
+					}
+				}
+
+			// let's put it back...
+			$this->args[ $key ]['set']   = TRUE;
+			if( $entry["switch"] == FALSE )
+				$this->args[ $key ]['param'] = $this->found_args[ $found_as_key ]["val"];
+
+			// remove it from found args...
+			unset( $this->found_args[ $found_as_key ] );
+			}
+		}
+
+	// let's check if we got any unknown args...
+	if( count( $this->found_args ) > 0 )
+		{
+		$msg = "Unknown options found: ";
+		$comma = "";
+		foreach( $this->found_args AS $key=>$val )
+			{
+			$msg .= sprintf("%s-%s", $comma, $key );
+			$comma = ", ";
+			}
+
+		$this->error_msg = $msg;
+		return( FALSE );
+		}
+
+	return( $result );
+}
+
+// scans user input and builds array of given arguments
+function _GetArgs( $argc, $argv )
+{
+	if( $argc < 1 )
+		return( TRUE );
+
+	for( $i = 1; $i<$argc; $i++ )
+		{
+		$val = $argv[$i];
+
+		$tmp = explode("=", $val);
+
+		if( $tmp[0][0] != '-' )
+			{
+			$this->error_msg = sprintf("Syntax error. Arguments start with dash (i.e. -%s).", $tmp[0]);
+			return( FALSE );
+			}
+
+		$arg_key = substr( str_replace( array(" "), "", $tmp[0]), 1);
+
+
+		if( strlen( $tmp[0] ) <= 0 )
+			{
+			$this->error_msg = sprintf("Bad argument '%s'.", $tmp[0]);
+			return( FALSE );
+			}
+
+		if( array_key_exists( $arg_key, $this->found_args ) )
+			{
+			$this->error_msg = sprintf("Argument '%s' was already specified.", $tmp[0]);
+			return( FALSE );
+			}
+
+
+		switch( count( $tmp ) )
+			{
+			case 2:
+				$arg_val = $tmp[1];
+				break;
+
+			case 1:
+				$arg_val = FALSE;
+				break;
+
+			default:
+				unset( $tmp[0] );
+				$arg_val = implode("=", $tmp);
+				break;
+			}
+
+		$this->found_args[ $arg_key ] = array("key"	=> $arg_key,
+											 				"val"	=> $arg_val
+											 			);
+		}
+
+
+	return( TRUE );
+}
+
+// ond of class
+}
+//}}}
+
+
+//{{{ Command Line Options Array
+		$args = array(
+					"source"		=> array( "short"		=> 's',
+												 "long"		=> "src",
+												 "required"	=> TRUE,
+												 "info"		=> 'Source directory (i.e. "data/") which you are going to process and backup'
+												 ),
+
+					"dest"		=> array("short"		=> 'd',
+												"long"		=> "dest",
+												"info"		=> "Destination directory where CD sets will be created. If ommited, your current working directory will be used"
+												),
+
+					"media"      => array("long"	=> "media",
+												 "info"	=> "Specifies destination media type to be used. See help-media for details"
+												 ),
+
+					"mode"		=> array("short"		=> 'm',
+												"long"		=> 'mode',
+												),
+
+					"help-media"	=>	array(
+													"short"	=> "hm",
+													"long"	=> "help-media",
+													"info"	=> "Show media type related help page",
+													"switch"	=> TRUE
+													),
+
+					"help"      	=> array("short"  => 'h',
+													"long"   => "help",
+													"info"   => "Shows this help page",
+													"switch" => TRUE
+													)
+					);
+
 
 /******************************************************************************/
 
@@ -269,12 +576,11 @@ function GetConfig()
 	return( $result );
 }
 //}}}
-//{{{ ShowHelp					.
-function ShowHelp()
+//{{{ ShowModeHelp			.
+function ShowModeHelp()
 {
 	global $argv;
 
-	printf("USAGE: %s mode src [dest]\n", $argv[0]);
 	printf('
 mode - specify method of CD set creation. Available modes:
 
@@ -295,12 +601,6 @@ mode - specify method of CD set creation. Available modes:
                 each CD created. Requires mkisofs and
                 as much free disk space as source takes
        "burn" - burns CD sets on-the-fly.
-
-src  - source directory (i.e. "data/") which you are going
-       to process and backup
-dest - destination directory where CD sets will be created.
-       If ommited, your current working directory will be
-       used
 '
 );
 
@@ -381,7 +681,7 @@ function AbortIfNoTool( $tool )
 	// check if we can access cdrecord tool
 	$cmd = sprintf( "which %s", $tool );
 	$location = trim( `$cmd` );
-						
+
 	if( file_exists( $location ) )
 		{
 		if( !(is_executable( "$location" ) ))
@@ -393,8 +693,8 @@ function AbortIfNoTool( $tool )
 		}
 	else
 		{
-		printf("FATAL: Can't find '%s' software. Make sure it's installed\n" . 
-		       "       and is in your \$PATH. It may be that you got insufficient\n" . 
+		printf("FATAL: Can't find '%s' software. Make sure it's installed\n" .
+		       "       and is in your \$PATH. It may be that you got insufficient\n" .
 				 "       privileges to use this tool. Check it.\n", $tool);
 		Abort();
 		}
@@ -415,10 +715,34 @@ function AbortIfNoTool( $tool )
 		);
 
 
-	if( ($argc != 4) && ($argc !=3) )
+	$cCLI = new CLI( $args );
+
+
+	if( $cCLI->Parse( $argc, $argv ) == FALSE )
 		{
-		ShowHelp();
-		Abort();
+		$cCLI->ShowHelpPage();
+		printf("%s\n", $cCLI->error_msg);
+		exit(0);
+		}
+	else
+		{
+		if( $cCLI->IsOptionSet("help") )
+			{
+			$cCLI->ShowHelpPage();
+			exit(0);
+			}
+
+		if( $cCLI->IsOptionSet("help-media") )
+			{
+			ShowMediaHelp();
+			exit(0);
+			}
+
+		if( $cCLI->IsOptionSet("help-mode") )
+			{
+			ShowModeHelp();
+			exit(0);
+			}
 		}
 
 
@@ -456,6 +780,7 @@ function AbortIfNoTool( $tool )
 	else
 		$config = $config_array["config"];
 
+
 	// some tweaks
 	if( USER == "root" )
 		$config["PDM"]["check_files_readability"] = FALSE;		// makes no sense for root...
@@ -480,9 +805,10 @@ function AbortIfNoTool( $tool )
 
 
 	// geting user params...
-	$COPY_MODE		= $argv[1];
-	$source_dir		= eregi_replace( "//+", "/", $argv[2] );
-	$DESTINATION	= ($argc == 4) ? $argv[3] : getenv("PWD");
+	$COPY_MODE		= $cCLI->GetOptionArg("mode");;
+	$source_dir		= eregi_replace( "//+", "/", $cCLI->GetOptionArg("source") );
+	$DESTINATION	= ($cCLI->IsOptionSet("dest")) ? $cCLI->GetOptionArg("dest") : getenv("PWD");
+	$MEDIA 			= ( $cCLI->IsOptionSet("media") ) ? $cCLI->GetOptionArg("media") : $config["PDM"]["media"];
 
 	// go to dest dir...
 	chdir( $DESTINATION );
@@ -506,7 +832,7 @@ function AbortIfNoTool( $tool )
 				Abort();
 				}
 			}
-			
+
 		if( strstr( $opt, 'r' ) !== FALSE )
 			{
 			if( !(is_readable( $dir )) )
@@ -526,9 +852,9 @@ function AbortIfNoTool( $tool )
 		Abort();
 		}
 
-	if( array_key_exists( $config["PDM"]["media"], $MEDIA_SPECS ) === FALSE )
+	if( array_key_exists( $MEDIA, $MEDIA_SPECS ) === FALSE )
 		{
-		printf("ERROR: Unknown media type: '%s'\n\n", $config["PDM"]["media"]);
+		printf("ERROR: Unknown media type: '%s'\n\n", $MEDIA);
 		ShowMediaHelp();
 		Abort();
 		}
@@ -585,12 +911,6 @@ function AbortIfNoTool( $tool )
 			}
 		}
 
-
-
-	// media
-	printf("Target media type %d (%s of capacity)\n\n",	$config["PDM"]["media"], SizeStr($MEDIA_SPECS[ $config["PDM"]["media"] ]["capacity"]) );
-
-	
 
 
 	// Go!
@@ -696,9 +1016,8 @@ function AbortIfNoTool( $tool )
 	printf("  Checking filesize limits...\n");
 	foreach( $target AS $key=>$entry )
 		{
-		if( $entry["size"] >= $MEDIA_SPECS[ $config["PDM"]["media"] ]["capacity"] )
+		if( $entry["size"] >= $MEDIA_SPECS[ $MEDIA ]["capacity"] )
 			{
-			// no, no, no. We won't be splitting files at the moment,
 			// we have to give up all the files bigger than the CD capacity
 			printf("  *** File %s is too big (%d bytes)\n", $val, $size );
 			$fatal_errors++;
@@ -730,7 +1049,7 @@ function AbortIfNoTool( $tool )
 
 	$cnt = $total_files;
 	$current_cd = 1;
-	$cd_remaining = $MEDIA_SPECS[ $config["PDM"]["media"] ]["sectors"];			//how sectors of current_cd we got remaining
+	$cd_remaining = $MEDIA_SPECS[ $MEDIA ]["sectors"];			//how sectors of current_cd we got remaining
 
 	while( $cnt > 0 )
 		{
@@ -772,14 +1091,14 @@ function AbortIfNoTool( $tool )
 		// we processed the while list of remaining files. If there're any left,
 		// we have to start a new CD set for them
 		$current_cd++;
-		$cd_remaining = $MEDIA_SPECS[ $config["PDM"]["media"] ]["sectors"];
+		$cd_remaining = $MEDIA_SPECS[ $MEDIA ]["sectors"];
 		}
 
 
 	$total_cds = $current_cd - 1;
 
 
-	printf("%-70s\n", sprintf("Tossed into %d CDs of %s each...", $total_cds, SizeStr( $MEDIA_SPECS[$config["PDM"]["media"]]["capacity"] ) ) );
+	printf("%-70s\n", sprintf("Tossed into %d CDs of %s each...", $total_cds, SizeStr( $MEDIA_SPECS[$MEDIA]["capacity"] ) ) );
 
 
 	// tell me what we have done...
