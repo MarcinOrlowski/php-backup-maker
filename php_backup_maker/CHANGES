@@ -7,6 +7,10 @@
 
  Development history:
  ------------------------
+ 2003.01.23 - v2.3 - removed debug code that <ough> went to public
+                     2.2 release making it rather useless unless one
+                     manally had fixed the code. Sorry for the inconvenience.
+
  2003.01.19 - v2.2 - PDM now knows more about CD structure handling. You
                      should specify 'capacity' and 'reserved' any longer
                      ('media' type replaces these) - PDM internal computation
@@ -113,4 +117,4 @@
 
 
 --
-$Id: CHANGES,v 1.12 2003/01/18 21:32:57 carl-os Exp $
+$Id: CHANGES,v 1.13 2003/01/22 20:11:39 carl-os Exp $
