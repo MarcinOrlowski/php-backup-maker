@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.24 2003/03/06 20:08:27 carl-os Exp $
+// $Id: pdm.php,v 1.25 2003/03/06 20:49:21 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -355,7 +355,8 @@ if( $argc >= 1 )
 
 					"dest"		=> array("short"		=> 'd',
 												"long"		=> "dest",
-												"info"		=> "Destination directory where CD sets will be created. If ommited, your current working directory will be used."
+												"info"		=> 'Destination directory where CD sets will be created. ' .
+																	'If ommited, your current working directory will be used.'
 												),
 
 					"media"      => array("long"	=> "media",
@@ -368,11 +369,16 @@ if( $argc >= 1 )
 												),
 					"out-core"	=> array("short"		=> 'c',
 												"long"		=> 'out-core',
-												"info"		=> 'Specifies name prefix used for CD sets directories. If not specified, Current date in YYYYMMDD format will be taken.'
+												"info"		=> 'Specifies name prefix used for CD sets directories. ' .
+																	'If not specified, Current date in YYYYMMDD format will be taken.'
 												),
 
 					"pattern"		=>	array('long'	=> 'pattern',
-													'info'	=> 'Specifies regular expression pattern for files to be processed. By default it defines "*" which means any file.'
+													'info'	=> 'Specifies regular expression pattern for files to be processed. ' .
+																	'Supports shell "?" and "*" patterns. Neesd PHP 4.3.0+'
+													),
+					"ereg-pattern"	=> array('long'	=> 'ereg-pattern',
+													'info'	=> 'Simmilar to "pattern" but uses plain regular expression without any shell pattern support.'
 													),
 
 					"help-mode"		=> array('long'	=> 'help-mode',
@@ -803,18 +809,25 @@ function AbortIfNoTool( $tool )
 
 
 
-// fnmatch wrapping code
+// file match code
 
-function fnmatch_fake( $pattern, $str )
+function filematch_fake( $pattern, $str )
 {
 	return( TRUE );
 }
-function fnmatch_real( $pattern, $str )
+function filematch_fnmatch( $pattern, $str )
 {
 	return( fnmatch( $pattern, $str ) );
 }
+function filematch_ereg( $pattern, $str )
+{
+	return( ereg( $pattern, $str ) );
+}
 
-	$FNMATCH_WRAPPER = fnmatch_real;
+	// setting up fake wrapper - using wrapper speeds upi further processing
+	// as we don't need any comparisions for each call, which would punish
+	// us whenever number of processing files exceeds 10 ;)
+	$FILEMATCH_WRAPPER = filematch_fnmatch;
 
 /******************************************************************************/
 
@@ -919,19 +932,32 @@ function fnmatch_real( $pattern, $str )
 	// let's check if we can use pattern features with user PHP
 	$VERSION_FNMATCH = "4.3.0";
 
-	if( (version_compare( phpversion(), $VERSION_FNMATCH , "<") ) )
+	if( $cCLI->IsOptionSet("ereg-pattern") && $cCLI->IsOptionSet("pattern") )
 		{
-		if( $cCLI->IsOptionSet("pattern") )
+		printf("ERROR: You can use one type of pattern matching at a time.\n");
+		Abort();
+		}
+
+	// pattern uses fnmatch() which is PHP 4.3.0+ enabled only
+	if( $cCLI->IsOptionSet("pattern") )
+		{
+		if( (version_compare( phpversion(), $VERSION_FNMATCH , "<") ) )
 			{
 			printf("ERROR: pattern matching requires PHP %s or higher\n", $VERSION_FNMATCH);
-			printf("       Please upgrade or omit this option.\n");
+			printf("       Please upgrade or use 'ereg-pattern' instead.\n");
 			Abort();
 			}
+		else
+			{
+			$FILEMATCH_WRAPPER = filematch_fnmatch;
+			$FILEMATCH_DEF_PATTERN = "*";
+			}
+		}
 
-		// setting up fake wrapper - using wrapper speeds upi further processing
-		// as we don't need any comparisions for each call, which would punish
-		// us whenever number of processing files exceeds 10 ;)
-		$FNMATCH_WRAPPER = fnmatch_fake;
+	if( $cCLI->IsOptionSet("ereg-pattern") )
+		{
+		$FILEMATCH_WRAPPER = filematch_ereg;
+		$FILEMATCH_DEF_PATTERN = ".*";
 		}
 
 
@@ -941,7 +967,13 @@ function fnmatch_real( $pattern, $str )
 	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  ? $cCLI->GetOptionArg("dest")  	: getenv("PWD");
 	$MEDIA 			= ($cCLI->IsOptionSet("media"))	? $cCLI->GetOptionArg("media") 	: $config["PDM"]["media"];
 	$OUT_CORE		= ($cCLI->IsOptionSet("out-core")) ? $cCLI->GetOptionArg("out-core")	: date("Ymd");
-	$PATTERN			= ($cCLI->IsOptionSet("pattern")) ? $cCLI->GetOptionArg("pattern") : "*";
+
+	// no defaults here, as in case of no option specified we got filematch_fake() wrapper in use
+	if( $cCLI->IsOptionSet("pattern") )
+		$PATTERN	= $cCLI->GetOptionArg("pattern");
+	if( $cCLI->IsOptionSet("ereg-pattern") )
+		$PATTERN = $cCLI->GetOptionArg("ereg-pattern");
+		
 	
 
    // lets check user input
@@ -1107,7 +1139,7 @@ function fnmatch_real( $pattern, $str )
 
 		// let's check if file matches our pattern finally
 	
-		if( $FNMATCH_WRAPPER( $PATTERN, $val ) )
+		if( $FILEMATCH_WRAPPER( $PATTERN, $val ) )
 			{
 			$file_size = filesize( $val );
 			$target[$i++] = array(	"name"	=> $name,

@@ -151,7 +151,7 @@ Usage
 
 Run it without arguments to get help page:
 
- ./cd_dump_maker.php mode src [dest]
+ ./pdm.php mode src [dest]
 
 mode - specify method of CD set creation. Available:
 
@@ -206,17 +206,17 @@ Examples
 
 To check how many CDs you will need to backup STUFF directory:
 
- ./cd_dump_maker.php test STUFF
+ ./pdm.php test STUFF
 
 
 to burn STUFF directory (on the fly):
 
- ./cd_dump_maker.php burn STUFF
+ ./pdm.php burn STUFF
 
 
 to create ISO images (for any reason ;-)
 
- ./cd_dump_maker.php iso STUFF
+ ./pdm.php iso STUFF
 
 
 I want to know more about CD Burning
@@ -244,5 +244,5 @@ Author
 
 
 --
-$Id: README,v 1.6 2003/03/06 20:08:27 carl-os Exp $
+$Id: README,v 1.7 2003/03/06 20:49:21 carl-os Exp $
 
