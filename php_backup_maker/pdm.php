@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.39 2003/05/14 23:44:55 carl-os Exp $
+// $Id: pdm.php,v 1.40 2003/05/15 10:38:45 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION"	, "3.2" );
+define( "SOFTWARE_VERSION"	, "3.3 beta" );
 define( "SOFTWARE_URL"		, "http://freshmeat.net/projects/pdm" );
 
 
@@ -380,6 +380,13 @@ if( $argc >= 1 )
 												"long"		=> 'out-core',
 												"info"		=> 'Specifies name prefix used for CD sets directories. ' .
 																	'If not specified, Current date in YYYYMMDD format will be taken.'
+												),
+					"iso-dest"	=> array("iso-dest"	=> 't',
+												'long'		=> 'iso-dest',
+												'info'		=> 'Specifies target directory PDM should use for storing ISO images ' .
+																	'(for "iso" and "burn-iso" modes only). '.
+																	'If not specified, "dest" value will be used. This option is mostly of no ' .
+																	'use unless you want ISO images to be stored over NFS. See "Working over NFS" in README'
 												),
 					"split"		=> array('short'		=> 'p',
 												'long'		=> 'split',
@@ -1157,6 +1164,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	$COPY_MODE		= ($cCLI->IsOptionSet("mode")) ? $cCLI->GetOptionArg("mode") : "test";
 	$source_dir		= eregi_replace( "//+", "/", $cCLI->GetOptionArg("source") );
 	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  ? $cCLI->GetOptionArg("dest")  	: getenv("PWD");
+	$ISO_DEST		= ($cCLI->IsOptionSet("iso-dest"))	? $cCLI->GetOptionArg('iso-dest')	:	$DESTINATION;
 	$MEDIA 			= ($cCLI->IsOptionSet("media"))	? $cCLI->GetOptionArg("media") 	: $config["PDM"]["media"];
 	$OUT_CORE		= ($cCLI->IsOptionSet("out-core")) ? $cCLI->GetOptionArg("out-core")	: date("Ymd");
 
@@ -1726,7 +1734,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 					{
 					case "iso":
 						{
-						$cmd = sprintf("mkisofs %s -output %s %s", $MKISOFS_PARAMS, $out_name, $src_name);
+						$cmd = sprintf("mkisofs %s -output %s/%s %s", $MKISOFS_PARAMS, $TMP_DEST, $out_name, $src_name);
 						printf("Creating: %s of %s\n", $out_name, $src_name );
 						system( $cmd );
 						}
