@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.11 2003/01/18 21:32:57 carl-os Exp $
+// $Id: pdm.php,v 1.12 2003/01/22 20:09:10 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -1271,9 +1271,7 @@ function AbortIfNoTool( $tool )
 
 		do
 			{
-//			for( $i=1; $i<=$total_cds; $i++ )
-printf("\ndebug!!\n");
-$i=1;
+			for( $i=1; $i<=$total_cds; $i++ )
 				{
 				$out_name = sprintf("%s_cd%02d.iso", $OUT_CORE, $i);
 				$vol_name = sprintf("%s_%d_of_%d", $OUT_CORE, $i, $total_cds);
@@ -1302,7 +1300,7 @@ $i=1;
 								$cdrecord = sprintf("cdrecord -fs=%dm -v -eject -dev=%s - ", $config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
 								$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
 
-//								$code = system( $burn_cmd );
+								$code = system( $burn_cmd );
 								printf("\nThe '%s' has been burnt.\n\n", $src_name);
 
 								$burn_again = GetYN( FALSE, sprintf("Do you want to burn '%s' again? [y/N]", $src_name) );
