@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.33 2003/04/08 21:48:48 carl-os Exp $
+// $Id: pdm.php,v 1.34 2003/04/12 21:12:52 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.6 beta" );
+define( "SOFTWARE_VERSION", "3.0 beta" );
 
 
 // argv/argc workaround for register_globals disabled
@@ -382,7 +382,8 @@ if( $argc >= 1 )
 												),
 					"split"		=> array('short'		=> 'p',
 												'long'		=> 'split',
-												'info'		=> 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).'
+												'info'		=> 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).',
+												'switch'		=> TRUE
 												),
 
 					"pattern"		=>	array('long'	=> 'pattern',
@@ -427,7 +428,10 @@ if( $argc >= 1 )
 													"fifo_size"			=> 10
 													),
 						"MKISOFS"	=> array("enabled"			=> FALSE
-													)
+													),
+						"SPLIT"		=> array('buffer_size'		=> 0,
+													'temp_dir'			=> "/tmp"
+													),
 						);
 	$config = array();
 
@@ -499,31 +503,38 @@ if( $argc >= 1 )
 																// AI here if CDs are that cheap now...
 
 	// we reserve some space for internal CD stuff
-	define( "RESERVED_SECTORS"	, round( ((5*MB)/SECTOR_CAPACITY)+0.5), 0 );
+	define( "RESERVED_CAPACITY", (5*MB) );
+	define( "RESERVED_SECTORS"	, round( (RESERVED_CAPACITY/SECTOR_CAPACITY)+0.5), 0 );
 
-	$MEDIA_SPECS = array(	184	=> array("min"			=> 21,
-														"capacity"	=> 184.6 * MB,
-														"sectors"	=> 94500 - RESERVED_SECTORS
+	$MEDIA_SPECS = array(	184	=> array("min"					=> 21,
+														"capacity"			=> 184.6 * MB,
+														"max_file_size"	=> (184.6 * MB) - (RESERVED_CAPACITY * 2),
+														"sectors"			=> 94500 - RESERVED_SECTORS
 														),
-									553	=>	array("min"			=> 63,
-														"capacity"	=> 553.7 * MB,
-														"sectors"	=> 283500 - RESERVED_SECTORS
+									553	=>	array("min"					=> 63,
+														"capacity"			=> 553.7 * MB,
+														"max_file_size"   => (553.7 * MB) - (RESERVED_CAPACITY * 2),
+														"sectors"			=> 283500 - RESERVED_SECTORS
 														),
-									650	=> array("min"			=> 74,
-														"capacity"	=> 650.3 * MB,
-														"sectors"	=> 333000 - RESERVED_SECTORS
+									650	=> array("min"					=> 74,
+														"capacity"			=> 650.3 * MB,
+														"max_file_size"   => (650.3 * MB) - (RESERVED_CAPACITY * 2),
+														"sectors"			=> 333000 - RESERVED_SECTORS
 														),
-									700	=> array("min"			=> 80,
-														"capacity"	=> 703.1 * MB,
-														"sectors"	=> 360000 - RESERVED_SECTORS
+									700	=> array("min"					=> 80,
+														"capacity"			=> 703.1 * MB,
+														"max_file_size"   => (703.1 * MB) - (RESERVED_CAPACITY * 2),
+														"sectors"			=> 360000 - RESERVED_SECTORS
 														),
-									800	=> array("min"			=> 90,
-														"capacity"	=> 791.0 * MB,
-														"sectors"	=> 405000 - RESERVED_SECTORS
+									800	=> array("min"					=> 90,
+														"capacity"			=> 791.0 * MB,
+														"max_file_size"   => (791.0 * MB) - (RESERVED_CAPACITY * 2),
+														"sectors"			=> 405000 - RESERVED_SECTORS
 														),
-									870	=> array("min"			=> 99,
-														"capacity"	=> 870.1 * MB,
-														"sectors"	=> 445500 - RESERVED_SECTORS
+									870	=> array("min"					=> 99,
+														"capacity"			=> 870.1 * MB,
+														"max_file_size"   => (870.1 * MB) - (RESERVED_CAPACITY * 2),
+														"sectors"			=> 445500 - RESERVED_SECTORS
 														)
 								);
 
@@ -848,6 +859,73 @@ function filematch_ereg( $pattern, $str )
 	// us whenever number of processing files exceeds 10 ;)
 	$FILEMATCH_WRAPPER = 'filematch_fake';
 
+
+
+
+function FileSplit( $in, $out_array, $chunk_size, $progress_meter = FALSE )
+{
+	global $config;
+
+	$result = FALSE;
+	
+	$step = $config['SPLIT']['buffer_size'];
+	if( $step == 0)
+		$step = min( (ini_get('memory_limit')*MB), $chunk_size)/4;
+
+	if( file_exists( $in ) )
+		{
+		if( $fh_in = fopen( $in, "rb+" ) )
+			{
+			$file_size = filesize( $in );
+			$parts = ceil( $file_size/$chunk_size );
+			
+			for( $i=0; $i<$parts; $i++ )
+				{
+				MakeDir( $out_array[$i]['path'] );
+
+				$write_name = sprintf("%s/%s_%03d", $out_array[$i]['path'], $out_array[$i]['name'], $i+1 );
+				if( $fh_out = fopen( $write_name, "wb+" ) )
+					{
+					$read_remain = $chunk_size;
+					while( $read_remain > 0 )
+						{
+						$buffer = fread( $fh_in, $step );
+
+						fwrite( $fh_out, &$buffer );
+
+						if( $progress_meter )
+							printf("    Splitting '%s' (%s to go)...\r", basename($in), SizeStr( $file_size ) );
+
+						unset( $buffer );
+						$read_remain -= $step;
+						$file_size -= $step;
+						if( $file_size < 0 )
+							$file_size = 0;
+						}
+						
+					fclose( $fh_out );
+					}
+				}
+
+			fclose( $fh_in );
+
+			$result = TRUE;
+			printf("\n");
+			}
+		else
+			{
+			printf("*** Can't open '%s' for read\n", $in);
+			}
+		}
+	else
+		{
+		printf("*** File '%s' not found for splitting\n", $in);
+		}
+
+	return( $result );
+}
+
+
 /******************************************************************************/
 
 
@@ -1132,6 +1210,7 @@ function filematch_ereg( $pattern, $str )
 		}
 
 	$target = array();
+	$target_split = array();
 	$dirs_to_ommit = array();
 	clearstatcache();
 
@@ -1229,18 +1308,22 @@ function filematch_ereg( $pattern, $str )
 	// down at the moment
 	printf("  Checking filesize limits (using %s media)...\n", SizeStr( $MEDIA_SPECS[ $MEDIA ]["capacity"] ));
 
-	$files_to_spit = array();
+	$files_to_split = array();
 	$split_active = $cCLI->IsOptionSet('split');
 
 	// can't use foreach due its 'work-on-copy' issue
 	reset( $target );
 	while( list($key, $entry) = each( $target ) )
 		{
-		if( $entry["size"] >= $MEDIA_SPECS[ $MEDIA ]["capacity"] )
+		if( $entry["size"] >= $MEDIA_SPECS[ $MEDIA ]["max_file_size"] )
 			{
 			if( $split_active )
 				{
-				$entry['split'] = TRUE;
+				$target[$key]['split'] = TRUE;
+
+				$files_to_split[ $key ] = $target[ $key ];
+				$files_to_split[ $key ]['splitted'] = FALSE;
+				$files_to_split[ $key ]['parts'] = array();
 				}
 			else
 				{
@@ -1253,18 +1336,75 @@ function filematch_ereg( $pattern, $str )
 	AbortOnErrors( $fatal_errors );
 
 
+	// Let's split what should be splitted. Here we gona fake a bit. We remove big files from the
+	// list first and create fake 'splitted' parts instead. Then we toss it and finally we do
+	// really split the file. This kind of trickery is somehow required here, to have splitting
+	// added without wrecking PDM internals. It could and should be made in clearer way, but since
+	// it's not as painful as it looks I keep it instead of rewriting the whole PDM (for now)
+	if( count( $files_to_split ) > 0 )
+		{
+		printf("  Splitting files bigger than %s...\n", SizeStr( $MEDIA_SPECS[ $MEDIA ]['max_file_size'] ) );
+
+		$trashcan = array();
+
+		reset( $files_to_split );
+		while( list($key, $file) = each( $files_to_split ) )
+			{
+			if( $file['split'] == TRUE )
+				{
+				$chunk_size = $MEDIA_SPECS[ $MEDIA ]['max_file_size']; 
+				$parts = ceil( $file['size'] / $chunk_size );
+
+				printf("    '%s' (%s) into %d chunks\n", $file['name'], SizeStr( $file['size'] ), $parts );
+				
+				$tmp_size = $file['size'];
+				for( $i=0; $i<$parts; $i++ )
+					{
+					$tmp = $file;
+
+					$file_size = intval(($tmp_size > $chunk_size) ? $chunk_size : $tmp_size);
+					
+					$tmp['size'] = $file_size;
+					$tmp['name'] = sprintf("%s_%03d", $file['name'], $i);
+					$tmp['sectors'] = round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 );
+					$tmp['chunk'] = $i;
+					$tmp['source_file_index'] = $key;
+
+					// fake part
+					$target_split[] = $tmp;
+					$tmp_size -= $chunk_size;
+
+					// big files out
+					unset( $target[ $key ] );
+					}
+				}
+			}
+		}
+
+
 	// I know it can be done much smarter, but I hate such 'optimalisation' which
 	// kill source readability and clearance. Too many vars in global scope
 	// sucks as well (or even more)...
-	$total_files = 0;
-	$total_size = 0;
+	$total_files_split = 0;
+	$total_size_split = 0;
+	$total_files_std = 0;
+	$total_size_std = 0;
 	
 	reset( $target );
 	while( list($key, $file) = each( $target ) )
 		{
-		$total_files++;
-		$total_size += $file["size"];
+		$total_files_std++;
+		$total_size_std += $file["size"];
 		}
+	reset( $target_split );
+	while( list($key, $file) = each( $target_split ) )
+		{
+		$total_files_split++;
+		$total_size_split += $file["size"];
+		}
+	
+	$total_files = $total_files_std + $total_files_split;
+	$total_size = $total_size_std + $total_size_split;
 
 	printf( "\n%d files (%s) remains for further processing.\n\n", $total_files, SizeStr($total_size) );
 	if( $total_files <= 0 )
@@ -1276,57 +1416,82 @@ function filematch_ereg( $pattern, $str )
 	$tossed = array();									// here we going to have tossed files at the end
 	$stats = array();										// some brief statistics for each set we create
 
-	$cnt = $total_files;
-	$current_cd = 1;
-	$cd_remaining = $MEDIA_SPECS[ $MEDIA ]["sectors"];			//how sectors of current_cd we got remaining
+function CreateSet( &$stats, $current_cd, $capacity )
+{
+	$stats[ $current_cd ]["cd"] = $current_cd;
+	$stats[ $current_cd ]["files"] = 0;
+	$stats[ $current_cd ]["bytes"] = 0;
+	$stats[ $current_cd ]["sectors"] = 0;
+	$stats[ $current_cd ]["sectors_toc"] = 0;
+	$stats[ $current_cd ]['remaining'] = $capacity;
+}
 
-	while( $cnt > 0 )
+function Toss( &$src, &$tossed, &$stats )
+{
+	global $MEDIA_SPECS, $MEDIA;
+
+	$cnt = count($src);
+
+	if( count($stats) == 0 )
+		CreateSet( $stats, 1, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
+	$next_id = count($stats) + 1;
+
+	reset( $src );
+	while( list($key, $file) = each( $src ) )
 		{
-		$stats[ $current_cd ]["cd"] = $current_cd;
-		$stats[ $current_cd ]["files"] = 0;
-		$stats[ $current_cd ]["bytes"] = 0;
-		$stats[ $current_cd ]["sectors"] = 0;
-		$stats[ $current_cd ]["sectors_toc"] = 0;
-
-		foreach( $target AS $key=>$file )
+		$toss_ok = FALSE;
+		
+		reset( $stats );
+		while( list($cd_key, $cd) = each( $stats ) )
 			{
-			if( $file["sectors"] <= ($cd_remaining - $stats[ $current_cd ]["sectors_toc"]) )
+			if( $file['sectors'] <= ($cd['remaining'] - $cd['sectors_toc']) )
 				{
-				// ok, it fits here...
-				$file["cd"] = $current_cd;
+				$file['cd'] = $cd_key;
 				$tossed[] = $file;
-				unset( $target[$key] );
+				unset( $src[ $key ] );
 
-				$cd_remaining -= $file["sectors"];
-				$stats[ $current_cd ]["files"] ++;
-				$stats[ $current_cd ]["bytes"] += $file["size"];
-				$stats[ $current_cd ]["sectors"] += $file["sectors"];
-				$stats[ $current_cd ]["sectors_toc"] = round( ((($stats[ $current_cd ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
+				$stats[$cd_key]['remaining'] -= $file["sectors"];
+				$stats[$cd_key]["files"] ++;
+				$stats[$cd_key]["bytes"] += $file["size"];
+				$stats[$cd_key]["sectors"] += $file["sectors"];
+				$stats[$cd_key]["sectors_toc"] = round( ((($stats[ $cd_key ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
 
-				$cnt--;
-				if( $cnt > 1500 )
-					$base = 100;
-				else
-					if( $cnt > 200 )
-						$base = 10;
-					else
-						$base = 1;
+				$toss_ok = TRUE;
+				}			
+			}
+			
+		if( $toss_ok == FALSE )
+			{
+			$cd_key = $next_id;
+			CreateSet( $stats, $cd_key, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
+			
+			$file['cd'] = $cd_key;
+			$tossed[] = $file;
+			unset( $src[ $key ] );
 
-				if( ( $cnt % $base ) == 0 )
-					printf("  CD: %3d, unprocessed files left: %5d   \r", $current_cd, $cnt);
-				}
+			$stats[$cd_key]['remaining'] -= $file["sectors"];
+			$stats[$cd_key]["files"] ++;
+			$stats[$cd_key]["bytes"] += $file["size"];
+			$stats[$cd_key]["sectors"] += $file["sectors"];
+			$stats[$cd_key]["sectors_toc"] = round( ((($stats[ $cd_key ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
+
+			$next_id++;
 			}
 
-		// we processed the while list of remaining files. If there're any left,
-		// we have to start a new CD set for them
-		$current_cd++;
-		$cd_remaining = $MEDIA_SPECS[ $MEDIA ]["sectors"];
+			
 		}
+}
 
 
-	$total_cds = $current_cd - 1;
+
+	// Tossing...
+	Toss( $target, $tossed, $stats );
+
+	$tmp_split = $target_split;					// since Toss() unset()'s elements, we use tmp array, as we need target_split later on...
+	Toss( $tmp_split, $tossed, $stats );
 
 
+	$total_cds = count($stats);
 	printf("%-70s\n", sprintf("Tossed into %d CDs of %s each...", $total_cds, SizeStr( $MEDIA_SPECS[$MEDIA]["capacity"] ) ) );
 
 
@@ -1351,6 +1516,13 @@ function filematch_ereg( $pattern, $str )
 	printf("Creating CD sets (mode: %s) in '%s'...\n", $COPY_MODE, $DESTINATION);
 	$cnt = $total_files;
 
+
+	// creating dirs...
+	for($i=1;$i<=$total_cds;$i++)
+      MakeDir( sprintf("%s/%s_cd%02d", $DESTINATION, $OUT_CORE, $i ) );
+
+
+	// tossing standard (non splitted files)
 	reset( $tossed );
 	while( list($key, $file) = each( $tossed ) )
 		{
@@ -1365,51 +1537,82 @@ function filematch_ereg( $pattern, $str )
 				else
 					$base = 1;
 
-		if( ( $cnt % $base ) == 0 )
-			printf("To do: %10d...\r", $cnt);
-
-		$src 	= sprintf("%s%s/%s", $source_dir, $file["path"], $file["name"]);
-		$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
-		$dest	= sprintf("%s/%s", $dest_dir, $file["name"] );
-
-		switch( $COPY_MODE )
+		if( $file['split'] == FALSE )
 			{
-			case "test";
-				break;
+			if( ( $cnt % $base ) == 0 )
+				printf("To do: %10d...\r", $cnt);
 
-			case "copy":
-				MakeDir( $dest_dir );
-				copy( $src, $dest );
-				break;
+			$src_dir = sprintf("%s/%s", $source_dir, $file["path"] );
+			$src  = sprintf("%s%s", $src_dir, $file["name"]);
+			$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
+			$dest = sprintf("%s/%s", $dest_dir, $file["name"] );
+				
+			switch( $COPY_MODE )
+				{
+				case "copy":
+					copy( $src, $dest );
+					break;
 
-			case "move":
-				MakeDir( $dest_dir );
-				rename( $src, $dest );
-				break;
+				case "move":
+					rename( $src, $dest );
+					break;
 
-			case "link":
-			case "iso":
-			case "burn":
-			case "burn-iso":
-				MakeDir( $dest_dir );
-				$tmp = explode("/", $src);
-				$prefix = "./";
+				case "link":
+				case "iso":
+				case "burn":
+				case "burn-iso":
+					$tmp = explode("/", $src);
+					$prefix = "./";
 
-				for($i=1; $i<count($tmp); $i++)
-					{
-					if( $tmp[$i] != "" )
-						$prefix .= "../";
-					}
-				if( symlink( sprintf("%s/%s", $prefix, $src), $dest ) == FALSE )
-					printf("symlink() failed: %s/%s => %s\n", $prefix, $src, $dest);
-				break;
+					for($i=1; $i<count($tmp); $i++)
+						{
+						if( $tmp[$i] != "" )
+							$prefix .= "../";
+						}
+					if( symlink( sprintf("%s/%s", $prefix, $src), $dest ) == FALSE )
+						printf("symlink() failed: %s/%s => %s\n", $prefix, $src, $dest);
+					break;
+				}
 
-			case "test";
-				break;
+			$cnt--;
 			}
-
-		$cnt--;
 		}
+
+
+	reset( $tossed );
+	while( list($key, $file) = each( $tossed ) )
+		{
+		if( $file['split'] )
+			{
+			$src_idx = $file['source_file_index'];
+
+			$src_dir = sprintf("%s/%s", $source_dir, $file["path"] );
+			$src  = sprintf("%s%s", $src_dir, $files_to_split[ $src_idx ]["name"]);
+			$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
+				
+			reset( $files_to_split );
+			while( list($spl_key, $spl_file) = each( $files_to_split ) )
+				{
+				if( $spl_key == $src_idx )
+					{
+					$files_to_split[ $src_idx ]['parts'][ $file['chunk'] ] = array( 'path' => $dest_dir,
+											 																	'name'	=> $spl_file['name']
+																											);
+
+					 }
+				}
+			}
+		}
+
+	// real choping...
+	reset( $files_to_split );
+	while( list($key, $file) = each( $files_to_split ) )
+		{
+		$src = sprintf("%s/%s/%s", $source_dir, $file['path'], $file['name']);
+		FileSplit( $src, $file['parts'],  $MEDIA_SPECS[ $MEDIA ]['max_file_size'], TRUE);
+		}
+	
+	
 
 	// let's write the index file, so it'd be easier to find given file later on
 	printf("Building index files...\n");
@@ -1421,8 +1624,6 @@ function filematch_ereg( $pattern, $str )
 		$cdindex .= "----+----------------------------------------------------\n";
 		for( $i=1; $i<=$total_cds; $i++ )
 			{
-			$set_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
-
 			$tmp = array();
 			foreach( $tossed AS $file )
 				{
@@ -1439,23 +1640,28 @@ function filematch_ereg( $pattern, $str )
 
 
 		// writting index and stamps...
-		$fh = fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
-		if( $fh )
+		for( $i=1; $i<=$total_cds; $i++ )
 			{
-			fputs( $fh, $cdindex );
-			fclose( $fh );
-			}
-		else
-			{
-			printf("*** Can't write index to '%s/%s'\n", $DESTINATION, $set_name);
-			}
+			$set_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
+			
+			$fh = fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
+			if( $fh )
+				{
+				fputs( $fh, $cdindex );
+				fclose( $fh );
+				}
+			else
+				{
+				printf("*** Can't write index to '%s/%s'\n", $DESTINATION, $set_name);
+				}
 
-		// CD stamps
-		$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
-		if( $fh )
-			{
-			fputs( $fh, sprintf("Out Core: %s", $OUT_CORE) );
-			fclose( $fh );
+			// CD stamps
+			$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
+			if( $fh )
+				{
+				fputs( $fh, sprintf("Out Core: %s", $OUT_CORE) );
+				fclose( $fh );
+				}
 			}
 		}
 
