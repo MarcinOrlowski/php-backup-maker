@@ -9,15 +9,25 @@
        big bugs, they may still lurk inside. Whenever you notice
        PDM to malfunction report this immidiately! Thanks.
 
-		 
+
 
  Development history:
  ------------------------
+ 2003.05.15 - v3.2 - mkisofs and cdrecord are now enabled by default,
+                     which let you use full featured PDM just out of
+                     a box without need to create pdm.ini.
+                   - fixed tosser issue causing some files to be
+                     tossed more than once (PDM used to move them to
+                     other CD set even they were already assigned).
+                     It ususally resulted on backups blown too much and
+                     files were spread over 1 more CD than they should
+                     be (CDs were less 'packed'). No other harms caused.
+
  2003.04.26 - v3.1 - under some conditions PDM used to duplicate some
                      files in internal structures, which caused i.e.
                      incorrect reports (tossed more files that we have).
                      It was harmless bug, and neither a file was lost
-                     nor duplicated. It was just visual oddity 
+                     nor duplicated. It was just visual oddity
                    - target temporary directories wasn't created as they
                      should, wrecking usability of PDM completely for
                      some action modes
@@ -31,7 +41,7 @@
                      and on n-th kept it finally competed while it should
                      put the same index file on each CD. Seems nobody
                      except me yet had to find something on multivolume
-                     backup yet ;) 
+                     backup yet ;)
                    - fixed argc/argv issue on register_globals disabled
                      environment
                    - implemented -split feature. See README for closer
@@ -51,7 +61,7 @@
                    - added "burn-iso" mode
                    - PDM used to remove CD sets directiories no matter of
                      used mode. Since these sets are in fact final results
-                     of 'link', 'move' and 'copy' modes it could hurt you 
+                     of 'link', 'move' and 'copy' modes it could hurt you
                      badly (in 'move' mode especialy').
                    - added 'pattern' option to let you filter out files
                      you process with aid of regexp patterns. This option
@@ -186,4 +196,4 @@
 
 
 --
-$Id: CHANGES,v 1.32 2003/04/29 17:14:26 carl-os Exp $
+$Id: CHANGES,v 1.33 2003/05/14 23:44:55 carl-os Exp $
