@@ -21,6 +21,10 @@
                      you process with aid of regexp patterns. This option
                      is only available if you run at least PHP 4.3.0
                      (feature request #698839 by Marcin Juszkiewicz)
+                   - added 'ereg-pattern' support for those who needs
+                     functionality close to 'pattern' but don't want
+                     to upgrade just for this. Please note that 'pattern'
+                     and 'ereg-pattern' may differ in pattern syntax
 
  2003.02.11 - v2.4 - fixed incorrect KB definition (was 10 times too big).
                      Fortunately there's no inpact as this was mostly
@@ -146,4 +150,4 @@
 
 
 --
-$Id: CHANGES,v 1.21 2003/03/06 20:08:26 carl-os Exp $
+$Id: CHANGES,v 1.22 2003/03/06 20:51:17 carl-os Exp $
