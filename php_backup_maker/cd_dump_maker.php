@@ -10,7 +10,7 @@
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "1.6" );
+define( "SOFTWARE_VERSION", "1.7 beta" );
 
 // for source formatted with tab spacing = 3
 
@@ -90,7 +90,7 @@ function Abort()
 	echo "\n*** Cleaning...\n";
 	CleanUp( TRUE );
 	
-	echo "\n*** Script terminated\n\n";
+	echo "*** Script terminated\n\n";
 	exit(10);
 }
 					 
@@ -169,8 +169,9 @@ dest - destination directory where CD sets will be created.
 
 
 printf(	"cd_dump_make.php v%s by Marcin Orlowski <carlos@wfmh.org.pl>\n\n" .
-	"Visit project home page: http://pdm.sf.net/ for newest release\n" .
-	"Please DO NOT report bugs by mail. Use bugtracker on the sf.net!\n\n"
+	"Visit project home page: http://pdm.sf.net/ for newest releases\n" .
+	"DO NOT report bugs by mail. Use bugtracker on project home page!\n\n" .
+	"Visit http://www.amazon.com/o/registry/20QXY0H72WMJK if you like it.\n\n"
 	, SOFTWARE_VERSION
 	);
 
