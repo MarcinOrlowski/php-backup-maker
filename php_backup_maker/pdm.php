@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.35 2003/04/13 15:33:22 carl-os Exp $
+// $Id: pdm.php,v 1.36 2003/04/13 16:18:14 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,7 +15,8 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "3.0 beta" );
+define( "SOFTWARE_VERSION"	, "3.0" );
+define( "SOFTWARE_URL"		, "http://freshmeat.net/projects/pdm" );
 
 
 // argv/argc workaround for register_globals disabled
@@ -1508,12 +1509,8 @@ function Toss( &$src, &$tossed, &$stats )
 
 			$next_id++;
 			}
-
-			
 		}
 }
-
-
 
 	// Tossing...
 	printf("Tossing...\n");
@@ -1653,7 +1650,7 @@ function Toss( &$src, &$tossed, &$stats )
 	printf("Building index files...\n");
 	if( $KNOWN_MODES[$COPY_MODE]['write'] )
 		{
-		$cdindex  = sprintf("\n Created by PDM v%s: http://freshmeat.net/projects/pdm\n", SOFTWARE_VERSION );
+		$cdindex  = sprintf("\n Created by PDM v%s: %s\n", SOFTWARE_VERSION, SOFTWARE_URL );
 		$cdindex .= sprintf(" Create date: %s, %s\n\n", date("Y.m.d"), date("H:m:s"));
 		$cdindex .= sprintf("%3.3s | %s\n", "CD", "Full path");
 		$cdindex .= "----+----------------------------------------------------\n";

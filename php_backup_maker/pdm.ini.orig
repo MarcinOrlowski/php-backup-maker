@@ -1,5 +1,5 @@
 ;
-; $Id: pdm.ini.orig,v 1.4 2003/01/15 00:33:57 carl-os Exp $
+; $Id: pdm.ini.orig,v 1.5 2003/04/13 16:18:13 carl-os Exp $
 ;
 ; Default config file for PDM script.
 ; 
@@ -91,3 +91,11 @@ fifo_size = 10
 ; Values: On/Off
 enabled = Off
 
+
+[SPLIT]
+; buffer_size [v3.0+]
+; Size, *always* in MB of internal splitting buffer. See README for more
+; information about splitting feature and internal buffer management
+; Default value is 0 (zero) which means PDM will automaticaly take care
+; of computing buffer_size
+buffer_size = 0
