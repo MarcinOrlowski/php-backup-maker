@@ -283,8 +283,8 @@ wasn't able to solve in elegant manner) it won't work with
 
 NOTE: When file is to splitted, PDM will create its copy
       and therefore will need additional disk space.
-		Read the pdm.ini/split/buffer_size information
-		above!
+      Read the pdm.ini/split/buffer_size information
+      above!
 
 
 Working over NFS
@@ -345,6 +345,11 @@ Examples
  ./pdm.php -s=STUFF -ereg-pattern='.*[^~]$'
 
 
+- to backup your home dir but not Mozilla's cache:
+
+ ./pdm.php -s=/home/YOU -ereg-pattern='^[.*/\.mozilla/.*/.*/Cache/.*]
+
+
 I want to know more about CD Burning
 -------------------------------------
 
@@ -370,5 +375,5 @@ Author
 
 
 --
-$Id: README,v 1.15 2003/05/24 13:41:39 carl-os Exp $
+$Id: README,v 1.16 2003/05/25 00:30:44 carl-os Exp $
 
