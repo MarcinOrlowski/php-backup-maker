@@ -2,10 +2,10 @@
 PDM? What a jerky name...
 -------------------------------------
 
-PDM stands for PHP Dump Maker. I formerly (as php backup maker)
+PDM stands for PHP Dump Maker. I (formerly as "php backup maker")
 wrote it as a quick solution to my 'why-there-is-not-useful-backup-tool'
 problem I've encountered one day wishing to backup some GB of my 
-data to CD in "my way{tm}". As it started to be useful, I decided
+data to CD "my way{tm}". As it started to be useful, I decided
 to give it a public release, to both help one having similar problems
 I had and to give my small contribution to Open Source movement
 from which I benefit now and before. The name of the tool had
@@ -16,28 +16,30 @@ on SourceForge.net. That's the whole story behind.
 What is it?
 -------------------------------------
 
-This is a small PHP script which reads a given source directory
-(or multiple directories) (with its subdirectories) and then
-creates a set of directories filled with the content of the
-source directory, arranged in groups to fit a given capacity.
+This is a PHP script which reads a given source directory
+(or multiple directories) with its subdirectories and creates
+set of directories filled with the content of the source
+directory, arranged in groups to fit a given capacity.
 It can be used to create CD sets for backups. It also supports
 ISO image creation, direct CD burning via cdrecord, automatic
-file index creation, and more.
+file index creation and more.
 
 
 Features
 -------------------------------------
 
- - multivolume backups
- - various capacity media support (any known CD)
- - file splitting for files bigger than media capacity
- - multi source backup
- - on-the-fly CD burning
- - ISO image creation
- - automatic index generating
- - pattern / regexp based file excluding
- - .pdm_ignore permament directory markers
- - bath, bed, breakfast
+ - multivolume backups,
+ - various capacity media support (any known CD),
+ - file splitting for files bigger than media capacity,
+ - multi source backup,
+ - on-the-fly CD burning,
+ - ISO image creation,
+ - optimised code to speed up ISO-over-NFS creation,
+ - automatic text index creation,
+ - pattern / regexp based file excluding,
+ - .pdm_ignore permament directory markers,
+ - portable code,
+ - bath, bed, breakfast.
 
 
 Requirements
@@ -235,7 +237,7 @@ Known options and switches are detailed below.
   -c -out-core     Specifies name prefix used for CD sets directories.
                    If not specified, Current date in YYYYMMDD format
                    will be taken.
-  -t -iso-dest		 Specifies destination directory for ISO images ('iso'
+  -t -iso-dest     Specifies destination directory for ISO images ('iso'
                    mode only). If not specified, '-dest' will be used.
                    If you don't use NFS, this option is useless for you.
                    See below for closer explanation.
@@ -375,5 +377,5 @@ Author
 
 
 --
-$Id: README,v 1.16 2003/05/25 00:30:44 carl-os Exp $
+$Id: README,v 1.17 2003/07/25 14:37:48 carl-os Exp $
 
