@@ -10,6 +10,10 @@
             - v2.4 - fixed incorrect KB definition (was 10 times too big).
                      Fortunately there's no inpact as this was mostly
                      never used. Reported by Jörg Schwiemann
+                   - PDM no longer checks if destination is writable if
+                     it's not going to write anything (mostly in -mode=test)
+                   - "mode" switch is now optional. When not specified, PDM
+                     falls back to "test" as default mode
 
  2003.01.23 - v2.3 - removed debug code that <ough> went to public
                      2.2 release making it rather useless unless one
@@ -121,4 +125,4 @@
 
 
 --
-$Id: CHANGES,v 1.15 2003/01/30 16:39:20 carl-os Exp $
+$Id: CHANGES,v 1.16 2003/02/08 14:01:15 carl-os Exp $
