@@ -13,11 +13,14 @@
 
  Development history:
  ------------------------
-            - v3.1 - under some conditions PDM used to duplicate some
+ 2003.04.26 - v3.1 - under some conditions PDM used to duplicate some
                      files in internal structures, which caused i.e.
                      incorrect reports (tossed more files that we have).
                      It was harmless bug, as in result not file was lost
                      nor duplicated phisically. Just visual oddity
+                   - target temporary directories wasn't created as they
+                     should, wrecking usability of PDM completely for
+                     some action modes
 
  2003.04.13 - v3.0 - reduced memory usage by replacing most foreach()
                      loops by while( list(), each() ) equivalents which
@@ -183,4 +186,4 @@
 
 
 --
-$Id: CHANGES,v 1.30 2003/04/26 14:27:11 carl-os Exp $
+$Id: CHANGES,v 1.31 2003/04/26 14:32:23 carl-os Exp $
