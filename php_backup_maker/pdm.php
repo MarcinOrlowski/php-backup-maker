@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.29 2003/03/12 09:54:50 carl-os Exp $
+// $Id: pdm.php,v 1.30 2003/03/12 21:36:48 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.5 beta" );
+define( "SOFTWARE_VERSION", "2.5" );
 
 
 //{{{ class_cli							.
@@ -371,6 +371,10 @@ if( $argc >= 1 )
 												"long"		=> 'out-core',
 												"info"		=> 'Specifies name prefix used for CD sets directories. ' .
 																	'If not specified, Current date in YYYYMMDD format will be taken.'
+												),
+					"split"		=> array('short'		=> 'p',
+												'long'		=> 'split'
+												'info'		=> 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).'
 												),
 
 					"pattern"		=>	array('long'	=> 'pattern',
