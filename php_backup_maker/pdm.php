@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.18 2003/02/08 14:02:02 carl-os Exp $
+// $Id: pdm.php,v 1.19 2003/02/08 14:10:47 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -680,10 +680,14 @@ function CleanUp( $force=FALSE )
 			for( $i=1; $i<=$total_cds; $i++ )
 				{
 				$src_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
-				$cmd = sprintf("rm -rf %s", $src_name);
 
-				printf("    Removing '%s'...\n", $src_name);
-				system( $cmd );
+				if( file_exists( $src_name ) )
+					{
+					$cmd = sprintf("rm -rf %s", $src_name);
+
+					printf("    Removing '%s'...\n", $src_name);
+					system( $cmd );
+					}
 				}
 			}
 		}
@@ -697,7 +701,7 @@ function Abort( $rc=10 )
 	CleanUp( TRUE );
 
 	if( $rc != 0 )
-	echo "*** Script terminated\n\n";
+		echo "*** Script terminated\n\n";
 	exit( $rc );
 }
 //}}}
