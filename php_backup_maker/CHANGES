@@ -3,11 +3,11 @@
  --------------------------------------------------
  Written by Marcin Orlowski <carlos@wfmh.org.pl>
  Home page: http://freshmeat.net/projects/pdm/
- 
- 
+
+
  Development history:
  ------------------------
-            - v2.2 - PDM now knows more about CD structure handling. You
+ 2003.01.19 - v2.2 - PDM now knows more about CD structure handling. You
                      should specify 'capacity' and 'reserved' any longer
                      ('media' type replaces these) - PDM internal computation
                      is now sector-based, which reduces risk of overburning
@@ -20,9 +20,9 @@
                      CDs are that cheap. I think it's better to waste 5 MB
                      than screw the whole CD due to overburnin problems etc
                      (it does not mean I'm not open for patches).
-                   - added comand line interface handling (with use of 
-                     class_cli). You are now able to overwrite default
-                     settings by specifing shell arguments. Please try 
+                   - added comand line interface handling (with use of
+                     class_cli.php). You are now able to overwrite default
+                     settings by specifing shell arguments. Please try
                      "pdm -help" for details.
                    - now checks if given source and destination directories
                      are in fact directories, if source is readable and
@@ -37,8 +37,10 @@
                      and available, when ordered to use them
                    - new ini section MKISOFS to turn mkisofs support and then
                      configure this tool
-                   - when in 'iso' mode, checks for older ISO images in 
+                   - when in 'iso' mode, checks for older ISO images in
                      destination folder to avoid accidental overwrites
+                   - pdm.ini is no longer obligatory. It's now optional. If
+                     no pdm.ini found, PDM falls back to defaults.
 
  2003.01.15 - v2.1 - added support for ignore marker. Ignore marker is a file
                      (by default '.pdm_ignore' but its name can be configured
@@ -63,7 +65,7 @@
                    - added .ini versioning, to be able to detect and inform
                      about ancient config files and (probably) misconfigured
                      features
-				
+
  2003.01.13 - v2.0 - added support for configuration file (pdm.ini). Script
                      first tries to read ~/.pdm/pdm.ini then, if not found,
                      tries /etc/pdm/pdm.ini
@@ -79,7 +81,7 @@
                      speeds up data processing *significantly*
                    - script used to leave temporary CD sets if ordered to Abort
                      after the sets had been created, but before processed
-                   - when in burn mode, it no longer asks to burn the CD 'again' 
+                   - when in burn mode, it no longer asks to burn the CD 'again'
                      if you wished not to burn the CD at all
                    - added config var to control FIFO size (important for all
                      on-the-fly burners)
@@ -94,21 +96,21 @@
  2002.10.20 - v1.3 - added ability of re-burning given CD set (useful if you
                      i.e. procceed too fast, and cdrecord didn't burn anything
                      due to i.e. no blank cd found etc),
-                   - reworked the 'UI' to be more friendly, and made most 
+                   - reworked the 'UI' to be more friendly, and made most
                      'requesters' to give 'positive' answer as default option,
-                     which lets you process your data just with [ENTER] key 
+                     which lets you process your data just with [ENTER] key
                      for most the time...
 
- 2002.08.13 - v1.2 - added "iso" copy mode, which acs like "link" but 
+ 2002.08.13 - v1.2 - added "iso" copy mode, which acs like "link" but
                      additionaly creates ISO images (requires mkisofs),
                    - added "burn" copy mode which burns cd set on-the-fly
                      (requires mkisofs and cdrecord). See $CD_DEVICE below!
 
- 2002.07.31 - v1.1 - instead of moving files, the script now symlinks them 
+ 2002.07.31 - v1.1 - instead of moving files, the script now symlinks them
                      by default (modify "COPY_MODE" to change this).
 
  2002.07.30 - v1.0 - initial release.
 
 
--- 
-$Id: CHANGES,v 1.11 2003/01/18 17:22:48 carl-os Exp $
+--
+$Id: CHANGES,v 1.12 2003/01/18 21:32:57 carl-os Exp $
