@@ -234,7 +234,11 @@ Known options and switches are detailed below.
   -t -iso-dest		 Specifies destination directory for ISO images ('iso'
                    mode only). If not specified, '-dest' will be used.
                    If you don't use NFS, this option is useless for you.
-                   See below for closer explanation
+                   See below for closer explanation.
+     -data-dir		 By default all backuped data is kept in "backup" subdir
+                   on each CD set. If you want to override this (don't!)
+                   this is for you. NOTE: PDM does NOT check for potential
+                   filename clash!
   -p -split        Enables file splitting feature (files bigger than
                    media size will be splitted into smaller hunks and
                    auto-join shell script will be generated to join
@@ -358,5 +362,5 @@ Author
 
 
 --
-$Id: README,v 1.13 2003/05/15 10:38:45 carl-os Exp $
+$Id: README,v 1.14 2003/05/15 13:40:19 carl-os Exp $
 

@@ -16,6 +16,16 @@
             - v3.3 - added 'iso-dest' option (for 'iso' mode only) to
                      speed up ISO image creation over NFS. See README
                      for closer details
+                   - changed CD structure. From now, all data inside
+                     each set is additionaly placed inside "backup"
+                     directory. This cleans whole backup and prevents
+                     some backuped files whose names equals to files
+                     created by PDM against being overwritten. See
+							'-data-dir' option if you want to override "backup"
+							but NOTE: PDM does not check for any conflicts
+                     unwisely chosen '-data-dir' may cause. My advice
+							is "hands off" ;)
+                     
 							
  2003.05.15 - v3.2 - mkisofs and cdrecord are now enabled by default,
                      which let you use full featured PDM just out of
@@ -202,4 +212,4 @@
 
 
 --
-$Id: CHANGES,v 1.35 2003/05/15 10:38:45 carl-os Exp $
+$Id: CHANGES,v 1.36 2003/05/15 13:40:18 carl-os Exp $
