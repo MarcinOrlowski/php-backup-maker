@@ -17,9 +17,9 @@
                      source directory scan may last a bit longer than
                      in former versions but it should not be noticeable
                      unless processing bunch of nested directories,
-							but from another hand, loosing symlinks may hurt
-							event stronger. Thanks to Jozef Riha for spotting
-							this (Support ticket #769543)
+                     but from another hand, loosing symlinks may hurt
+                     event stronger. Thanks to Jozef Riha for spotting
+                     this (RFE #769543)
 
  2003.05.24 - v3.3 - added 'iso-dest' option (for 'iso' mode only) to
                      speed up ISO image creation over NFS. See README
@@ -228,4 +228,4 @@
 
 
 --
-$Id: CHANGES,v 1.40 2003/07/25 14:37:48 carl-os Exp $
+$Id: CHANGES,v 1.41 2003/07/26 13:16:00 carl-os Exp $
