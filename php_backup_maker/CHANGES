@@ -16,12 +16,14 @@
  2003.05.15 - v3.2 - mkisofs and cdrecord are now enabled by default,
                      which let you use full featured PDM just out of
                      a box without need to create pdm.ini.
-                   - fixed tosser issue causing some files to be
-                     tossed more than once (PDM used to move them to
-                     other CD set even they were already assigned).
-                     It ususally resulted on backups blown too much and
-                     files were spread over 1 more CD than they should
-                     be (CDs were less 'packed'). No other harms caused.
+                   - fixed tosser issue causing some files to be tossed
+                     more than once (PDM used to move them to other CD
+                     set even they were already assigned). It ususally
+                     resulted on backups blown too much and files were
+                     spread over 1 more CD than they should be (CDs were
+                     less 'packed' with content). Additionally tossing
+                     was a bit slower due to this bug. No file loss nor
+                     other damages caused.
 
  2003.04.26 - v3.1 - under some conditions PDM used to duplicate some
                      files in internal structures, which caused i.e.
@@ -196,4 +198,4 @@
 
 
 --
-$Id: CHANGES,v 1.33 2003/05/14 23:44:55 carl-os Exp $
+$Id: CHANGES,v 1.34 2003/05/14 23:51:11 carl-os Exp $
