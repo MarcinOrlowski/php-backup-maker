@@ -20,6 +20,10 @@
                      CDs are that cheap. I think it's better to waste 5 MB
                      than screw the whole CD due to overburnin problems etc
                      (it does not mean I'm not open for patches).
+                   - added comand line interface handling (with use of 
+                     class_cli). You are now able to overwrite default
+                     settings by specifing shell arguments. Please try 
+                     "pdm -help" for details.
                    - now checks if given source and destination directories
                      are in fact directories, if source is readable and
                      destination writable to the user
@@ -107,4 +111,4 @@
 
 
 -- 
-$Id: CHANGES,v 1.10 2003/01/15 00:33:57 carl-os Exp $
+$Id: CHANGES,v 1.11 2003/01/18 17:22:48 carl-os Exp $
