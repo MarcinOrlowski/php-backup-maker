@@ -21,6 +21,8 @@
                      environment
                    - implemented -split feature. See README for closer
                      details how to backup your big stuff
+                   - now correctly reports name and size of file exceeding
+                     allowed media capacity
 
  2003.03.12 - v2.5 - cdrecord is now called with additional options:
                      speed=0 (max available), burnfree=On, gracetime=2
@@ -165,4 +167,4 @@
 
 
 --
-$Id: CHANGES,v 1.25 2003/03/31 21:02:31 carl-os Exp $
+$Id: CHANGES,v 1.26 2003/04/04 10:58:42 carl-os Exp $
