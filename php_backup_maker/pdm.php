@@ -4,7 +4,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.6 2003/01/13 14:51:50 carl-os Exp $
+// $Id: pdm.php,v 1.7 2003/01/14 14:50:29 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -20,7 +20,10 @@ define( "SOFTWARE_VERSION", "2.1 beta" );
 /******************************************************************************/
 
 	// DON'T touch this! Create ~/.pdm/pdm.ini to override defaults!
+	$min_config_version = 21;
 	$config_default = array(
+						"CONFIG"		=> array("version"			=> 0
+												  ),
 						"PDM"			=> array("capacity"			=> 700,
 													"reserved"			=> 4,
 													"ignore_file"		=> ".pdm_ignore",
@@ -327,11 +330,23 @@ function Abort( $rc=10 )
 	else
 		$config = $config_array["config"];
 
+
 	// some 'debug' info...
 	printf("Your memory_limit: %s, config: %s\n\n",
 					ini_get('memory_limit'),
 					$config_array["config_file"]
 			);
+
+   // let's check for outdated configs
+	if( $config["CONFIG"]["version"] < $min_config_version )
+		{
+		printf("NOTE: It seems your %s is outdated.\n", $config_array["config_file"]);
+		printf("      This PDM version offers bigger configurability.\n");
+		printf("      Please check 'pdm.ini.orig' to find out what's new\n\n");
+		if( GetYN( FALSE ) == FALSE )
+			Abort();
+		}
+												
 
 
 	// geting user params...
