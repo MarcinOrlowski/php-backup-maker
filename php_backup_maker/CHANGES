@@ -7,6 +7,35 @@
  
  Development history:
  ------------------------
+            - v2.2 - PDM now knows more about CD structure handling. You
+                     should specify 'capacity' and 'reserved' any longer
+                     ('media' type replaces these) - PDM internal computation
+                     is now sector-based, which reduces risk of overburning
+                     your CD by 99% and should produce valid image for any
+                     number of files in source data set, which was previously
+                     complicated sometimes and required to play with RESERVED
+                     value manually. However current implementation ain't
+                     perfect (yet), and might not fill each set as tightly
+                     as you may wish, but frankly I don't care that much when
+                     CDs are that cheap. I think it's better to waste 5 MB
+                     than screw the whole CD due to overburnin problems etc
+                     (it does not mean I'm not open for patches).
+                   - now checks if given source and destination directories
+                     are in fact directories, if source is readable and
+                     destination writable to the user
+                   - added optional (see check_files_readability in .ini)
+                     file checking, to ensure each processed file is really
+                     readable to user. This shields you from being kicked by
+                     mkisofs (i.e. during burn of 5th CD), which aborts if
+                     unable to read any file. This option is not active if
+                     you launch PDM as root (as it simply make no sense then)
+                   - PDM now ensures you have mkisofs and cdrecord installed
+                     and available, when ordered to use them
+                   - new ini section MKISOFS to turn mkisofs support and then
+                     configure this tool
+                   - when in 'iso' mode, checks for older ISO images in 
+                     destination folder to avoid accidental overwrites
+
  2003.01.15 - v2.1 - added support for ignore marker. Ignore marker is a file
                      (by default '.pdm_ignore' but its name can be configured
                      via ini file) that tells PDM to skip the directory it
@@ -78,4 +107,4 @@
 
 
 -- 
-$Id: CHANGES,v 1.9 2003/01/14 14:55:14 carl-os Exp $
+$Id: CHANGES,v 1.10 2003/01/15 00:33:57 carl-os Exp $
