@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.21 2003/02/11 11:22:02 carl-os Exp $
+// $Id: pdm.php,v 1.22 2003/02/22 20:12:34 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.4" );
+define( "SOFTWARE_VERSION", "2.5 beta" );
 
 
 //{{{ class_cli							.
@@ -1316,7 +1316,7 @@ function AbortIfNoTool( $tool )
 							if( GetYN(TRUE) )
 								{
 								$mkisofs  = sprintf("mkisofs %s %s", $MKISOFS_PARAMS, $src_name);
-								$cdrecord = sprintf("cdrecord -fs=%dm -v -eject -dev=%s - ", $config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
+								$cdrecord = sprintf("cdrecord -fs=%dm -v driveropts=burnfree speed=0 gracetime=2 -eject -dev=%s - ", $config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
 								$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
 
 								$code = system( $burn_cmd );

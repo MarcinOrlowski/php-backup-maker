@@ -7,6 +7,11 @@
 
  Development history:
  ------------------------
+            - v2.5 - cdrecord is now called with additional options:
+	                  speed=0 (max available), burnfree=On, gracetime=2
+                     (burning starts 6 seconds faster (default grace is 8))
+                   - removed forgotten debug code in index creation part
+                     (not a harmful thingie anyway)
  2003.02.11 - v2.4 - fixed incorrect KB definition (was 10 times too big).
                      Fortunately there's no inpact as this was mostly
                      never used. Reported by Jörg Schwiemann
@@ -131,4 +136,4 @@
 
 
 --
-$Id: CHANGES,v 1.18 2003/02/11 11:22:02 carl-os Exp $
+$Id: CHANGES,v 1.19 2003/02/22 20:12:34 carl-os Exp $
