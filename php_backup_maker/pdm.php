@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.47 2003/05/24 15:05:05 carl-os Exp $
+// $Id: pdm.php,v 1.48 2003/05/24 16:16:35 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,8 +15,10 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION"	, "3.3" );
-define( "SOFTWARE_URL"		, "http://freshmeat.net/projects/pdm" );
+define( "SOFTWARE_VERSION"				, "3.3" );
+define( "SOFTWARE_VERSION_BETA"		, TRUE );
+define( "SOFTWARE_VERSION_BETA_STR"	, " beta");
+define( "SOFTWARE_URL"					, "http://freshmeat.net/projects/pdm" );
 
 
 // argv/argc workaround for register_globals disabled
@@ -26,10 +28,9 @@ if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 
 //{{{ class_cli							.
 
-
 /***************************************************************************
 **
-** $Id: pdm.php,v 1.47 2003/05/24 15:05:05 carl-os Exp $
+** $Id: pdm.php,v 1.48 2003/05/24 16:16:35 carl-os Exp $
 **
 ** (C) Copyright 2003-2003 * All rights reserved
 **     Marcin Orlowski <carlos@wfmh.org.pl>
@@ -69,6 +70,8 @@ class CLI
 	var	$help_command_name = "";
 	var	$help_short_len = 0;
 	var	$help_long_len = 0;
+
+	var	$page_width=74;
 
 function CLI( $args="" )
 {
@@ -136,7 +139,7 @@ function GetOptionArg( $key )
 function GetOptionArgCount( $key )
 {
 	$result = 0;
-
+	
 	if( isset( $this->args[$key] ) )
 		{
 		if( is_array( $this->args[$key]['param'] ) )
@@ -144,7 +147,7 @@ function GetOptionArgCount( $key )
 		else
 			$result = 1;
 		}
-
+	
 	return( $result );
 }
 
@@ -168,15 +171,13 @@ function ShowErrors()
 // produces usge page, based on $args
 function ShowHelpPage()
 {
-	$fmt = sprintf("  %%-%ds %%-%ds %%s%%s\n", ($this->help_short_len+1), ($this->help_long_len+1) );
+	$fmt = sprintf("  %%-%ds %%-%ds ", ($this->help_short_len+1), ($this->help_long_len+1) );
 
 	$msg = sprintf("\nUsage: %s -opt=val -switch ...\n" .
 						"\nKnown options and switches are detailed below.\n" .
 						" [R] means the option is required,\n" .
-						" [S] stands for valueless switch, otherwise\n" .
-						"     option requires an value,\n" .
-						" [M] means you can use this option as many times,\n" .
-						"     as you need,\n" .
+						" [S] stands for valueless switch, otherwise option requires an value,\n" .
+						" [M] means you can use this option as many times, as you need,\n" .
 						"\n", $this->help_command_name );
 
 	foreach( $this->args AS $entry )
@@ -190,7 +191,24 @@ function ShowHelpPage()
 		$short	= ($entry['short'] !== FALSE) ? (sprintf("-%s", $entry['short'])) : "";
 		$long		= ($entry['long']  !== FALSE) ? (sprintf("-%s", $entry['long']))  : "";
 
-		$msg .= sprintf( $fmt, $short, $long, $flags, $entry['info'] );
+		$tmp = sprintf( $fmt, $short, $long );
+		$indent = strlen( $tmp );
+		$offset = $this->page_width - $indent;
+
+		$desc = sprintf("%s%s", $flags, $entry['info'] );
+
+		$msg .= sprintf("%s%s\n", $tmp, substr( $desc, 0, $offset ));
+
+		// does it fit?
+		if( strlen( $entry['info'] ) > $offset )
+			{
+			$_fmt = sprintf("%%-%ds%%s\n", $indent);
+			$_text = substr( $desc, $offset );
+			$_lines = explode( "\n", wordwrap($_text, $offset ));
+
+			foreach( $_lines AS $_line )
+				$msg .= sprintf( $_fmt, "", trim($_line) );
+			}
 		}
 
 	$msg .= "\n";
@@ -244,7 +262,7 @@ function _InitSourceArgsArray( $args )
 
 // checks if given argumens are known, unique (precheck
 // was made in GetArgs, but we still need to check against
-// non 'multi' arguments given twice
+// non 'multi' arguments given twice 
 function _ValidateArgs()
 {
 	$result = TRUE;
@@ -403,7 +421,7 @@ if( $argc >= 1 )
 				$this->found_args[ $arg_key ] = array("key"	=> $arg_key,
 													 				"val"	=> array()
 													 			);
-			if( !(in_array( $arg_val, $this->found_args[ $arg_key ]['val'] ) ) )
+			if( !(in_array( $arg_val, $this->found_args[ $arg_key ]['val'] )) )
 				$this->found_args[ $arg_key ]['val'][] = $arg_val;
 			}
 		}
@@ -854,7 +872,7 @@ function UpdateCheck()
 			if( version_compare( sprintf("%s.0",$version), sprintf("%s.0", SOFTWARE_VERSION), ">") )
 				printf("   Version %s is now available\n", $version );
 			else
-				printf("   You're up to date.\n");
+				printf("   No upgrade. You're up to date.\n");
 			}
 		else
 			{
@@ -1145,15 +1163,23 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 /******************************************************************************/
 
+// main() ;-)
+
 	printf(
 		"\n" .
-		"PHP Dump Maker v%s by Marcin Orlowski <carlos@wfmh.org.pl>\n" .
+		"PHP Dump Maker v%s%s by Marcin Orlowski <carlos@wfmh.org.pl>\n" .
 		"----------------------------------------------------------------\n" .
 		"Visit project home page: http://pdm.sf.net/ for newest releases\n" .
 		"DO NOT report bugs by mail. Use bugtracker on project home page!\n" .
 		"Visit http://www.amazon.com/o/registry/20QXY0H72WMJK too!\n"
 		, SOFTWARE_VERSION
+		, (SOFTWARE_VERSION_BETA) ? SOFTWARE_VERSION_BETA_STR : ""
+		
+		
 		);
+
+	if( SOFTWARE_VERSION_BETA )
+		printf("\n*** This is BETA version. May crash, trash, splash... Be warned!\n");
 
 
 	$cCLI = new CLI( $args );
@@ -1826,7 +1852,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	printf("Building index files...\n");
 	if( $KNOWN_MODES[$COPY_MODE]['write'] )
 		{
-		$data_header  = sprintf("\n Created by PDM v%s: %s\n", SOFTWARE_VERSION, SOFTWARE_URL );
+		$data_header  = sprintf("\n Created by PDM v%s%s: %s\n", SOFTWARE_VERSION, ( SOFTWARE_VERSION_BETA ? SOFTWARE_VERSION_BETA_STR :""), SOFTWARE_URL );
 		$data_header .= sprintf(" Create date: %s, %s\n\n", date("Y.m.d"), date("H:m:s"));
 
 		$cdindex  = $data_header;
