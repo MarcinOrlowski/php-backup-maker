@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.32 2003/04/04 10:58:42 carl-os Exp $
+// $Id: pdm.php,v 1.33 2003/04/08 21:48:48 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -846,7 +846,7 @@ function filematch_ereg( $pattern, $str )
 	// setting up fake wrapper - using wrapper speeds upi further processing
 	// as we don't need any comparisions for each call, which would punish
 	// us whenever number of processing files exceeds 10 ;)
-	$FILEMATCH_WRAPPER = filematch_fake;
+	$FILEMATCH_WRAPPER = 'filematch_fake';
 
 /******************************************************************************/
 
@@ -968,14 +968,14 @@ function filematch_ereg( $pattern, $str )
 			}
 		else
 			{
-			$FILEMATCH_WRAPPER = filematch_fnmatch;
+			$FILEMATCH_WRAPPER = 'filematch_fnmatch';
 			$FILEMATCH_DEF_PATTERN = "*";
 			}
 		}
 
 	if( $cCLI->IsOptionSet("ereg-pattern") )
 		{
-		$FILEMATCH_WRAPPER = filematch_ereg;
+		$FILEMATCH_WRAPPER = 'filematch_ereg';
 		$FILEMATCH_DEF_PATTERN = ".*";
 		}
 
