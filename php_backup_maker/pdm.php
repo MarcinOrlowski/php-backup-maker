@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.51 2004/08/02 06:35:00 carl-os Exp $
+// $Id: pdm.php,v 1.52 2004/08/13 18:12:17 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -30,7 +30,7 @@ if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 
 /***************************************************************************
 **
-** $Id: pdm.php,v 1.51 2004/08/02 06:35:00 carl-os Exp $
+** $Id: pdm.php,v 1.52 2004/08/13 18:12:17 carl-os Exp $
 **
 ** (C) Copyright 2003-2003 * All rights reserved
 **     Marcin Orlowski <carlos@wfmh.org.pl>
@@ -959,20 +959,23 @@ function CleanUp( $force=FALSE )
 
 function CleanUp_RemoveSets( $total_cds )
 {
-	global $OUT_CORE;
+	global $OUT_CORE, $DESTINATION;
 
 	for( $i=1; $i<=$total_cds; $i++ )
 		{
-		$src_name = sprintf("%s_%02d", $OUT_CORE, $i);
+		$src_name = sprintf("%s/%s_%02d", $DESTINATION, $OUT_CORE, $i);
 
 		if( file_exists( $src_name ) )
 			{
 			$cmd = sprintf("rm -rf %s", $src_name);
-
-			printf("    Removing '%s'...\n", $src_name);
 			system( $cmd );
 			}
+
+		ProgressBarRaw( ProgressBarCalcPercent( $total_cds, $i ), " Cleaning" );
 		}
+
+	ProgressBarRaw( 100, " Cleaning" );
+	printf("\n");
 }
 //}}}
 //{{{ Abort									.
@@ -1211,7 +1214,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 	printf(
 		"\n" .
-		"PHP Dump Maker v%s%s by Marcin Orlowski <carlos@wfmh.org.pl>\n" .
+		"PHP Backup Maker v%s%s by Marcin Orlowski <carlos@wfmh.org.pl>\n" .
 		"----------------------------------------------------------------\n" .
 		"Visit project home page: http://pdm.sf.net/ for newest releases\n" .
 		"DO NOT report bugs by mail. Use bugtracker on project home page!\n" .
@@ -1413,7 +1416,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		}
 
 	// go to dest dir...
-	chdir( $DESTINATION );
+//	chdir( $DESTINATION );
 
 
 	// let's check if source and dest are directories...
@@ -1480,6 +1483,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 			else
 				{
 				CleanUp_RemoveSets( 99 );
+				break;
 				}
 			}
 
@@ -1785,7 +1789,6 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 
 	// tossing standard (non splitted files)
-	$progress_bar = "##################################################";
 	reset( $tossed );
 	while( list($key, $file) = each( $tossed ) )
 		{
@@ -1803,12 +1806,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		if( $file['split'] == FALSE )
 			{
 			if( ( $cnt % $base ) == 0 )
-				{
-				$percent = 100-round( 100-(($total_files-$cnt)*100 / $total_files) );
-				printf("Preparing: [%-50s] %3d%%\r",
-					substr($progress_bar, 0, $percent/2 ),
-					$percent);
-				}
+				ProgressBarRaw( ProgressBarCalcPercent( $total_files, $cnt ), "Preparing" );
 
 			$src  = MakePath( $file['path'], $file["name"] );
 			$dest_dir = sprintf("%s/%s_%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"] );
@@ -1834,6 +1832,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 					$prefix = "";
 					// absolute paths are absolute. period
+/*
 					if( $src{0} != '/' )
 						{
 						$prefix = "../";
@@ -1846,6 +1845,8 @@ function CreateSet( &$stats, $current_cd, $capacity )
 						}
 
 					$_path = MakePath( $prefix, $src );
+*/
+					$_path = realpath( $src );
 					if( symlink( $_path, $dest ) == FALSE )
 						printf("symlink() failed: %s => %s\n", $_path, $dest);
 					break;
@@ -1854,6 +1855,8 @@ function CreateSet( &$stats, $current_cd, $capacity )
 			$cnt--;
 			}
 		}
+
+	ProgressBarRaw( 100, "Preparing" );
 	printf("\n");
 
 
@@ -1968,16 +1971,15 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 				$MKISOFS_PARAMS = sprintf(	" -R -A 'PDM BACKUP CREATOR  http://pdm.sf.net/' -follow-links -joliet-long -joliet -rock -full-iso9660-filenames " .
 													" -allow-lowercase -allow-multidot -hide-joliet-trans-tbl -iso-level 2 " .
-													" -overburn -V %s -volset %s -volset-size %d -volset-seqno %d ",
-														$vol_name, $vol_name, $total_cds, $i );
+													" -overburn -V %s -volset %s ",
+														$vol_name, $vol_name );
 
 				switch( $COPY_MODE )
 					{
 					case "iso":
 						{
-						$cmd = sprintf("mkisofs %s -output %s/%s %s", $MKISOFS_PARAMS, $ISO_DEST, $out_name, $src_name);
-						printf("Creating: %s of %s\n", $out_name, $src_name );
-						system( $cmd );
+						$cmd = sprintf("mkisofs %s -output %s/%s %s/%s 2>&1", $MKISOFS_PARAMS, $ISO_DEST, $out_name, $DESTINATION, $src_name);
+						ProgressBar( $cmd, sprintf("ISO %s", $out_name) );
 						}
 						break;
 
@@ -2000,9 +2002,8 @@ function CreateSet( &$stats, $current_cd, $capacity )
 										case "burn-iso":
 											{
 											// making temporary iso image 1st
-											$cmd = sprintf("mkisofs %s -output %s %s", $MKISOFS_PARAMS, $out_name, $src_name);
-											printf("Creating: %s of %s\n", $out_name, $src_name );
-											system( $cmd );
+											$cmd = sprintf("mkisofs %s -output %s %s/%s 2>&1", $MKISOFS_PARAMS, $out_name, $DESTINATION, $src_name);
+											ProgressBar( $cmd, sprintf("ISO %s", $out_name) );
 
 											switch( $MEDIA_SPECS[ $MEDIA ]['handler'] )
 												{
@@ -2024,7 +2025,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 											switch( $MEDIA_SPECS[ $MEDIA ][ 'handler' ] )
 												{
 												case 'cd':
-													$mkisofs  = sprintf("mkisofs %s %s", $MKISOFS_PARAMS, $src_name);
+													$mkisofs  = sprintf("mkisofs %s %s/%s", $MKISOFS_PARAMS, $DESTINATION, $src_name);
 													$cdrecord = sprintf("cdrecord -fs=%dm -v driveropts=burnfree speed=0 gracetime=2 -eject -dev=%s - ",
 															$config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
 													$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
@@ -2040,7 +2041,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 											// Go!
 
-									$code = system( $burn_cmd );
+									ProgressBar( $burn_cmd, "Burning" );
 									printf("\nThe '%s' has been burnt.\n\n", $src_name);
 
 									$burn_again = GetYN( FALSE, sprintf("Do you want to burn '%s' again?", $src_name) );
@@ -2106,4 +2107,40 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 	printf("\nDone.\n\n");
 
+
+
+function ProgressBarRaw( $percent, $msg="Working" )
+{
+	$progress_bar = "##################################################";
+
+	printf( "%s: [%-50s] %.1f%%\r", $msg, substr($progress_bar, 0, $percent/2 ), $percent );
+}
+
+function ProgressBarCalcPercent( $total, $current )
+{
+	$percent = 100.0-(float)round( 100-(($total-$current)*100 / $total) );
+
+	return( $percent );
+}
+
+function ProgressBar( $cmd, $msg )
+{
+	$pattern = '\'(\ [0-9]{1,2})*\.([0-9]{2})*% done, estimate finish (.*)+\'siU';
+
+	printf("CMD: %s\n", $cmd);
+
+	$ph = popen( $cmd, "r" );
+	while (!feof($ph))
+		{
+		$buffer = fgets($ph, 256);
+		if( preg_match( $pattern, $buffer, $match ) )
+			{
+			ProgressBarRaw( (float)sprintf("%s.%s" , $match[1], $match[2]), $msg );
+			}
+		}
+	pclose( $ph );
+
+	ProgressBarRaw( 100, $msg );
+	printf("\n");
+}
 ?>
