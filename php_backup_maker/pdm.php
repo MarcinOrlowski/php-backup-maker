@@ -4,7 +4,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.3 2003/01/13 02:45:51 carl-os Exp $
+// $Id: pdm.php,v 1.4 2003/01/13 02:47:26 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -89,16 +89,14 @@ function GetInput()
 //{{{ MakeDir					.
 function MakeDir( $path )
 {
-//	printf("MakeDir: '%s'\n", $path);
-
 	$tmp = explode("/", $path);
 	$dir = "/";
+
 	for( $i=0; $i<count($tmp); $i++ )
 		{
 		if( $tmp[$i] != "" )
 			$dir .= sprintf("%s/", $tmp[$i]);
 
-printf("%s", $dir);
 		if( $dir != "" )
 			{
 			if( file_exists( $dir ) === FALSE )
@@ -106,8 +104,6 @@ printf("%s", $dir);
 			else
 				printf( "E");
 			}
-
-		printf("\n");
 		}
 }
 //}}}
