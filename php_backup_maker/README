@@ -1,0 +1,214 @@
+
+What is it?
+-------------------------------------
+
+This is a small PHP script which reads a given source directory
+(with its subdirectories) and then creates a set of directories
+filled with the content of the source directory, arranged in
+groups to fit a given capacity. It can be used to create CD sets
+for backups. It also supports ISO image creation, direct CD
+burning via cdrecord, automatic file index creation, and more.
+
+
+Requirements
+-------------------------------------
+
+Obligatory:
+
+ - PHP interpreter <http://php.net>. This script is developed
+   with PHP 4.2.x but any 4.x would do (3.x may fail - I don't
+   care, neither consider any 'fixes' when this appears true).
+
+Optional:
+
+ - mkisofs <http://freshmeat.net/projects/mkisofs/>
+   if you want to create ISO images or burn CDs
+ - cdrecord <http://freshmeat.net/projects/cdrecord>
+   if you want to burn any CDs with this script
+	(you need to configure your kernel first and config
+	the script - see inside for details)
+
+
+Configuration
+-------------------------------------
+
+To make script to work well, you should configure it first.
+Use any text editor, and open the script body itself, look
+for the following variables, and correct defaults if needed.
+
+Plase note that if you don't plan to burn nor produce ISO
+images, you can ignore most of these settings. Check
+NOTEs below for more details about what to keep eye on
+mostly.
+
+
+ CDR device
+ ---------------
+
+ $CD_DEVICE = "1,0,0";
+
+ if you want to burn anything you need to tell on which 
+ device your CDR burner is. Use "cdrecord -scanbus" to
+ find this out, and put the 1st column value as shown
+ on above example. If you don't plan to burn, nor have
+ any burner, leave it as is.
+
+
+ CD capacity
+ ---------------
+ 
+ $CD_CAPACITY = 700;
+
+ Specify how many megabytes (MB) fits on your CDRs. 700MB
+ are most widely used. Check the booklet for details.
+ 
+ $RESERVED = 4;
+ 
+ We need to reserve some space for internal data stuctures
+ each CD needs. Default 4MB of reserved space shall be fine
+ for most burnouts, but if you got lot of small files to
+ process (say 30000 or 45000 files in total) you most probably
+ will may need to increase this (even up to 40MB).
+ It's all because of technical requirements: each file written
+ on CD takes some space for its 'body' (the data it really holds),
+ but we also need to store file  name, it's attributes and
+ so on. And this data also needs to fit on the CD. If you
+ reserve insufficient space, you get 'broken' ISO images
+ (exceeding real CD capacity) or broken CDs.
+
+ I plan to implement smarter computation in future for this.
+
+ Yes, the more you reserve, the less 'real data' fits on
+ the CD (on the above example we really fit 696MB on
+ each CD), but you can't change it.
+
+ NOTE: If you don't plan to burn anything nor create ISO
+       images you can set RESERVED to 0 and CD_CAPACITY
+		 to the value you want per set.
+
+
+ FIFO queue size
+ ---------------
+
+ $FIFO_SIZE = 10;
+
+ FIFO queue is used when you burn on-the-fly. It's memory buffer
+ used to communicate between mkisofs that creates CD structures
+ and cdrecord that burns your data. If it's too small, cdrecord
+ may burn faster than mkisofs is able to deliver the data (this
+ mostly happens if you burn thousands of millions small files
+ on-the-fly). Unless you use burn-proof device, you get
+ "Buffer underrun" if this happen, and in result broken CD.
+ By default, 10MB is used, which shall be fine for 99,9% of
+ uses. Most probably you won't ever need to touch this.
+
+
+Configuring PHP
+-------------------------------------
+
+No special configuration is needed, but please make sure you
+don't have command line scripts working in Safe Mode (most
+probably you have this option turned off), as it needs to 
+disable script timeout limits (it takes some time to process
+all the data). You also should check if memory_limit in your
+config file (/etc/php4/CGI/php.ini) is high enough. I don't
+belive default 8MB will do for anything. If PHP aborts while
+processing your files throwing memory related errors, edit
+your config and increase it. I usually got 30MB (but even
+that wasn't enough for 45000 file set).
+
+
+Usage
+-------------------------------------
+
+Run it without arguments to get help page:
+
+ ./cd_dump_maker.php mode src [dest]
+
+mode - specify method of CD set creation. Available:
+
+       "test" - is you want to see how many CDs you
+                need to store you data, try this
+
+       "move" - moves source files into destination CD
+                set directory much free disk space as
+                source takes.
+
+       "copy" - copies files into destination CD set
+                directory. Needs as much free disk space
+                as source data takes
+
+       "link" - creates symbolic links to source data
+                in destination directory. NOTE: some
+                CD burning software needs to be ordered
+                to follow symlinks, otherwise you burn
+                no data!
+					 
+       "iso"  - acts as "link" described above, but
+                additionally creates ISO image files for
+                each CD created. Requires mkisofs and
+                as much free disk space as source takes
+
+       "burn" - burns CD sets on-the-fly.
+
+src  - source directory (i.e. "data/") which you are going
+       to process and backup
+
+dest - destination directory where CD sets will be created.
+       If ommited, current directory will be used (".")
+
+
+How it works:
+-------------------------------------
+
+First, it scans source directory to learn its structure,
+get files and subdirs. Then it toss the data to fit in
+given CD_CAPACITY capacity. Then, depending on the 
+work mode it either copies the data, moves it or links.
+Additionally it may burn it. 
+
+For "iso" and "burn" it needs to create temporary data 
+sets, which are produced as in "link" mode.
+
+
+Examples
+-------------------------------------
+
+To check how many CDs you will need to backup STUFF directory:
+
+ ./cd_dump_maker.php test STUFF
+
+
+to burn STUFF directory (on the fly):
+
+ ./cd_dump_maker.php burn STUFF
+
+
+to create ISO images (for any reason ;-)
+
+ ./cd_dump_maker.php iso STUFF
+
+ 
+I want to know more about CD Burning
+-------------------------------------
+ 
+Bother to know more about all the CDs and CD burning topics?
+Visit a great source of practical information at:
+
+  http://www.cdrfaq.org
+
+
+Bugs? Suggestions?
+-------------------------------------
+
+If you got any bug report or feature request, PLEASE, PLEASE
+USE SOURCEFORGE.NET bugtracker or forum for this. DO NOT
+mail me directly!
+
+
+Author
+-------------------------------------
+
+ Written by Marcin Orlowski <carlos@wfmh.org.pl>
+ Home page: http://freshmeat.net/projects/pbm/
+	

@@ -1,0 +1,42 @@
+
+ Written by Marcin Orlowski <carlos@wfmh.org.pl>
+ Home page: http://freshmeat.net/projects/pbm/
+ 
+ 
+ Development history:
+ ------------------------
+ 
+ 2003.01.01 - v1.6 - code spead-up ('progress' is repored less often, which
+                     speeds up data processing *significantly*
+                   - script used to leave temporary CD sets if ordered to Abort
+                     after the sets had been created, but before processed
+                   - when in burn mode, it no longer asks to burn the CD 'again' 
+                     if you wished not to burn the CD at all
+                   - added config var to control FIFO size (important for all
+                     on-the-fly burners)
+                   - wrote some kind of documentation (check README ;-)
+                   - modified configuration vars to be more self explanatory
+
+ 2002.12.10 - v1.5 - seems mkdir() needs now two parameters.
+
+ 2002.11.09 - v1.4 - changed the "Cleanup temp data question?",
+                   - cleaned source code a bit, to better fit in 80 columns.
+
+ 2002.10.20 - v1.3 - added ability of re-burning given CD set (useful if you
+                     i.e. procceed too fast, and cdrecord didn't burn anything
+                     due to i.e. no blank cd found etc),
+                   - reworked the 'UI' to be more friendly, and made most 
+                     'requesters' to give 'positive' answer as default option,
+                     which lets you process your data just with [ENTER] key 
+                     for most the time...
+
+ 2002.08.13 - v1.2 - added "iso" copy mode, which acs like "link" but 
+                     additionaly creates ISO images (requires mkisofs),
+                   - added "burn" copy mode which burns cd set on-the-fly
+                     (requires mkisofs and cdrecord). See $CD_DEVICE below!
+
+ 2002.07.31 - v1.1 - instead of moving files, the script now symlinks them 
+                     by default (modify "COPY_MODE" to change this).
+
+ 2002.07.30 - v1.0 - initial release.
+
