@@ -17,6 +17,16 @@
                      working directory (the dir it resides in).
                    - prior this version PDM had serious problems creating
                      some files and links if dest dir was specified
+                   - Y/N 'requesters' can now accept 'Y', 'N' or empty answer
+                     (equal to default answer) only. Feeding with crap repeats
+                     the question unless valid answer is given.
+                   - added ability to repeat whole burning (when in 'burn'
+                     mode) again and again. This gives you a possibility to
+                     make more than one copy of produced sets or to burn
+                     selected set (i.e. when you skipped it, aborted by
+                     mistake)
+                   - PDM does no startup check against old set directories
+                     to avoid potential problems with file/dir name collisions
 				
  2003.01.13 - v2.0 - added support for configuration file (pdm.ini). Script
                      first tries to read ~/.pdm/pdm.ini then, if not found,
@@ -65,4 +75,4 @@
 
 
 -- 
-$Id: CHANGES,v 1.6 2003/01/13 02:45:51 carl-os Exp $
+$Id: CHANGES,v 1.7 2003/01/13 14:51:49 carl-os Exp $

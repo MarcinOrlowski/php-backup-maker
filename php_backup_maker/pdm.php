@@ -4,7 +4,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.5 2003/01/13 02:48:35 carl-os Exp $
+// $Id: pdm.php,v 1.6 2003/01/13 14:51:50 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -33,7 +33,7 @@ define( "SOFTWARE_VERSION", "2.1 beta" );
 						);
 	$config = array();
 
-	$out_core = date("Ymd");		// the CD directory prefix (today's date by default)
+	$OUT_CORE = date("Ymd");		// the CD directory prefix (today's date by default)
 											// Note: it can't be empty (due to CleanUp() conditions)!
 
 /** No modyfications below this line are definitely required ******************/
@@ -56,8 +56,17 @@ function GetNo( $prompt="" )
 {
 	if( $prompt=="" )
 		$prompt="Do you want to proceed [y/N]: ";
-	echo $prompt;
-	return( (strtolower(GetInput()) == 'y' ) ? TRUE : FALSE );
+
+	while( TRUE )
+		{
+		echo $prompt;
+		$answer = strtolower( GetInput() );
+
+		if( $answer == 'y' )
+			return( TRUE );
+		if( ($answer == 'n') || ($answer == "") )
+			return( FALSE );
+		}
 }
 //}}}
 //{{{   GetYes					.
@@ -65,8 +74,17 @@ function GetYes( $prompt="" )
 {
 	if( $prompt == "" )
 		$prompt="Do you want to proceed [Y/n]: ";
-	echo $prompt;
-	return( (strtolower(GetInput()) == 'n' ) ? FALSE : TRUE );
+
+	while( TRUE )
+		{
+		echo $prompt;
+		$answer = strtolower( GetInput() );
+
+		if( ($answer == 'y') || ($answer == "") )
+			return( TRUE );
+		if( $answer == 'n')
+			return( FALSE );
+		}
 }
 //}}}
 //{{{ GetInput					.
@@ -209,10 +227,10 @@ dest - destination directory where CD sets will be created.
 //{{{ CleanUp					.
 function CleanUp( $force=FALSE )
 {
-	global $COPY_MODE, $total_cds, $out_core;
+	global $COPY_MODE, $total_cds, $OUT_CORE;
 
 	// probably not set yet?
-	if( ($total_cds < 1) || ($out_core=="") )
+	if( ($total_cds < 1) || ($OUT_CORE=="") )
 		return;
 
 	if( ($COPY_MODE=="iso") || ($COPY_MODE=="burn") )
@@ -225,7 +243,7 @@ function CleanUp( $force=FALSE )
 
 			default:
 				printf("\nCleaning up temporary data...\n");
-				$do_clean = GetYN(TRUE, "Clean temporary directories? [Y/n]: ");
+				$do_clean = GetYN(TRUE, "  Clean temporary directories? [Y/n]: ");
 				break;
 			}
 
@@ -233,10 +251,10 @@ function CleanUp( $force=FALSE )
 			{
 			for( $i=1; $i<=$total_cds; $i++ )
 				{
-				$src_name = sprintf("%s_cd%02d", $out_core, $i);
+				$src_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
 				$cmd = sprintf("rm -rf %s", $src_name);
 
-				printf(" Removing '%s'...\n", $src_name);
+				printf("  Removing '%s'...\n", $src_name);
 				system( $cmd );
 				}
 			}
@@ -324,6 +342,17 @@ function Abort( $rc=10 )
 	// go to dest dir...
 	chdir( $DESTINATION );
 
+
+	// lets check if there's no sets dirs here...
+	for($i=1; $i<10; $i++)
+		{
+		if( file_exists( sprintf("%s/%s_cd%02d", $DESTINATION, $OUT_CORE, $i ) ) )
+			{
+			printf("FATAL: Found old sets in '%s'.\n", $DESTINATION);
+			printf("       Remove them first or choose other destination.\n");
+			Abort();
+			}
+		}
 
 	// some precomputations...
 	$TOTAL_PER_CD = (($config["PDM"]["capacity"] - $config["PDM"]["reserved"]) *1024*1024);
@@ -510,7 +539,7 @@ function Abort( $rc=10 )
 
 
 
-	printf("I'm about to create CD sets from your data (mode: '%s') in '%s' directory\n", $COPY_MODE, $DESTINATION);
+	printf("I'm about to create CD sets from your data (mode: '%s')\n", $COPY_MODE);
 	if( GetYN(TRUE) == FALSE)
 		Abort();
 
@@ -535,7 +564,7 @@ function Abort( $rc=10 )
 			printf("To do: %10d...\r", $cnt);
 
 		$src 	= sprintf("%s%s/%s", $source_dir, $file["path"], $file["name"]);
-		$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $out_core, $file["cd"], $file["path"] );
+		$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
 		$dest	= sprintf("%s/%s", $dest_dir, $file["name"] );
 
 		switch( $COPY_MODE )
@@ -586,7 +615,7 @@ function Abort( $rc=10 )
 		$cdindex .= "----+----------------------------------------------------\n";
 		for( $i=1; $i<=$total_cds; $i++ )
 			{
-			$set_name = sprintf("%s_cd%02d", $out_core, $i);
+			$set_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
 
 			$tmp = array();
 			foreach( $tossed AS $file )
@@ -620,7 +649,7 @@ function Abort( $rc=10 )
 			$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
 			if( $fh )
 				{
-				fputs( $fh, sprintf("Out Core: %s", $out_core) );
+				fputs( $fh, sprintf("Out Core: %s", $OUT_CORE) );
 				fclose( $fh );
 				}
 			}
@@ -633,52 +662,74 @@ function Abort( $rc=10 )
 		if( GetYN(TRUE) == FALSE)
 			Abort();
 
-		for( $i=1; $i<=$total_cds; $i++ )
-			{
-			$out_name = sprintf("%s_cd%02d.iso", $out_core, $i);
-			$vol_name = sprintf("%s_%d_of_%d", $out_core, $i, $total_cds);
-			$src_name = sprintf("%s_cd%02d", $out_core, $i);
 
+		$repeat_process = FALSE;		// do we want to do all this again?
+
+		do
+			{
+			for( $i=1; $i<=$total_cds; $i++ )
+				{
+				$out_name = sprintf("%s_cd%02d.iso", $OUT_CORE, $i);
+				$vol_name = sprintf("%s_%d_of_%d", $OUT_CORE, $i, $total_cds);
+				$src_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
+
+				switch( $COPY_MODE )
+					{
+					case "iso":
+						{
+						$cmd = sprintf("mkisofs -follow-links -joliet -rock -full-iso9660-filenames -allow-multidot -V %s -output %s %s",
+											$vol_name, $out_name, $src_name);
+						printf("Creating: %s of %s\n", $out_name, $src_name );
+						system( $cmd );
+						}
+						break;
+
+					case "burn":
+						{
+						do
+							{
+							printf("\nAttemting to burn %s (#%d CD of %d) on-the-fly (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds);
+							if( GetYN(TRUE) )
+								{
+								$mkisofs  = sprintf("mkisofs -follow-links -joliet -rock -full-iso9660-filenames -allow-multidot -V %s %s", $vol_name, $src_name);
+								$cdrecord = sprintf("cdrecord -fs=%dm -v -eject -dev=%s - ", $config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
+								$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
+
+//								$code = system( $burn_cmd );
+								printf("\nThe '%s' has been burnt.\n\n", $src_name);
+
+								$burn_again = GetYN( FALSE, sprintf("Do you want to burn '%s' again? [y/N]", $src_name) );
+								}
+							else
+								{
+								printf(" ** Skipped...\n");
+								$burn_again = FALSE;
+								}
+							}
+							while( $burn_again );
+						}
+						break;
+					}
+				}
+
+
+			printf("\n\nOperation done.\n");
 			switch( $COPY_MODE )
 				{
-				case "iso":
-					{
-					$cmd = sprintf("mkisofs -follow-links -joliet -rock -full-iso9660-filenames -allow-multidot -V %s -output %s %s",
-										$vol_name, $out_name, $src_name);
-					printf("Creating: %s of %s\n", $out_name, $src_name );
-					system( $cmd );
-					}
-					break;
-
 				case "burn":
-					{
-					do
-						{
-						printf("\nAttemting to burn %s (#%d CD of %d) on-the-fly (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds);
-						if( GetYN(TRUE) )
-							{
-							$mkisofs  = sprintf("mkisofs -follow-links -joliet -rock -full-iso9660-filenames -allow-multidot -V %s %s", $vol_name, $src_name);
-							$cdrecord = sprintf("cdrecord -fs=%dm -v -eject -dev=%s - ", $config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
-							$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
-
-							$code = system( $burn_cmd );
-						printf("RC: %d\n", $code);
-							printf("\nThe '%s' has been burnt.\n", $src_name);
-
-							$burn_again = GetYN( FALSE, sprintf("Do you want to burn '%s' again? [y/N]", $src_name) );
-							}
-						else
-							{
-							printf(" ** Skipped...\n");
-							$burn_again = FALSE;
-							}
-						}
-						while( $burn_again );
-					}
+					$repeat_process = GetYN(FALSE, sprintf("\nDo you want to %s all the %d sets again [y/N]?", $COPY_MODE, $total_cds) );
+					;
 					break;
 
+				default:
+					$repeat_process = FALSE;
+					break;
 				}
+
+
 			}
+			while( $repeat_process );
+
 		}
 
 	// cleaning temporary data files...
