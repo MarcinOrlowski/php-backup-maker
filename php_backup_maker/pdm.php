@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.27 2003/03/07 15:37:00 carl-os Exp $
+// $Id: pdm.php,v 1.28 2003/03/12 09:33:02 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -1486,11 +1486,13 @@ function filematch_ereg( $pattern, $str )
 											break;
 
 										case ANSWER_NO:
-											unlink( $out_name );
+											if( file_exists( $out_name ) )
+												unlink( $out_name );
 											break;
 											
 										case ANSWER_ABORT:
-											unlink( $out_name );
+											if( file_exists( $out_name ) )
+												unlink( $out_name );
 											Abort();
 											break;
 										}
