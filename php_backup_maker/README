@@ -24,6 +24,20 @@ for backups. It also supports ISO image creation, direct CD
 burning via cdrecord, automatic file index creation, and more.
 
 
+Features
+-------------------------------------
+
+ - multivolume backups
+ - various capacity media support (any known CD)
+ - file splitting for files bigger than media capacity
+ - on-the-fly CD burning
+ - ISO image creation
+ - automatic index generating
+ - pattern / regexp based file excluding
+ - .pdm_ignore permament directory markers
+ - bath, bed, breakfast
+
+
 Requirements
 -------------------------------------
 
@@ -304,5 +318,5 @@ Author
 
 
 --
-$Id: README,v 1.11 2003/04/13 16:18:13 carl-os Exp $
+$Id: README,v 1.12 2003/04/15 14:34:02 carl-os Exp $
 
