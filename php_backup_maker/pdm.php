@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.43 2003/05/24 13:37:58 carl-os Exp $
+// $Id: pdm.php,v 1.44 2003/05/24 13:41:39 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION"	, "3.3 beta" );
+define( "SOFTWARE_VERSION"	, "3.3" );
 define( "SOFTWARE_URL"		, "http://freshmeat.net/projects/pdm" );
 
 
@@ -29,7 +29,7 @@ if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 
 /***************************************************************************
 **
-** $Id: pdm.php,v 1.43 2003/05/24 13:37:58 carl-os Exp $
+** $Id: pdm.php,v 1.44 2003/05/24 13:41:39 carl-os Exp $
 **
 ** (C) Copyright 2003-2003 * All rights reserved
 **     Marcin Orlowski <carlos@wfmh.org.pl>

@@ -17,11 +17,12 @@ What is it?
 -------------------------------------
 
 This is a small PHP script which reads a given source directory
-(with its subdirectories) and then creates a set of directories
-filled with the content of the source directory, arranged in
-groups to fit a given capacity. It can be used to create CD sets
-for backups. It also supports ISO image creation, direct CD
-burning via cdrecord, automatic file index creation, and more.
+(or multiple directories) (with its subdirectories) and then
+creates a set of directories filled with the content of the
+source directory, arranged in groups to fit a given capacity.
+It can be used to create CD sets for backups. It also supports
+ISO image creation, direct CD burning via cdrecord, automatic
+file index creation, and more.
 
 
 Features
@@ -30,6 +31,7 @@ Features
  - multivolume backups
  - various capacity media support (any known CD)
  - file splitting for files bigger than media capacity
+ - multi source backup
  - on-the-fly CD burning
  - ISO image creation
  - automatic index generating
@@ -218,8 +220,10 @@ Known options and switches are detailed below.
  [R] means the option is required (you can't ommit it)
  [S] stands for valueless switch. If no [S] specified
      next to the option name option requires an value
+ [M] means you can use this option as many times,
+     as you need,
 
-  -s -src          [R] Source directory (i.e. "data/")
+  -s -src          [RM] Source directory (i.e. "data/")
                    which you are going to process and backup.
   -d -dest         Destination directory where CD sets will be
                    created. If ommited, your current working
@@ -256,7 +260,7 @@ Known options and switches are detailed below.
 How it works:
 -------------------------------------
 
-First, it scans source directory to learn its structure,
+First, it scans source directories to learn its structure,
 get files and subdirs. Then it toss the data to fit in
 given CD_CAPACITY capacity. Then, depending on the
 work mode it either copies the data, moves it or links.
@@ -313,6 +317,10 @@ Examples
 
  ./pdm.php -s=STUFF
 
+- to do the same for three diferent sources:
+
+ ./pdm.php -s=STUFF1 -s=STUFF2 -s=STUFF3
+
 
 - to burn STUFF directory (on the fly):
 
@@ -321,7 +329,7 @@ Examples
 
 - to create ISO images (for any reason ;-)
 
- ./pdm.php -m=iso -s=STUFF
+ ./pdm.php -m=iso -s=STUFF1 -s=STUFF2
 
 
 - to create ISO images over NFS *faster* than in previous release
@@ -362,5 +370,5 @@ Author
 
 
 --
-$Id: README,v 1.14 2003/05/15 13:40:19 carl-os Exp $
+$Id: README,v 1.15 2003/05/24 13:41:39 carl-os Exp $
 
