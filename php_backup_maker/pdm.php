@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.20 2003/02/11 10:29:25 carl-os Exp $
+// $Id: pdm.php,v 1.21 2003/02/11 11:22:02 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.4 beta" );
+define( "SOFTWARE_VERSION", "2.4" );
 
 
 //{{{ class_cli							.
@@ -365,6 +365,10 @@ if( $argc >= 1 )
 					"mode"		=> array("short"		=> 'm',
 												"long"		=> 'mode',
 												"info"		=> 'Specifies working mode. See help-mode for details.'
+												),
+					"out-core"	=> array("short"		=> 'c',
+												"long"		=> 'out-core',
+												"info"		=> 'Specifies name prefix used for CD sets directories. If not specified, Current date in YYYYMMDD format will be taken.'
 												),
 
 					"help-mode"		=> array('long'	=> 'help-mode',
@@ -845,8 +849,10 @@ function AbortIfNoTool( $tool )
 	// geting user params...
 	$COPY_MODE		= ($cCLI->IsOptionSet("mode")) ? $cCLI->GetOptionArg("mode") : "test";
 	$source_dir		= eregi_replace( "//+", "/", $cCLI->GetOptionArg("source") );
-	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  ? $cCLI->GetOptionArg("dest")  : getenv("PWD");
-	$MEDIA 			= ($cCLI->IsOptionSet("media")) ? $cCLI->GetOptionArg("media") : $config["PDM"]["media"];
+	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  ? $cCLI->GetOptionArg("dest")  	: getenv("PWD");
+	$MEDIA 			= ($cCLI->IsOptionSet("media"))	? $cCLI->GetOptionArg("media") 	: $config["PDM"]["media"];
+	$OUT_CORE		= ($cCLI->IsOptionSet("out-core")) ? $cCLI->GetOptionArg("out-core")	: date("Ymd");
+	
 
    // lets check user input
    if( array_key_exists( $COPY_MODE, $KNOWN_MODES ) === FALSE )
