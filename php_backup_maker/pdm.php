@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.28 2003/03/12 09:33:02 carl-os Exp $
+// $Id: pdm.php,v 1.29 2003/03/12 09:54:50 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -360,12 +360,12 @@ if( $argc >= 1 )
 												),
 
 					"media"      => array("long"	=> "media",
-												 "info"	=> "Specifies destination media type to be used. See help-media for details."
+												 "info"	=> "Specifies destination media type to be used. See help-media for details. Default media capacity is 700MB."
 												 ),
 
 					"mode"		=> array("short"		=> 'm',
 												"long"		=> 'mode',
-												"info"		=> 'Specifies working mode. See help-mode for details.'
+												"info"		=> 'Specifies working mode. See help-mode for details. Default mode is "test".'
 												),
 					"out-core"	=> array("short"		=> 'c',
 												"long"		=> 'out-core',
@@ -375,7 +375,7 @@ if( $argc >= 1 )
 
 					"pattern"		=>	array('long'	=> 'pattern',
 													'info'	=> 'Specifies regular expression pattern for files to be processed. ' .
-																	'Supports shell "?" and "*" patterns. Neesd PHP 4.3.0+'
+																	'Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'
 													),
 					"ereg-pattern"	=> array('long'	=> 'ereg-pattern',
 													'info'	=> 'Simmilar to "pattern" but uses plain regular expression without any shell pattern support.'

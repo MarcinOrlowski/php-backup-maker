@@ -1,5 +1,19 @@
 
-PDM? What is it?
+PDM? What a jerky name...
+-------------------------------------
+
+PDM stands for PHP Dump Maker. I formerly (as php backup maker)
+wrote it as a quick solution to my 'why-there-is-not-useful-backup-tool'
+problem I've encountered one day wishing to backup some GB of my 
+data to CD in "my way{tm}". As it started to be useful, I decided
+to give it a public release, to both help one having simmilar problems
+I had and to give my small contribution to Open Source movement
+from which I benefit now and before. The name of the tool had
+to be changed from PBM as there was another project named PBM
+on SourceForge.net. That's the whole story behind?
+
+
+What is it?
 -------------------------------------
 
 This is a small PHP script which reads a given source directory
@@ -144,49 +158,41 @@ that wasn't enough for 45000 file set).
 Usage
 -------------------------------------
 
- NOTE: this 'chapter' is outdated as of PDM v2.3+. Please 
-        use -help and your imagination at the moment. Sorry
-		  ==============================================
+Run it without arguments or with -help switch
+to get detailed usage information:
+
+ ./pdm.php -help
 
 
-Run it without arguments to get help page:
+Usage template:
 
- ./pdm.php mode src [dest]
+  ./pdm.php -opt=val -switch ...
 
-mode - specify method of CD set creation. Available:
+Known options and switches are detailed below.
+ [R] means the option is required (you can't ommit it)
+ [S] stands for valueless switch. If no [S] specified
+     next to the option name option requires an value
 
-       "test" - is you want to see how many CDs you
-                need to store you data, try this
-
-       "move" - moves source files into destination CD
-                set directory much free disk space as
-                source takes.
-
-       "copy" - copies files into destination CD set
-                directory. Needs as much free disk space
-                as source data takes
-
-       "link" - creates symbolic links to source data
-                in destination directory. NOTE: some
-                CD burning software needs to be ordered
-                to follow symlinks, otherwise you burn
-                no data!
-
-       "iso"  - acts as "link" described above, but
-                additionally creates ISO image files for
-                each CD created. Requires mkisofs and
-                as much free disk space as source takes
-
-       "burn" - burns CD sets on-the-fly (have to be
-		          enabled first)
-
-src  - source directory (i.e. "data/") which you are going
-       to process and backup
-
-dest - destination directory where CD sets will be created.
-       If ommited, your current working directory will be
-       used
-
+  -s -src          [R] Source directory (i.e. "data/")
+                   which you are going to process and backup.
+  -d -dest         Destination directory where CD sets will be
+                   created. If ommited, your current working
+                   directory will be used.
+     -media        Specifies destination media type to be used.
+                   See help-media for details. Default is 700MB
+  -m -mode         Specifies working mode. See help-mode for details.
+                   Default mode is 'test'
+  -c -out-core     Specifies name prefix used for CD sets directories.
+                   If not specified, Current date in YYYYMMDD format
+                   will be taken.
+     -pattern      Specifies regular expression pattern for files to be
+                   processed. Supports shell "?" and "*" patterns. Needs
+                   PHP 4.3.0+
+     -ereg-pattern Simmilar to "pattern" but uses plain regular
+                   expression without any shell pattern support.
+     -help-mode    [S] Shows more information about available work modes.
+     -help-media   [S] Show media type related help page.
+  -h -help         [S] Shows this help page.
 
 How it works:
 -------------------------------------
@@ -206,17 +212,17 @@ Examples
 
 To check how many CDs you will need to backup STUFF directory:
 
- ./pdm.php test STUFF
+ ./pdm.php -s=STUFF
 
 
 to burn STUFF directory (on the fly):
 
- ./pdm.php burn STUFF
+ ./pdm.php -mode=burn -s=STUFF
 
 
 to create ISO images (for any reason ;-)
 
- ./pdm.php iso STUFF
+ ./pdm.php -m=iso -s=STUFF
 
 
 I want to know more about CD Burning
@@ -244,5 +250,5 @@ Author
 
 
 --
-$Id: README,v 1.7 2003/03/06 20:49:21 carl-os Exp $
+$Id: README,v 1.8 2003/03/12 09:54:50 carl-os Exp $
 
