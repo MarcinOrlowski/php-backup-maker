@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.42 2003/05/15 13:40:19 carl-os Exp $
+// $Id: pdm.php,v 1.43 2003/05/24 13:37:58 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -20,13 +20,26 @@ define( "SOFTWARE_URL"		, "http://freshmeat.net/projects/pdm" );
 
 
 // argv/argc workaround for register_globals disabled
-
 if( !(isset( $argc )) )	$argc = $_SERVER['argc'];
 if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 
 
-
 //{{{ class_cli							.
+
+
+/***************************************************************************
+**
+** $Id: pdm.php,v 1.43 2003/05/24 13:37:58 carl-os Exp $
+**
+** (C) Copyright 2003-2003 * All rights reserved
+**     Marcin Orlowski <carlos@wfmh.org.pl>
+**
+** Function: (C)command (L)ine (I)nterface - shell argument parsing
+**           and handling class. Features automatic required arguments
+**           detection, valueless switches handling, automatic help
+**           page display, unlimited argumens support and more
+**
+***************************************************************************/
 
 class CLI
 {
@@ -35,7 +48,7 @@ class CLI
 
 	var	$errors;
 
-	var	$version_str = "CLI class 1.2 by Marcin Orlowski <carlos@wfmh.org.pl>";
+	var	$version_str = "CLI class 1.3 by Marcin Orlowski <carlos@wfmh.org.pl>";
 
 
 	// this array describes all the fields args array should define
@@ -45,7 +58,8 @@ class CLI
 													"info"		=> "--- No description. Complain! ---",
 													"required"	=> FALSE,
 													"switch"		=>	FALSE,
-													"param"		=> "",
+													"multi"		=> FALSE,
+													"param"		=> array(),
 
 													// DON'T set any of these by hand!
 													"set"			=> FALSE,
@@ -97,14 +111,39 @@ function IsOptionSet( $key )
 
 
 // returns option argument. Default is '', so it's safe
-// to call this function even agains $key is a switch
+// to call this function even against $key is a switch
 // not a regular option
+//
+// NOTE: for arguments with 'multi' == TRUE, you will
+//       get Array back! See the demo...
 function GetOptionArg( $key )
 {
 	$result = "";
 
 	if( isset( $this->args[$key] ) )
-		$result = $this->args[$key]['param'];
+		{
+		if( $this->args[$key]['multi'] )
+			$result = $this->args[$key]['param'];
+		else
+			$result = $this->args[$key]['param'][0];
+		}
+
+	return( $result );
+}
+
+// returns numer of values assigned to the option. Usually
+// it can be 0 (if no option or it's valueless) or X
+function GetOptionArgCount( $key )
+{
+	$result = 0;
+
+	if( isset( $this->args[$key] ) )
+		{
+		if( is_array( $this->args[$key]['param'] ) )
+			$result = count( $this->args[$key]['param'] );
+		else
+			$result = 1;
+		}
 
 	return( $result );
 }
@@ -135,13 +174,16 @@ function ShowHelpPage()
 						"\nKnown options and switches are detailed below.\n" .
 						" [R] means the option is required,\n" .
 						" [S] stands for valueless switch, otherwise\n" .
-						"     option requires an value\n" .
+						"     option requires an value,\n" .
+						" [M] means you can use this option as many times,\n" .
+						"     as you need,\n" .
 						"\n", $this->help_command_name );
 
 	foreach( $this->args AS $entry )
 		{
 		$flags  = ($entry['required']) ? "R" : "";
 		$flags .= ($entry['switch'])   ? "S" : "";
+		$flags .= ($entry['multi'])    ? "M" : "";
 		if( $flags != "" )
 			$flags = sprintf("[%s] ", $flags );
 
@@ -178,11 +220,17 @@ function _InitSourceArgsArray( $args )
 		if( ($tmp['short'] === FALSE) && ($tmp['long'] === FALSE) )
 			{
 			// bad, bad developer!
-			printf("*** DEV BUG: Missing 'short' or 'long' definition for '%s'.\n", $key);
+			printf("*** FATAL: Missing 'short' or 'long' definition for '%s'.\n", $key);
 			exit(10);
 			}
 
-		// some measures for dinamically layouted help page
+		if( ($tmp['multi'] == TRUE) && ($tmp['switch'] == TRUE) )
+			{
+			printf("*** FATAL: '%s' cannot be both 'switch' and 'multi' argument.\n", $key);
+			exit(10);
+			}
+
+		// some measures for dynamically layouted help page
 		if( $tmp['short'] !== FALSE )
 			$this->help_short_len = max( $this->help_short_len, strlen( $tmp['short'] ) );
 
@@ -195,9 +243,8 @@ function _InitSourceArgsArray( $args )
 }
 
 // checks if given argumens are known, unique (precheck
-// was made in GetArgs, but we still need to check agains
-// argument givend twice, once with short and once with
-// long keyword
+// was made in GetArgs, but we still need to check against
+// non 'multi' arguments given twice
 function _ValidateArgs()
 {
 	$result = TRUE;
@@ -225,6 +272,13 @@ function _ValidateArgs()
 				}
 			}
 
+		if( ($entry["multi"] != TRUE) && (count($entry['param'])>0) )
+			{
+			$this->errors[] = sprintf("Argument '-%s' was already specified.", $entry['long']);
+			$result = FALSE;
+			}
+
+		// haven't found anything like this yet
 		if( $found == 0 )
 			{
 			if( $entry["required"] == TRUE )
@@ -235,23 +289,28 @@ function _ValidateArgs()
 			}
 		else
 			{
-			if( $found == 2 )
+			// either short or long keyword was previously found...
+			if( $entry["multi"] != TRUE )
 				{
-				$this->errors[] = sprintf("Option '-%s' was already specified.", $entry['long']);
-				$result = FALSE;
+				if( $found == 2 )
+					{
+					printf("s: %d\n", $entry["multi"] );
+					$this->errors[] = sprintf("Argument '-%s' was already specified.", $entry['long']);
+					$result = FALSE;
+					}
 				}
 
-			if( $entry["switch"] == FALSE )
+			if( $entry["switch"] === FALSE )
 				{
 				if( $this->found_args[ $found_as_key ]["val"] === FALSE )
 					{
-					$this->errors[] = sprintf("Option '-%s' requires value (i.e. -%s=something.", $found_as_key, $found_as_key);
+					$this->errors[] = sprintf("Argument '-%s' requires value (i.e. -%s=something).", $found_as_key, $found_as_key);
 					$result = FALSE;
 					}
 				}
 			else
 				{
-				if( $this->found_args[ $found_as_key ]["val"] !== FALSE )
+				if( count($this->found_args[ $found_as_key ]["val"]) == 0 )
 					{
 					printf( "'%s' '%s'", $this->found_args[ $found_as_key ]["val"], $entry["long"] );
 					$this->errors[] = sprintf("'-%s' is just a switch, and does not require any value.", $found_as_key);
@@ -260,9 +319,9 @@ function _ValidateArgs()
 				}
 
 			// let's put it back...
-			$this->args[ $key ]['set']   = TRUE;
+			$this->args[ $key ]['set'] = TRUE;
 			if( $entry["switch"] == FALSE )
-				$this->args[ $key ]['param'] = $this->found_args[ $found_as_key ]["val"];
+				$this->args[ $key ]['param'] = $this->found_args[ $found_as_key ]['val'];
 
 			// remove it from found args...
 			unset( $this->found_args[ $found_as_key ] );
@@ -316,11 +375,11 @@ if( $argc >= 1 )
 			$valid = $result = FALSE;
 			}
 
-		if( array_key_exists( $arg_key, $this->found_args ) )
-			{
-			$this->errors[] = sprintf("Argument '%s' was already specified.", $tmp[0]);
-			$valid = $result = FALSE;
-			}
+//		if( array_key_exists( $arg_key, $this->found_args ) )
+//			{
+//			$this->errors[] = sprintf("Argument '%s' was already specified.", $tmp[0]);
+//			$valid = $result = FALSE;
+//			}
 
 		if( $valid )
 			{
@@ -340,9 +399,12 @@ if( $argc >= 1 )
 					break;
 				}
 
-			$this->found_args[ $arg_key ] = array("key"	=> $arg_key,
-												 				"val"	=> $arg_val
-												 			);
+			if( !(isset($this->found_args[ $arg_key ])) )
+				$this->found_args[ $arg_key ] = array("key"	=> $arg_key,
+													 				"val"	=> array()
+													 			);
+			if( !(in_array( $arg_val, $this->found_args[ $arg_key ]['val'] ) ) )
+				$this->found_args[ $arg_key ]['val'][] = $arg_val;
 			}
 		}
 	}
@@ -350,7 +412,7 @@ if( $argc >= 1 )
 	return( $result );
 }
 
-// end of class
+// ond of class
 }
 
 //}}}
@@ -359,6 +421,7 @@ if( $argc >= 1 )
 					"source"		=> array( "short"		=> 's',
 												 "long"		=> "src",
 												 "required"	=> TRUE,
+												 "multi"		=> TRUE,
 												 "info"		=> 'Source directory (i.e. "data/") which you are going to process and backup.'
 												 ),
 
@@ -965,9 +1028,7 @@ function MakePath()
 //{{{ MakeEntryPath						.
 function MakeEntryPath( $entry )
 {
-	global $source_dir;
-
-	return( MakePath( $source_dir, $entry['path'], $entry['name'] ) );
+	return( MakePath( $entry['path'], $entry['name'] ) );
 }
 //}}}
 
@@ -1171,13 +1232,13 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 
 	// geting user params...
-	$COPY_MODE		= ($cCLI->IsOptionSet("mode"))		? $cCLI->GetOptionArg("mode") : "test";
-	$source_dir		= eregi_replace( "//+", "/", $cCLI->GetOptionArg("source") );
-	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  		? $cCLI->GetOptionArg("dest")			: getenv("PWD");
-	$ISO_DEST		= ($cCLI->IsOptionSet("iso-dest"))	? $cCLI->GetOptionArg('iso-dest')	: $DESTINATION;
-	$MEDIA 			= ($cCLI->IsOptionSet("media"))		? $cCLI->GetOptionArg("media") 		: $config["PDM"]["media"];
-	$OUT_CORE		= ($cCLI->IsOptionSet("out-core"))	? $cCLI->GetOptionArg("out-core")	: date("Ymd");
-	$DATA_DIR		= ($cCLI->IsOptionSet('data-dir'))	? $cCLI->GetOptionArg('data-dir')	: "backup";
+	$COPY_MODE			= ($cCLI->IsOptionSet("mode"))		? $cCLI->GetOptionArg("mode") : "test";
+	$source_dir_array	= $cCLI->GetOptionArg("source");
+	$DESTINATION		= ($cCLI->IsOptionSet("dest"))  		? $cCLI->GetOptionArg("dest")			: getenv("PWD");
+	$ISO_DEST			= ($cCLI->IsOptionSet("iso-dest"))	? $cCLI->GetOptionArg('iso-dest')	: $DESTINATION;
+	$MEDIA 				= ($cCLI->IsOptionSet("media"))		? $cCLI->GetOptionArg("media") 		: $config["PDM"]["media"];
+	$OUT_CORE			= ($cCLI->IsOptionSet("out-core"))	? $cCLI->GetOptionArg("out-core")	: date("Ymd");
+	$DATA_DIR			= ($cCLI->IsOptionSet('data-dir'))	? $cCLI->GetOptionArg('data-dir')	: "backup";
 
 	// no defaults here, as in case of no option specified we got filematch_fake() wrapper in use
 	if( $cCLI->IsOptionSet("pattern") )
@@ -1211,12 +1272,35 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		Abort();
 		}
 
+	// let's check if we dont' have directory names clash (i.e. different "etc" and
+	// "/etc" would result in the same destination "etc" directory in the backup
+	// for now we complain and abort
+	$dest_roots = array();
+	foreach( $source_dir_array AS $source_dir )
+		{
+		$dir = MakePath( $source_dir );		// cleaning up, to avoid "/dir///dir" mess
+		$tmp = explode('/', $dir);
+		$dir = ($source_dir{0} == '/') ? $tmp[1] : $tmp[0];
+		if( in_array( $dir, $dest_roots ) )
+			{
+			printf("ERROR: Source '%s' directory name clashes with other dir.\n", $source_dir);
+			printf("       Example: '/etc/...' and 'etc/...' produces the same 'etc'\n" );
+			printf("       for backup dir, which is a problem. Change one of these\n" );
+			printf("       names (even temporary) to avoid this.\n" );
+			Abort();
+			}
+		else
+			$dest_roots[] = $dir;
+		}
+
 	// go to dest dir...
 	chdir( $DESTINATION );
 
 
 	// let's check if source and dest are directories...
-	$dirs = array( $source_dir=>"r" );
+	$dirs = array();
+	foreach(	$source_dir_array	AS $source_dir )
+		$dirs[ $source_dir ] = "r";
 
 	// uf copy mode requires any writting, we need to check if we
 	// would be able to write anything to given destdir
@@ -1312,22 +1396,31 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 
 	// Go!
-	printf("Scanning '%s'. Please wait...\n", $source_dir);
+	$files = array();
 
-	// lets scan $source_dir and subdirectories
-	// and look for files...
-	$a = trim( `find $source_dir/ -depth -type f -print` );
+	printf("Scanning. Please wait...\n");
+	foreach( $source_dir_array AS $source_dir )
+		{
+		$source_dir = eregi_replace( "//+", "/", $source_dir );
 
-	if( $a != "" )
-		{
-		$files = explode ("\n", $a);
-		asort($files);
+		printf("  Dir: '%s'... ", $source_dir);
+
+		// lets scan $source_dir and subdirectories
+		// and look for files...
+		$a = trim( `find $source_dir/ -depth -type f -print` );
+
+		if( $a != "" )
+			{
+			$files_tmp = explode("\n", $a);
+			$files = array_merge_recursive( $files, $files_tmp );
+			}
+		else
+			printf("Looks empty?");
+
+		echo "\n";
 		}
-	else
-		{
-		// find gave nothing returned...
-		$files = array();
-		}
+
+	asort($files);
 
 	$target = array();
 	$target_split = array();
@@ -1347,7 +1440,6 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		$size = filesize( $val );
 
 		$dir = dirname( $val );
-		$dir = substr( $dir, strlen( $source_dir ) );
 		$name = basename( $val );
 
 		// is it our special file? if so, we should remember this dir for
@@ -1399,7 +1491,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 			$reduced_cnt = 0;
 			$reduced_size = 0;
 
-			printf("    %s\n", MakePath( $source_dir, $dir ) );
+			printf("    %s\n", $dir );
 
 			$dir_len = strlen( $dir );
 
@@ -1598,8 +1690,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 			if( ( $cnt % $base ) == 0 )
 				printf("To do: %10d...\r", $cnt);
 
-			$src_dir = MakePath( $source_dir, $file["path"] );
-			$src  = MakePath( $src_dir, $file["name"] );
+			$src  = MakePath( $file['path'], $file["name"] );
 			$dest_dir = sprintf("%s/%s_cd%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"] );
 			$dest = MakePath( $dest_dir, $file["name"] );
 
@@ -1620,15 +1711,23 @@ function CreateSet( &$stats, $current_cd, $capacity )
 				case "burn":
 				case "burn-iso":
 					$tmp = explode("/", $src);
-					$prefix = "./";
 
-					for($i=0; $i<count($tmp); $i++)
+					$prefix = "";
+					// absolute paths are absolute. period
+					if( $src{0} != '/' )
 						{
-						if( $tmp[$i] != "" )
-							$prefix .= "../";
+						$prefix = "../";
+						
+						for($i=0; $i<count($tmp); $i++)
+							{
+							if( $tmp[$i] != "" )
+								$prefix .= "../";
+							}
 						}
-					if( symlink( sprintf("%s/%s", $prefix, $src), $dest ) == FALSE )
-						printf("symlink() failed: %s/%s => %s\n", $prefix, $src, $dest);
+
+					$_path = MakePath( $prefix, $src );
+					if( symlink( $_path, $dest ) == FALSE )
+						printf("symlink() failed: %s => %s\n", $_path, $dest);
 					break;
 				}
 
@@ -1644,8 +1743,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 			{
 			$src_idx = $file['source_file_index'];
 
-			$src_dir = MakePath($source_dir, $file["path"] );
-			$src  = MakePath("%s%s", $src_dir, $files_to_split[ $src_idx ]["name"]);
+			$src  = MakePath("%s%s", $file['path'], $files_to_split[ $src_idx ]["name"]);
 			$dest_dir = sprintf("%s/%s_cd%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"] );
 
 			reset( $files_to_split );
