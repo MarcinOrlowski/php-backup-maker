@@ -62,9 +62,9 @@ Configuration
 -------------------------------------
 
 Most parameters can be passed as argument when script
-is invoked. But some of them (i.e. cd recording related)
-have to be configured first by creating valid pdm.ini
-file. Here's how to do so (I will simplify this later):
+is invoked. Some of them you can default by creating
+php.ini settings file (this file is not required).
+Let's create customised pdm.ini from our template:
 
   cd ~
   mkdir .pdm
@@ -74,7 +74,7 @@ Then use any text editor, and open the pdm.ini file,
 and configure whatever you wish (pleasae note, that
 the script does NOT validate these values. If you put
 "abcd" as i.e. capacity you will get unexpected errors
-in the script.
+in the script (I am not going to fix this in near future).
 
 
  General settings (PDM section):
@@ -231,6 +231,10 @@ Known options and switches are detailed below.
   -c -out-core     Specifies name prefix used for CD sets directories.
                    If not specified, Current date in YYYYMMDD format
                    will be taken.
+  -t -iso-dest		 Specifies destination directory for ISO images ('iso'
+                   mode only). If not specified, '-dest' will be used.
+                   If you don't use NFS, this option is useless for you.
+                   See below for closer explanation
   -p -split        Enables file splitting feature (files bigger than
                    media size will be splitted into smaller hunks and
                    auto-join shell script will be generated to join
@@ -275,22 +279,58 @@ NOTE: When file is to splitted, PDM will create its copy
 		above!
 
 
+Working over NFS
+-------------------------------------
+
+PDM does not perform any tricky actions with filesystem
+so be it NFS or ext2 or reiserfs or anything it does not
+really matter. But if you use NFS, I added some switches
+to speed things up over networked file systems. At least
+for now, PDM creates bunch of symlinks in '-dest' for
+later processing. If your '-dest' points somewhere over
+NFS it means there will be additional network traffic
+first to create these and then to read and process. 
+But since symlinks does not waste too much diskspace,
+you may wish to do the trick and separate temporary data
+destination directory from output directory. This works
+for 'iso' mode only and let you specify target on local 
+machine (i.e. /tmp) but at the same time point ISO
+destination to somewhere else (mainly over NFS). This
+significantly speeds things up - for usage examples
+see the "Examples" part below.
+
+
+
 Examples
 -------------------------------------
 
-To check how many CDs you will need to backup STUFF directory:
+- to check how many CDs you will need to backup STUFF
+  directory:
 
  ./pdm.php -s=STUFF
 
 
-to burn STUFF directory (on the fly):
+- to burn STUFF directory (on the fly):
 
  ./pdm.php -mode=burn -s=STUFF
 
 
-to create ISO images (for any reason ;-)
+- to create ISO images (for any reason ;-)
 
  ./pdm.php -m=iso -s=STUFF
+
+
+- to create ISO images over NFS *faster* than in previous release
+  (see "Working over NFS" for details)
+
+ ./pdm.php -m=iso -dest=/tmp -iso-dest=/NFSMOUNT -s=STUFF
+
+
+- to evaluate backup size (w/o no further action) of all files
+  but files ending with "~" (ususally text editor's backup files)
+  (Note quotes, used to avoid shell to evaluate our pattern).
+
+ ./pdm.php -s=STUFF -ereg-pattern='.*[^~]$'
 
 
 I want to know more about CD Burning
@@ -318,5 +358,5 @@ Author
 
 
 --
-$Id: README,v 1.12 2003/04/15 14:34:02 carl-os Exp $
+$Id: README,v 1.13 2003/05/15 10:38:45 carl-os Exp $
 

@@ -13,6 +13,10 @@
 
  Development history:
  ------------------------
+            - v3.3 - added 'iso-dest' option (for 'iso' mode only) to
+                     speed up ISO image creation over NFS. See README
+                     for closer details
+							
  2003.05.15 - v3.2 - mkisofs and cdrecord are now enabled by default,
                      which let you use full featured PDM just out of
                      a box without need to create pdm.ini.
@@ -198,4 +202,4 @@
 
 
 --
-$Id: CHANGES,v 1.34 2003/05/14 23:51:11 carl-os Exp $
+$Id: CHANGES,v 1.35 2003/05/15 10:38:45 carl-os Exp $
