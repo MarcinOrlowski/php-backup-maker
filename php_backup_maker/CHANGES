@@ -16,8 +16,8 @@
  2003.04.26 - v3.1 - under some conditions PDM used to duplicate some
                      files in internal structures, which caused i.e.
                      incorrect reports (tossed more files that we have).
-                     It was harmless bug, as in result not file was lost
-                     nor duplicated phisically. Just visual oddity
+                     It was harmless bug, and neither a file was lost
+                     nor duplicated. It was just visual oddity 
                    - target temporary directories wasn't created as they
                      should, wrecking usability of PDM completely for
                      some action modes
@@ -186,4 +186,4 @@
 
 
 --
-$Id: CHANGES,v 1.31 2003/04/26 14:32:23 carl-os Exp $
+$Id: CHANGES,v 1.32 2003/04/29 17:14:26 carl-os Exp $
