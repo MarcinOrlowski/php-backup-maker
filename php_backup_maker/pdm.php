@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.41 2003/05/15 11:04:34 carl-os Exp $
+// $Id: pdm.php,v 1.42 2003/05/15 13:40:19 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -381,7 +381,7 @@ if( $argc >= 1 )
 												"info"		=> 'Specifies name prefix used for CD sets directories. ' .
 																	'If not specified, Current date in YYYYMMDD format will be taken.'
 												),
-					"iso-dest"	=> array("iso-dest"	=> 't',
+					"iso-dest"	=> array("short"		=> 't',
 												'long'		=> 'iso-dest',
 												'info'		=> 'Specifies target directory PDM should use for storing ISO images ' .
 																	'(for "iso" and "burn-iso" modes only). '.
@@ -393,6 +393,9 @@ if( $argc >= 1 )
 												'info'		=> 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).',
 												'switch'		=> TRUE
 												),
+					"data-dir"		=>	array('long'	=> 'data-dir',
+													'info'	=> 'All backuped data is stored inside of "data-dir" on each set. Defaults is "backup"'
+													),
 
 					"pattern"		=>	array('long'	=> 'pattern',
 													'info'	=> 'Specifies regular expression pattern for files to be processed. ' .
@@ -1168,12 +1171,13 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 
 	// geting user params...
-	$COPY_MODE		= ($cCLI->IsOptionSet("mode")) ? $cCLI->GetOptionArg("mode") : "test";
+	$COPY_MODE		= ($cCLI->IsOptionSet("mode"))		? $cCLI->GetOptionArg("mode") : "test";
 	$source_dir		= eregi_replace( "//+", "/", $cCLI->GetOptionArg("source") );
-	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  ? $cCLI->GetOptionArg("dest")  	: getenv("PWD");
-	$ISO_DEST		= ($cCLI->IsOptionSet("iso-dest"))	? $cCLI->GetOptionArg('iso-dest')	:	$DESTINATION;
-	$MEDIA 			= ($cCLI->IsOptionSet("media"))	? $cCLI->GetOptionArg("media") 	: $config["PDM"]["media"];
-	$OUT_CORE		= ($cCLI->IsOptionSet("out-core")) ? $cCLI->GetOptionArg("out-core")	: date("Ymd");
+	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  		? $cCLI->GetOptionArg("dest")			: getenv("PWD");
+	$ISO_DEST		= ($cCLI->IsOptionSet("iso-dest"))	? $cCLI->GetOptionArg('iso-dest')	: $DESTINATION;
+	$MEDIA 			= ($cCLI->IsOptionSet("media"))		? $cCLI->GetOptionArg("media") 		: $config["PDM"]["media"];
+	$OUT_CORE		= ($cCLI->IsOptionSet("out-core"))	? $cCLI->GetOptionArg("out-core")	: date("Ymd");
+	$DATA_DIR		= ($cCLI->IsOptionSet('data-dir'))	? $cCLI->GetOptionArg('data-dir')	: "backup";
 
 	// no defaults here, as in case of no option specified we got filematch_fake() wrapper in use
 	if( $cCLI->IsOptionSet("pattern") )
@@ -1571,7 +1575,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 	// creating dirs...
 	for($i=1;$i<=$total_cds;$i++)
-      MakeDir( sprintf("%s/%s_cd%02d", $DESTINATION, $OUT_CORE, $i ) );
+      MakeDir( sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $i, $DATA_DIR ) );
 
 
 	// tossing standard (non splitted files)
@@ -1596,7 +1600,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 			$src_dir = MakePath( $source_dir, $file["path"] );
 			$src  = MakePath( $src_dir, $file["name"] );
-			$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
+			$dest_dir = sprintf("%s/%s_cd%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"] );
 			$dest = MakePath( $dest_dir, $file["name"] );
 
 			MakeDir( $dest_dir );
@@ -1618,7 +1622,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 					$tmp = explode("/", $src);
 					$prefix = "./";
 
-					for($i=1; $i<count($tmp); $i++)
+					for($i=0; $i<count($tmp); $i++)
 						{
 						if( $tmp[$i] != "" )
 							$prefix .= "../";
@@ -1642,7 +1646,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 			$src_dir = MakePath($source_dir, $file["path"] );
 			$src  = MakePath("%s%s", $src_dir, $files_to_split[ $src_idx ]["name"]);
-			$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
+			$dest_dir = sprintf("%s/%s_cd%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"] );
 
 			reset( $files_to_split );
 			while( list($spl_key, $spl_file) = each( $files_to_split ) )
@@ -1675,8 +1679,10 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	printf("Building index files...\n");
 	if( $KNOWN_MODES[$COPY_MODE]['write'] )
 		{
-		$cdindex  = sprintf("\n Created by PDM v%s: %s\n", SOFTWARE_VERSION, SOFTWARE_URL );
-		$cdindex .= sprintf(" Create date: %s, %s\n\n", date("Y.m.d"), date("H:m:s"));
+		$data_header  = sprintf("\n Created by PDM v%s: %s\n", SOFTWARE_VERSION, SOFTWARE_URL );
+		$data_header .= sprintf(" Create date: %s, %s\n\n", date("Y.m.d"), date("H:m:s"));
+
+		$cdindex  = $data_header;
 		$cdindex .= sprintf("%3.3s | %s\n", "CD", "Full path");
 		$cdindex .= "----+----------------------------------------------------\n";
 		for( $i=1; $i<=$total_cds; $i++ )
@@ -1716,6 +1722,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 			$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
 			if( $fh )
 				{
+				fputs( $fh, $data_header );
 				fputs( $fh, sprintf("Out Core: %s", $OUT_CORE) );
 				fclose( $fh );
 				}
