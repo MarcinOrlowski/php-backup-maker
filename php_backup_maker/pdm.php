@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.40 2003/05/15 10:38:45 carl-os Exp $
+// $Id: pdm.php,v 1.41 2003/05/15 11:04:34 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -451,43 +451,50 @@ if( $argc >= 1 )
 															"mkisofs"		=> FALSE,
 															"cdrecord"		=> FALSE,
 															"FileSplit"		=> TRUE,
-															"RemoveSets"	=> FALSE
+															"RemoveSets"	=> FALSE,
+															'SeparateDest'	=> FALSE
 															),
 								"link"		=> array("write"			=> TRUE,
 															"mkisofs"		=> FALSE,
 															"cdrecord"		=> FALSE,
 															"FileSplit"    => TRUE,
-															"RemoveSets"	=> FALSE
+															"RemoveSets"	=> FALSE,
+															'SeparateDest'	=> FALSE
 															),
 								"copy"		=> array("write"			=> TRUE,
 															"mkisofs"		=>	FALSE,
 															"cdrecord"		=> FALSE,
 															"FileSplit"    => FALSE,
-															"RemoveSets"	=> FALSE
+															"RemoveSets"	=> FALSE,
+															'SeparateDest'	=> FALSE
 															),
 								"move"		=> array("write"			=> TRUE,
 															"mkisofs"		=> FALSE,
 															"cdrecord"		=> FALSE,
 															"FileSplit"    => FALSE,
-															"RemoveSets"	=> FALSE
+															"RemoveSets"	=> FALSE,
+															'SeparateDest'	=> FALSE
 															),
 								"iso"			=> array("write"			=> TRUE,
 															"mkisofs"		=> TRUE,
 															"cdrecord"		=> FALSE,
 															"FileSplit"    => TRUE,
-															"RemoveSets"	=> TRUE
+															"RemoveSets"	=> TRUE,
+															'SeparateDest'	=> TRUE
 															),
 								"burn"		=> array("write"			=> TRUE,
 															"mkisofs"		=> TRUE,
 															"cdrecord"		=> FALSE,
 															"FileSplit"    => TRUE,
-															"RemoveSets"	=> TRUE
+															"RemoveSets"	=> TRUE,
+															'SeparateDest'	=> FALSE,
 															),
 								"burn-iso"	=> array("write"			=> TRUE,
 															"mkisofs"		=> TRUE,
 															"cdrecord"		=> TRUE,
 															"FileSplit"    => TRUE,
-															"RemoveSets"	=> TRUE
+															"RemoveSets"	=> TRUE,
+															'SeparateDest'	=> FALSE
 															)
 								);
 
@@ -1211,7 +1218,13 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	// would be able to write anything to given destdir
 	// otherwise we don't care if are write-enabled
 	if( $KNOWN_MODES[ $COPY_MODE ]['write'] == TRUE )
+		{
 		$dirs[ $DESTINATION ] = "w";
+
+		if( $KNOWN_MODES[ $COPY_MODE ][ 'SeparateDest' ] == TRUE )
+			if( $DESTINATION != $ISO_DEST )
+				$dirs[ $ISO_DEST ] = "w";
+		}
 
 	foreach( $dirs AS $dir=>$opt )
 		{
@@ -1734,7 +1747,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 					{
 					case "iso":
 						{
-						$cmd = sprintf("mkisofs %s -output %s/%s %s", $MKISOFS_PARAMS, $TMP_DEST, $out_name, $src_name);
+						$cmd = sprintf("mkisofs %s -output %s/%s %s", $MKISOFS_PARAMS, $ISO_DEST, $out_name, $src_name);
 						printf("Creating: %s of %s\n", $out_name, $src_name );
 						system( $cmd );
 						}
