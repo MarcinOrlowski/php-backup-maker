@@ -14,10 +14,10 @@
                    - renamed scripts. The main script is now just pdm.php
                      to match SF and FM project name
                    - added more end-user-readable output for all filesizes.
-						   Instead of just pure bytecounts like "219942106" you will
-							also face "210MB"
+                     Instead of just pure bytecounts like "219942106" you will
+                     also face "210MB"
                    - checks PHP config agains safe_mode to avoid newbie
-						   problems they may face when running with active SafeMode.
+                     problems they may face when running with active SafeMode.
 
  2003.01.01 - v1.6 - code spead-up ('progress' is repored less often, which
                      speeds up data processing *significantly*
@@ -55,4 +55,4 @@
 
 
 -- 
-$Id: CHANGES,v 1.2 2003/01/13 00:30:13 carl-os Exp $
+$Id: CHANGES,v 1.3 2003/01/13 00:36:27 carl-os Exp $
