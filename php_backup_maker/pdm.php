@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.15 2003/01/28 21:27:31 carl-os Exp $
+// $Id: pdm.php,v 1.16 2003/01/30 16:39:21 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -419,9 +419,9 @@ if( $argc >= 1 )
 	define("USER", getenv("USER"));
 
 	// some useful constans
-	define("GB",	1024^3);
-	define("MB",	1024^2);
-	define("KB",	1024^1);
+	define("GB",	pow(1024,3));
+	define("MB",	pow(1024,2));
+	define("KB",	pow(1024,1));
 
 	// according to http://www.cdrfaq.org/faq07.html#S7-6
 	// each sector is 2352 bytes, but only 2048 bytes can be used for data
