@@ -1,5 +1,5 @@
 ;
-; $Id: pdm.ini.orig,v 1.1 2003/01/13 00:30:13 carl-os Exp $
+; $Id: pdm.ini.orig,v 1.2 2003/01/13 02:20:50 carl-os Exp $
 ;
 ; Default config file for PDM script.
 ; 
@@ -24,6 +24,18 @@ capacity = 700
 ; 5 MB reserved for internal CD structures. 
 ; NOTE: read README for more details or you may waste some CDRs!
 reserved = 5
+
+; 'ignore' marker file - name of the file that indicates directory which
+; should NOT be processed. I. e. if you have mp3/ direcotry in your home,
+; putting this file in the root of this folder prevent it from
+; being backuped. Defult is '.pdm_ignore'
+ignore_file = .pdm_ignore
+
+; by default, PDM ignores also subdirectories of folder where ignore_file
+; had been found. if you want to avoid this, set this to Off - in that
+; case, only content of the directory will be forgotten. Subdirs (if any)
+; will be kept
+ignore_subdirs = On
 
 
 ;

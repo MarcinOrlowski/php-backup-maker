@@ -7,6 +7,11 @@
  
  Development history:
  ------------------------
+            - v2.1 - added support for ignore marker. Ignore marker is a file
+				         (by default '.pdm_ignore' but its name can be configured
+                     via ini file) that tells PDM to skip the directory it
+                     resides in from being processed.
+				
  2003.01.13 - v2.0 - added support for configuration file (pdm.ini). Script
                      first tries to read ~/.pdm/pdm.ini then, if not found,
                      tries /etc/pdm/pdm.ini
@@ -54,4 +59,4 @@
 
 
 -- 
-$Id: CHANGES,v 1.4 2003/01/13 00:39:28 carl-os Exp $
+$Id: CHANGES,v 1.5 2003/01/13 02:20:50 carl-os Exp $

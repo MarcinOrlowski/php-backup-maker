@@ -4,7 +4,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.1 2003/01/13 00:30:13 carl-os Exp $
+// $Id: pdm.php,v 1.2 2003/01/13 02:20:50 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -13,7 +13,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.0" );
+define( "SOFTWARE_VERSION", "2.1 beta" );
 
 // for source formatted with tab spacing = 3
 
@@ -21,12 +21,14 @@ define( "SOFTWARE_VERSION", "2.0" );
 
 	// DON'T touch this! Create ~/.pdm/pdm.ini to override defaults!
 	$config_default = array(
-						"PDM"			=> array("capacity"	=> 700,
-													"reserved"	=> 4
+						"PDM"			=> array("capacity"			=> 700,
+													"reserved"			=> 4,
+													"ignore_file"		=> ".pdm_ignore",
+													"ignore_subdirs"	=> TRUE
 													),
-						"CDRECORD"	=>	array("enabled"		=>	FALSE,
-													"device"			=> "1,0,0",
-													"fifo_size"		=> 10
+						"CDRECORD"	=>	array("enabled"			=>	FALSE,
+													"device"				=> "1,0,0",
+													"fifo_size"			=> 10
 													),
 						);
 	$config = array();
@@ -308,10 +310,11 @@ function Abort( $rc=10 )
 	// some 'debug' info...
 	printf("Your memory_limit: %s, config: %s\n\n",
 					ini_get('memory_limit'),
-					$config_array["config_file"]);
+					$config_array["config_file"]
+			);
 
 
-
+	// geting user params...
 	$COPY_MODE		= $argv[1];
 	$source_dir		= $argv[2];
 	$DESTINATION	= ($argc == 4) ? $argv[3] : ".";
@@ -344,6 +347,7 @@ function Abort( $rc=10 )
 	asort($files);
 
 	$target = array();
+	$dirs_to_ommit = array();
 	clearstatcache();
 
 	$fatal_errors = 0;
@@ -351,35 +355,84 @@ function Abort( $rc=10 )
 
 
 	printf("Processing file list...\n");
+
+	printf("  Gettings file sizes...\n");
 	foreach( $files AS $key=>$val )
-	{
-	$size = filesize( $val );
-	if( $size >= $TOTAL_PER_CD )
 		{
-		// no, no, no. We won't be splitting files at the moment,
-		// we have to give up all the files bigger than the CD capacity
-		printf("  *** File %s is too big (%d bytes)\n", $val, $size );
-		$fatal_errors++;
+		$size = filesize( $val );
+
+		$dir = dirname( $val );
+		$dir = substr( $dir, strlen( $source_dir ) );
+		$name = basename( $val );
+
+		// is it our special file? if so, we should remember this dir for
+		// further processing...
+		if( $name == $config["PDM"]["ignore_file"] )
+			if( isset( $dirs_to_ommit[$dir] ) == FALSE )
+				$dirs_to_ommit[$dir] = $dir;
+
+		$target[$i++] = array(	"name"	=> $name,
+										"path"	=> $dir,
+										"size"	=> filesize( $val ),
+										"cd"		=> 0						// #of CD we move this file into
+									);
+
+		unset( $files[ $key ] );
 		}
 
-	$dir = dirname( $val );
-	$dir = substr( $dir, strlen( $source_dir ) );
-	$target[$i++] = array("name"	=> basename( $val ),
-								"path"	=> $dir,
-								"size"	=> filesize( $val ),
-								"cd"		=> 0						// #of CD we move this file into
-							);
 
-	unset( $files[ $key ] );
-	}
+	// filtering out dirs we don't want to backup
+	if( count( $dirs_to_ommit ) > 0 )
+		{
+		printf("  Filtering out content marked with '%s' in:\n", $config["PDM"]["ignore_file"]);
+		foreach( $dirs_to_ommit AS $dir )
+			{
+			$reduced_cnt = 0;
+			$reduced_size = 0;
+
+			printf("    %s..\n", $dir);
+
+			$dir_len = strlen( $dir );
+
+			foreach( $target AS $key=>$entry )
+				{
+				if( $config["PDM"]["ignore_subdirs"] == FALSE )
+					$match = ( $entry["path"] == $dir );
+				else
+					$match = ( substr($entry["path"], 0, $dir_len) == $dir );
+
+				if( $match )
+					{
+					$reduced_cnt++;
+					$reduced_size += $entry["size"];
+					unset( $target[$key] );
+					}
+				}
+			}
+
+		printf("  Filtered %s in %d files\n", SizeStr( $reduced_size ), $reduced_cnt);
+		}
 
 
+	// let's check if file will fit... Prior v2.1 we had this nicely done in one pass
+	// with the above preprocessing, but due to skipping feature we need to slow things
+	// down at the moment
+	printf("  Checking filesize limits...\n");
+	foreach( $target AS $key=>$entry )
+		{
+		if( $entry["size"] >= $TOTAL_PER_CD )
+			{
+			// no, no, no. We won't be splitting files at the moment,
+			// we have to give up all the files bigger than the CD capacity
+			printf("  *** File %s is too big (%d bytes)\n", $val, $size );
+			$fatal_errors++;
+			}
+		}
 	if( $fatal_errors > 0 )
 		{
 		printf("%d critical errors occured. Operation aborted.\n", $fatal_errors );
 		Abort();
 		}
-
 
 
 	$current_cd = 1;
@@ -605,13 +658,13 @@ function Abort( $rc=10 )
 
 							$code = system( $burn_cmd );
 						printf("RC: %d\n", $code);
-							printf("\nThe \"%s\" has been burnt.\n", $src_name);
+							printf("\nThe '%s' has been burnt.\n", $src_name);
 
 							$burn_again = GetYN( FALSE, sprintf("Do you want to burn '%s' again? [y/N]", $src_name) );
 							}
 						else
 							{
-							printf("    Skipped...\n");
+							printf(" ** Skipped...\n");
 							$burn_again = FALSE;
 							}
 						}
