@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.38 2003/04/26 14:32:23 carl-os Exp $
+// $Id: pdm.php,v 1.39 2003/05/14 23:44:55 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION"	, "3.1" );
+define( "SOFTWARE_VERSION"	, "3.2" );
 define( "SOFTWARE_URL"		, "http://freshmeat.net/projects/pdm" );
 
 
@@ -424,11 +424,11 @@ if( $argc >= 1 )
 													"ignore_subdirs"					=> TRUE,
 													"check_files_readability"		=> TRUE
 													),
-						"CDRECORD"	=>	array("enabled"			=>	FALSE,
+						"CDRECORD"	=>	array("enabled"			=>	TRUE,
 													"device"				=> "1,0,0",
 													"fifo_size"			=> 10
 													),
-						"MKISOFS"	=> array("enabled"			=> FALSE
+						"MKISOFS"	=> array("enabled"			=> TRUE
 													),
 						"SPLIT"		=> array('buffer_size'		=> 0
 													),
@@ -802,7 +802,7 @@ function Abort( $rc=10 )
 	exit( $rc );
 }
 //}}}
-
+//{{{ AbortOnErrors						.
 function AbortOnErrors( $error_cnt )
 {
    if( $error_cnt > 0 )
@@ -811,8 +811,8 @@ function AbortOnErrors( $error_cnt )
 		Abort();
 		}
 }
-
-
+//}}}
+//{{{ AbortIfNoTool						.
 function AbortIfNoTool( $tool )
 {
 	// check if we can access cdrecord tool
@@ -836,11 +836,9 @@ function AbortIfNoTool( $tool )
 		Abort();
 		}
 }
+//}}}
 
-
-
-// file match code
-
+//{{{ file match code					.
 function filematch_fake( $pattern, $str )
 {
 	return( TRUE );
@@ -859,15 +857,15 @@ function filematch_ereg( $pattern, $str )
 	// us whenever number of processing files exceeds 10 ;)
 	$FILEMATCH_WRAPPER = 'filematch_fake';
 
+//}}}
 
-
-
+//{{{ FileSplit							.
 function FileSplit( $in, $out_array, $chunk_size, $progress_meter="" )
 {
 	global $config;
 
 	$result = FALSE;
-	
+
 	$step = $config['SPLIT']['buffer_size'];
 	if( $step == 0)
 		$step = min( (ini_get('memory_limit')*MB), $chunk_size)/3;
@@ -878,7 +876,7 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter="" )
 			{
 			$file_size = filesize( $in );
 			$parts = ceil( $file_size/$chunk_size );
-			
+
 			for( $i=0; $i<$parts; $i++ )
 				{
 				MakeDir( $out_array[$i]['path'] );
@@ -902,7 +900,7 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter="" )
 						if( $file_size < 0 )
 							$file_size = 0;
 						}
-						
+
 					fclose( $fh_out );
 					}
 				}
@@ -926,8 +924,8 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter="" )
 
 	return( $result );
 }
-
-
+//}}}
+//{{{ MakePath								.
 function MakePath()
 {
 	$cnt = func_num_args();
@@ -946,16 +944,85 @@ function MakePath()
 
 	return( eregi_replace( "//+", "/", $path) );
 }
+//}}}
+//{{{ MakeEntryPath						.
 function MakeEntryPath( $entry )
 {
 	global $source_dir;
 
 	return( MakePath( $source_dir, $entry['path'], $entry['name'] ) );
 }
+//}}}
 
+//{{{ Toss									.
+function Toss( &$src, &$tossed, &$stats )
+{
+	global $MEDIA_SPECS, $MEDIA;
+
+	$cnt = count($src);
+
+	if( count($stats) == 0 )
+		CreateSet( $stats, 1, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
+	$next_id = count($stats) + 1;
+
+	reset( $src );
+	while( list($key, $file) = each( $src ) )
+		{
+		$toss_ok = FALSE;
+
+		reset( $stats );
+		while( list($cd_key, $cd) = each( $stats ) )
+			{
+			if( $file['sectors'] <= ($cd['remaining'] - $cd['sectors_toc']) )
+				{
+				$file['cd'] = $cd_key;
+				$tossed[$key] = $file;
+				unset( $src[ $key ] );
+
+				$stats[$cd_key]['remaining'] -= $file["sectors"];
+				$stats[$cd_key]["files"] ++;
+				$stats[$cd_key]["bytes"] += $file["size"];
+				$stats[$cd_key]["sectors"] += $file["sectors"];
+				$stats[$cd_key]["sectors_toc"] = round( ((($stats[ $cd_key ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
+
+				$toss_ok = TRUE;
+				break;
+				}
+			}
+
+		if( $toss_ok == FALSE )
+			{
+			$cd_key = $next_id;
+			CreateSet( $stats, $cd_key, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
+
+			$file['cd'] = $cd_key;
+			$tossed[$key] = $file;
+			unset( $src[ $key ] );
+
+			$stats[$cd_key]['remaining'] -= $file["sectors"];
+			$stats[$cd_key]["files"] ++;
+			$stats[$cd_key]["bytes"] += $file["size"];
+			$stats[$cd_key]["sectors"] += $file["sectors"];
+			$stats[$cd_key]["sectors_toc"] = round( ((($stats[ $cd_key ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
+
+			$next_id++;
+			}
+		}
+}
+//}}}
+//{{{ CreateSet							.
+function CreateSet( &$stats, $current_cd, $capacity )
+{
+	$stats[ $current_cd ]["cd"] = $current_cd;
+	$stats[ $current_cd ]["files"] = 0;
+	$stats[ $current_cd ]["bytes"] = 0;
+	$stats[ $current_cd ]["sectors"] = 0;
+	$stats[ $current_cd ]["sectors_toc"] = 0;
+	$stats[ $current_cd ]['remaining'] = $capacity;
+}
+//}}}
 
 /******************************************************************************/
-
 
 	printf(
 		"\n" .
@@ -1137,7 +1204,7 @@ function MakeEntryPath( $entry )
 	// otherwise we don't care if are write-enabled
 	if( $KNOWN_MODES[ $COPY_MODE ]['write'] == TRUE )
 		$dirs[ $DESTINATION ] = "w";
-	
+
 	foreach( $dirs AS $dir=>$opt )
 		{
 		if( !(is_dir( $dir )) )
@@ -1273,7 +1340,7 @@ function MakeEntryPath( $entry )
 				}
 
 		// let's check if file matches our pattern finally
-	
+
 		if( $FILEMATCH_WRAPPER( $PATTERN, $val ) )
 			{
 			$file_size = filesize( $val );
@@ -1384,18 +1451,18 @@ function MakeEntryPath( $entry )
 			{
 			if( $file['split'] == TRUE )
 				{
-				$chunk_size = $MEDIA_SPECS[ $MEDIA ]['max_file_size']; 
+				$chunk_size = $MEDIA_SPECS[ $MEDIA ]['max_file_size'];
 				$parts = ceil( $file['size'] / $chunk_size );
 
 				printf("    '%s' (%s) into %d chunks\n", $file['name'], SizeStr( $file['size'] ), $parts );
-				
+
 				$tmp_size = $file['size'];
 				for( $i=0; $i<$parts; $i++ )
 					{
 					$tmp = $file;
 
 					$file_size = intval(($tmp_size > $chunk_size) ? $chunk_size : $tmp_size);
-					
+
 					$tmp['size'] = $file_size;
 					$tmp['name'] = sprintf("%s_%03d", $file['name'], $i);
 					$tmp['sectors'] = round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 );
@@ -1421,7 +1488,7 @@ function MakeEntryPath( $entry )
 	$total_size_split = 0;
 	$total_files_std = 0;
 	$total_size_std = 0;
-	
+
 	reset( $target );
 	while( list($key, $file) = each( $target ) )
 		{
@@ -1434,7 +1501,7 @@ function MakeEntryPath( $entry )
 		$total_files_split++;
 		$total_size_split += $file["size"];
 		}
-	
+
 	$total_files = $total_files_std + $total_files_split;
 	$total_size = $total_size_std + $total_size_split;
 
@@ -1443,82 +1510,17 @@ function MakeEntryPath( $entry )
 		Abort();
 
 
-
 	// let's go, as long as we got something to process...
 	$tossed = array();									// here we going to have tossed files at the end
 	$stats = array();										// some brief statistics for each set we create
 
-function CreateSet( &$stats, $current_cd, $capacity )
-{
-	$stats[ $current_cd ]["cd"] = $current_cd;
-	$stats[ $current_cd ]["files"] = 0;
-	$stats[ $current_cd ]["bytes"] = 0;
-	$stats[ $current_cd ]["sectors"] = 0;
-	$stats[ $current_cd ]["sectors_toc"] = 0;
-	$stats[ $current_cd ]['remaining'] = $capacity;
-}
-
-function Toss( &$src, &$tossed, &$stats )
-{
-	global $MEDIA_SPECS, $MEDIA;
-
-	$cnt = count($src);
-
-	if( count($stats) == 0 )
-		CreateSet( $stats, 1, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
-	$next_id = count($stats) + 1;
-
-	reset( $src );
-	while( list($key, $file) = each( $src ) )
-		{
-		$toss_ok = FALSE;
-		
-		reset( $stats );
-		while( list($cd_key, $cd) = each( $stats ) )
-			{
-			if( $file['sectors'] <= ($cd['remaining'] - $cd['sectors_toc']) )
-				{
-				$file['cd'] = $cd_key;
-				$tossed[$key] = $file;
-				unset( $src[ $key ] );
-
-				$stats[$cd_key]['remaining'] -= $file["sectors"];
-				$stats[$cd_key]["files"] ++;
-				$stats[$cd_key]["bytes"] += $file["size"];
-				$stats[$cd_key]["sectors"] += $file["sectors"];
-				$stats[$cd_key]["sectors_toc"] = round( ((($stats[ $cd_key ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
-
-				$toss_ok = TRUE;
-				}			
-			}
-			
-		if( $toss_ok == FALSE )
-			{
-			$cd_key = $next_id;
-			CreateSet( $stats, $cd_key, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
-			
-			$file['cd'] = $cd_key;
-			$tossed[$key] = $file;
-			unset( $src[ $key ] );
-
-			$stats[$cd_key]['remaining'] -= $file["sectors"];
-			$stats[$cd_key]["files"] ++;
-			$stats[$cd_key]["bytes"] += $file["size"];
-			$stats[$cd_key]["sectors"] += $file["sectors"];
-			$stats[$cd_key]["sectors_toc"] = round( ((($stats[ $cd_key ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
-
-			$next_id++;
-			}
-		}
-}
 
 	// Tossing...
 	printf("Tossing...\n");
-	Toss( $target, $tossed, $stats );
 
+	Toss( $target, $tossed, $stats );
 	$tmp_split = $target_split;					// since Toss() unset()'s elements, we use tmp array, as we need target_split later on...
 	Toss( $tmp_split, $tossed, $stats );
-
 
 	$total_cds = count($stats);
 	printf("%-70s\n", sprintf("Tossed into %d CDs of %s each...", $total_cds, SizeStr( $MEDIA_SPECS[$MEDIA]["capacity"] ) ) );
@@ -1577,7 +1579,7 @@ function Toss( &$src, &$tossed, &$stats )
 			$dest = MakePath( $dest_dir, $file["name"] );
 
 			MakeDir( $dest_dir );
-				
+
 			switch( $COPY_MODE )
 				{
 				case "copy":
@@ -1620,7 +1622,7 @@ function Toss( &$src, &$tossed, &$stats )
 			$src_dir = MakePath($source_dir, $file["path"] );
 			$src  = MakePath("%s%s", $src_dir, $files_to_split[ $src_idx ]["name"]);
 			$dest_dir = sprintf("%s/%s_cd%02d/%s", $DESTINATION, $OUT_CORE, $file["cd"], $file["path"] );
-				
+
 			reset( $files_to_split );
 			while( list($spl_key, $spl_file) = each( $files_to_split ) )
 				{
@@ -1645,8 +1647,8 @@ function Toss( &$src, &$tossed, &$stats )
 		$progress = sprintf("%3d:  Splitting '#NAME#' (#SIZE# to go)...\r", $cnt);
 		FileSplit( $src, $file['parts'],  $MEDIA_SPECS[ $MEDIA ]['max_file_size'], $progress );
 		}
-	
-	
+
+
 
 	// let's write the index file, so it'd be easier to find given file later on
 	printf("Building index files...\n");
@@ -1677,7 +1679,7 @@ function Toss( &$src, &$tossed, &$stats )
 		for( $i=1; $i<=$total_cds; $i++ )
 			{
 			$set_name = sprintf("%s_cd%02d", $OUT_CORE, $i);
-			
+
 			$fh = fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
 			if( $fh )
 				{
@@ -1737,7 +1739,7 @@ function Toss( &$src, &$tossed, &$stats )
 							$_type = "on-the-fly";
 						else
 							$_type = "via ISO image";
-						
+
 						do
 							{
 							printf("\nAttemting to burn %s (#%d CD of %d) %s (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds, $_type);
@@ -1772,7 +1774,7 @@ function Toss( &$src, &$tossed, &$stats )
 											if( file_exists( $out_name ) )
 												unlink( $out_name );
 											break;
-											
+
 										case ANSWER_ABORT:
 											if( file_exists( $out_name ) )
 												unlink( $out_name );
