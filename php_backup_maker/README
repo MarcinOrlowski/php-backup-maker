@@ -171,7 +171,8 @@ src  - source directory (i.e. "data/") which you are going
        to process and backup
 
 dest - destination directory where CD sets will be created.
-       If ommited, current directory will be used (".")
+       If ommited, your current working directory will be
+       used
 
 
 How it works:
