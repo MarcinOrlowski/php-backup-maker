@@ -24,7 +24,8 @@ cd ..
 
 tar -zcvf "pdm-${1}.tgz" pdm_${TAG}
 md5sum -b pdm-${1}.tgz >pdm-${1}.md5sum
+echo ${TAG} >pdm_latest_version.txt
 
-lukemftp -u ftp://upload.sf.net/incoming/ pdm-${1}.md5sum  pdm-${1}.tgz
+lukemftp -u ftp://upload.sf.net/incoming/ pdm-${1}.md5sum pdm-${1}.tgz pdm_latest_version.txt
 
 cd ${CUR}
