@@ -27,12 +27,12 @@
                      environment
                    - implemented -split feature. See README for closer
                      details how to backup your big stuff feature
-							request #702555 by Thien (and lot of others ;)
+                     request #702555 by Thien (and lot of others ;)
                    - now correctly reports name and size of file exceeding
                      allowed media capacity
                    - rewrote file tosser routine. It's now significantly
                      faster than old one (tossing 80000 files took pdm3
-							15 seconds while pdm2 needed 27 secs).
+                     15 seconds while pdm2 needed 27 secs).
 
  2003.03.12 - v2.5 - cdrecord is now called with additional options:
                      speed=0 (max available), burnfree=On, gracetime=2
@@ -177,4 +177,4 @@
 
 
 --
-$Id: CHANGES,v 1.28 2003/04/13 15:33:22 carl-os Exp $
+$Id: CHANGES,v 1.29 2003/04/13 16:23:24 carl-os Exp $
