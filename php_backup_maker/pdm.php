@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.16 2003/01/30 16:39:21 carl-os Exp $
+// $Id: pdm.php,v 1.17 2003/02/08 14:01:15 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -364,7 +364,6 @@ if( $argc >= 1 )
 
 					"mode"		=> array("short"		=> 'm',
 												"long"		=> 'mode',
-												"required"	=> TRUE,
 												"info"		=> 'Specifies working mode. See help-mode for details.'
 												),
 
@@ -411,7 +410,12 @@ if( $argc >= 1 )
 
 /** No modyfications below this line are definitely required ******************/
 
-	$KNOWN_MODES = array("test","link","copy","move","iso","burn");
+	$KNOWN_MODES = array("test"	=> "",
+								"link"	=> "w",
+								"copy"	=> "w",
+								"move"	=> "w",
+								"iso"		=> "w",
+								"burn"	=> "w");
 
 /******************************************************************************/
 
@@ -835,17 +839,39 @@ function AbortIfNoTool( $tool )
 
 
 	// geting user params...
-	$COPY_MODE		= $cCLI->GetOptionArg("mode");;
+	$COPY_MODE		= ($cCLI->IsOptionSet("mode")) ? $cCLI->GetOptionArg("mode") : "test";
 	$source_dir		= eregi_replace( "//+", "/", $cCLI->GetOptionArg("source") );
-	$DESTINATION	= ($cCLI->IsOptionSet("dest")) ? $cCLI->GetOptionArg("dest") : getenv("PWD");
-	$MEDIA 			= ( $cCLI->IsOptionSet("media") ) ? $cCLI->GetOptionArg("media") : $config["PDM"]["media"];
+	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  ? $cCLI->GetOptionArg("dest")  : getenv("PWD");
+	$MEDIA 			= ($cCLI->IsOptionSet("media")) ? $cCLI->GetOptionArg("media") : $config["PDM"]["media"];
+
+   // lets check user input
+   if( array_key_exists( $COPY_MODE, $KNOWN_MODES ) === FALSE )
+		{
+		printf("ERROR: Unknown mode: '%s'\n\n", $COPY_MODE );
+		ShowModeHelp();
+		Abort();
+		}
+
+  if( array_key_exists( $MEDIA, $MEDIA_SPECS ) === FALSE )
+     {
+	  printf("ERROR: Unknown media type: '%s'\n\n", $MEDIA);
+	  ShowMediaHelp();
+	  Abort();
+	  }
 
 	// go to dest dir...
 	chdir( $DESTINATION );
 
 
 	// let's check if source and dest are directories...
-	$dirs = array( $source_dir=>"r", $DESTINATION=>"w" );
+	$dirs = array( $source_dir=>"r" );
+
+	// uf copy mode requires any writting, we need to check if we
+	// would be able to write anything to given destdir
+	// otherwise we don't care if are write-enabled
+	if( $KNOWN_MODES[ $COPY_MODE ] == "w" )
+		$dirs[ $DESTINATION ] = "w";
+	
 	foreach( $dirs AS $dir=>$opt )
 		{
 		if( !(is_dir( $dir )) )
@@ -871,22 +897,6 @@ function AbortIfNoTool( $tool )
 				Abort();
 				}
 			}
-		}
-
-
-	// lets check user input
-	if( array_search( $COPY_MODE, $KNOWN_MODES ) === FALSE )
-		{
-		printf("ERROR: Unknown mode: '%s'\n\n", $COPY_MODE );
-		ShowModeHelp();
-		Abort();
-		}
-
-	if( array_key_exists( $MEDIA, $MEDIA_SPECS ) === FALSE )
-		{
-		printf("ERROR: Unknown media type: '%s'\n\n", $MEDIA);
-		ShowMediaHelp();
-		Abort();
 		}
 
 
@@ -1133,7 +1143,7 @@ function AbortIfNoTool( $tool )
 
 	// tell me what we have done...
 	foreach( $stats AS $item )
-		printf("  CD: %2d, files: %5d, ISO FS: %5s + special\n", $item["cd"], $item["files"], SizeStr($item["bytes"]), SizeStr( $item["files"] * AVG_BYTES_PER_TOC_ENTRY) );
+		printf("  CD: %2d, files: %5d, ISO FS: %6.6s + specials\n", $item["cd"], $item["files"], SizeStr($item["bytes"]), SizeStr( $item["files"] * AVG_BYTES_PER_TOC_ENTRY) );
 
 	printf("\n");
 
