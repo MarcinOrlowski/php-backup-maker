@@ -7,7 +7,7 @@
 
  Development history:
  ------------------------
-            - v2.6 - reduced memory usage by replacing most foreach()
+            - v3.0 - reduced memory usage by replacing most foreach()
                      loops by while( list(), each() ) equivalents which
                      does not clone arrays
                    - PDM used to generate incomplete index files in
@@ -23,6 +23,8 @@
                      details how to backup your big stuff
                    - now correctly reports name and size of file exceeding
                      allowed media capacity
+                   - rewrote file tosser. It's now significantly faster
+                     that one known from older releases.
 
  2003.03.12 - v2.5 - cdrecord is now called with additional options:
                      speed=0 (max available), burnfree=On, gracetime=2
@@ -167,4 +169,4 @@
 
 
 --
-$Id: CHANGES,v 1.26 2003/04/04 10:58:42 carl-os Exp $
+$Id: CHANGES,v 1.27 2003/04/12 21:12:52 carl-os Exp $
