@@ -153,16 +153,16 @@ in the script.
  given memory_limit but also (strange to me) does not offer
  any function to determine how many spare bytes remains.
  PDM deals with this as follow. If buffer_size is set to
- 0 or is not specified, we take 4th part of chunk size
+ 0 or is not specified, we take 3rd part of chunk size
  or php.ini/memory_limit value, taking the lower one. 
  For example, if we got 200MB file to split into 100MB
- chunks and current memory limit is set to 40MB, PDM
+ chunks and current memory limit is set to 30MB, PDM
  will use 10MB for splitting buffer. This slows us a bit
  as we have to do 10 reads/writes per chunk, but prevents
  against memory exchausting problem. Alternate approach
  is to specify buffer_size manually. Write how many
  MB you want PDM to *always* use (ie. to set it up
- to 22MB, set buffer_size to 22). If you got memory_limit
+ to 22MB, set buffer_size = 22). If you got memory_limit
  set high enough (i.e 200MB) 4th part of it is only 50MB.
  However PDM is memory hungry tool sometimes, it safely
  deals with 50000 files even with i64MB memory_limit.
@@ -304,5 +304,5 @@ Author
 
 
 --
-$Id: README,v 1.10 2003/04/12 21:12:52 carl-os Exp $
+$Id: README,v 1.11 2003/04/13 16:18:13 carl-os Exp $
 
