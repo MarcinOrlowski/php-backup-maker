@@ -8,11 +8,10 @@
  Development history:
  ------------------------
  2003.01.13 - v2.0 - added support for configuration file (pdm.ini). Script
-                     first tries to read ~/.pdm/pdm_config.ini then, if not
-                     found, tries /etc/pdm/pdm_config.ini finally it tries
-							./pdm.ini
-                   - renamed scripts. The main script is now just pdm.php
-                     to match SF and FM project name
+                     first tries to read ~/.pdm/pdm.ini then, if not found,
+                     tries /etc/pdm/pdm.ini
+                   - renamed the script - it's now just pdm.php to match SF
+                     and FM project name (and to avoid confusion)
                    - added more end-user-readable output for all filesizes.
                      Instead of just pure bytecounts like "219942106" you will
                      also face "210MB"
@@ -55,4 +54,4 @@
 
 
 -- 
-$Id: CHANGES,v 1.3 2003/01/13 00:36:27 carl-os Exp $
+$Id: CHANGES,v 1.4 2003/01/13 00:39:28 carl-os Exp $
