@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my code ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.17 2003/02/08 14:01:15 carl-os Exp $
+// $Id: pdm.php,v 1.18 2003/02/08 14:02:02 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.3" );
+define( "SOFTWARE_VERSION", "2.4 beta" );
 
 
 //{{{ class_cli							.
