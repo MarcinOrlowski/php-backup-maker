@@ -1,11 +1,24 @@
 
+ PHP Dump Maker
+ --------------------------------------------------
  Written by Marcin Orlowski <carlos@wfmh.org.pl>
- Home page: http://freshmeat.net/projects/pbm/
+ Home page: http://freshmeat.net/projects/pdm/
  
  
  Development history:
  ------------------------
- 
+ 2003.01.13 - v2.0 - added support for configuration file (pdm.ini). Script
+                     first tries to read ~/.pdm/pdm_config.ini then, if not
+                     found, tries /etc/pdm/pdm_config.ini finally it tries
+							./pdm.ini
+                   - renamed scripts. The main script is now just pdm.php
+                     to match SF and FM project name
+                   - added more end-user-readable output for all filesizes.
+						   Instead of just pure bytecounts like "219942106" you will
+							also face "210MB"
+                   - checks PHP config agains safe_mode to avoid newbie
+						   problems they may face when running with active SafeMode.
+
  2003.01.01 - v1.6 - code spead-up ('progress' is repored less often, which
                      speeds up data processing *significantly*
                    - script used to leave temporary CD sets if ordered to Abort
@@ -40,3 +53,6 @@
 
  2002.07.30 - v1.0 - initial release.
 
+
+-- 
+$Id: CHANGES,v 1.2 2003/01/13 00:30:13 carl-os Exp $

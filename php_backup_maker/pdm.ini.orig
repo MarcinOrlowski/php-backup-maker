@@ -1,0 +1,51 @@
+;
+; $Id: pdm.ini.orig,v 1.1 2003/01/13 00:30:13 carl-os Exp $
+;
+; Default config file for PDM script.
+; 
+; INSTALLATION: Rename to 'pdm.ini' and put to ~/.pdm/
+;               directory
+;
+; Author: Marcin Orlowski <carlos@wfmh.org.pl>
+;
+; Project home: http://pdm.sf.net/
+;               http://wfmh.org.pl/~carlos/
+;
+
+;
+; PDM - general settings...
+;
+[PDM]
+
+; you use 700 MB CDRs or (if you don't want to burn but to toss files only)
+; all files will be placed in sets containing of max. capacity MB of data
+capacity = 700
+
+; 5 MB reserved for internal CD structures. 
+; NOTE: read README for more details or you may waste some CDRs!
+reserved = 5
+
+
+;
+; CDRECORD
+;
+; here we gonna set up some values for 'cdrecord' tool, to make CD burning
+; possible. Make sure you got it all right!
+;
+[CDRECORD]
+
+; if you want to burn anything, enable this feature first. Make sure you
+; have cdrecord and mkisofs installed and available!
+; Values: On/Off
+enabled = Off
+
+; use "cdrecord -scanbus" to find out your device settings and put the result
+; (i.e. for 1st CD writer it will be something like "x,0,0")
+; NOTE: don't put any /dev/xxxx here. CD-Record needs what's above.
+; device 1,0,0 means master unit on 2nd IDE device (probably your case too)
+device = "1,0,0"
+
+; how many MB per fifo size (important when burning on the fly. If you got
+; many small files to burn, You may consider increasing this value if RAM
+; permits, however default 10MB should be fine for most uses
+fifo_size = 10

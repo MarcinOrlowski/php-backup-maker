@@ -1,5 +1,5 @@
 
-What is it?
+PDM? What is it?
 -------------------------------------
 
 This is a small PHP script which reads a given source directory
@@ -16,8 +16,8 @@ Requirements
 Obligatory:
 
  - PHP interpreter <http://php.net>. This script is developed
-   with PHP 4.2.x but any 4.x would do (3.x may fail - I don't
-   care, neither consider any 'fixes' when this appears true).
+   with PHP 4.2.x but any 4.x would do (it will fail on 3.x
+	as it uses PHP 4.x specific functions here and there).
 
 Optional:
 
@@ -32,40 +32,33 @@ Optional:
 Configuration
 -------------------------------------
 
-To make script to work well, you should configure it first.
-Use any text editor, and open the script body itself, look
-for the following variables, and correct defaults if needed.
+To make script to work well, you should configure it first,
+by doing the following (I will simplify this later)
 
-Plase note that if you don't plan to burn nor produce ISO
-images, you can ignore most of these settings. Check
-NOTEs below for more details about what to keep eye on
-mostly.
-
-
- CDR device
- ---------------
-
- $CD_DEVICE = "1,0,0";
-
- if you want to burn anything you need to tell on which 
- device your CDR burner is. Use "cdrecord -scanbus" to
- find this out, and put the 1st column value as shown
- on above example. If you don't plan to burn, nor have
- any burner, leave it as is.
+  cd ~
+  mkdir .pdm
+  cp PATH_TO_PDM_UNPACKED/pdm.ini.orig ~/.pdm/pdm.ini
+  
+Then use any text editor, and open the pdm.ini file, 
+and configure whatever you wish (pleasae note, that
+the script does NOT validate these values. If you put
+"abcd" as i.e. capacity you will get unexpected errors
+in the script.
 
 
- CD capacity
- ---------------
+ General settings (PDM section):
+ ----------------------------------
  
- $CD_CAPACITY = 700;
+ capacity = 700
 
  Specify how many megabytes (MB) fits on your CDRs. 700MB
  are most widely used. Check the booklet for details.
- 
- $RESERVED = 4;
- 
+
+
+ reserved = 5
+
  We need to reserve some space for internal data stuctures
- each CD needs. Default 4MB of reserved space shall be fine
+ CD needs. Default 4MB of reserved space shall be fine
  for most burnouts, but if you got lot of small files to
  process (say 30000 or 45000 files in total) you most probably
  will may need to increase this (even up to 40MB).
@@ -83,14 +76,36 @@ mostly.
  each CD), but you can't change it.
 
  NOTE: If you don't plan to burn anything nor create ISO
-       images you can set RESERVED to 0 and CD_CAPACITY
-		 to the value you want per set.
+       images you can set RESERVED to 0 and CAPACITY
+       to the value you want per set.
+										
+			  
+
+ CD recording (CDRECORD section)
+ -----------------------------------
+ Plase note that if you don't plan to burn nor produce ISO
+ images, you can ignore most of these settings. Check
+ NOTEs below for more details about what to keep eye on
+ mostly.
 
 
- FIFO queue size
- ---------------
+ enabled = Off
 
- $FIFO_SIZE = 10;
+ If you want to make burning available switch this to
+ "On" (w/o quotes). Make sure you got external software
+ like cdrecord and mkisofs installed and available.
+
+
+ device = "1,0,0"
+
+ if you want to burn anything you need to tell on which 
+ device your CDR burner is. Use "cdrecord -scanbus" to
+ find this out, and put the 1st column value as shown
+ on above example. If you don't plan to burn, nor have
+ any burner, leave it as is.
+
+
+ fifo_size = 10
 
  FIFO queue is used when you burn on-the-fly. It's memory buffer
  used to communicate between mkisofs that creates CD structures
@@ -149,7 +164,8 @@ mode - specify method of CD set creation. Available:
                 each CD created. Requires mkisofs and
                 as much free disk space as source takes
 
-       "burn" - burns CD sets on-the-fly.
+       "burn" - burns CD sets on-the-fly (have to be
+		          enabled first)
 
 src  - source directory (i.e. "data/") which you are going
        to process and backup
@@ -210,5 +226,5 @@ Author
 -------------------------------------
 
  Written by Marcin Orlowski <carlos@wfmh.org.pl>
- Home page: http://freshmeat.net/projects/pbm/
+ Home page: http://freshmeat.net/projects/pdm/
 	
