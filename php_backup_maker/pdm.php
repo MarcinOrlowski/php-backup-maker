@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.36 2003/04/13 16:18:14 carl-os Exp $
+// $Id: pdm.php,v 1.37 2003/04/26 14:27:11 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION"	, "3.0" );
+define( "SOFTWARE_VERSION"	, "3.1 beta" );
 define( "SOFTWARE_URL"		, "http://freshmeat.net/projects/pdm" );
 
 
@@ -1479,7 +1479,7 @@ function Toss( &$src, &$tossed, &$stats )
 			if( $file['sectors'] <= ($cd['remaining'] - $cd['sectors_toc']) )
 				{
 				$file['cd'] = $cd_key;
-				$tossed[] = $file;
+				$tossed[$key] = $file;
 				unset( $src[ $key ] );
 
 				$stats[$cd_key]['remaining'] -= $file["sectors"];
@@ -1498,7 +1498,7 @@ function Toss( &$src, &$tossed, &$stats )
 			CreateSet( $stats, $cd_key, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
 			
 			$file['cd'] = $cd_key;
-			$tossed[] = $file;
+			$tossed[$key] = $file;
 			unset( $src[ $key ] );
 
 			$stats[$cd_key]['remaining'] -= $file["sectors"];
