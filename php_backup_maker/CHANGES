@@ -27,6 +27,9 @@
                      mistake)
                    - PDM does no startup check against old set directories
                      to avoid potential problems with file/dir name collisions
+                   - added .ini versioning, to be able to detect and inform
+                     about ancient config files and (probably) misconfigured
+                     features
 				
  2003.01.13 - v2.0 - added support for configuration file (pdm.ini). Script
                      first tries to read ~/.pdm/pdm.ini then, if not found,
@@ -75,4 +78,4 @@
 
 
 -- 
-$Id: CHANGES,v 1.7 2003/01/13 14:51:49 carl-os Exp $
+$Id: CHANGES,v 1.8 2003/01/14 14:50:27 carl-os Exp $
