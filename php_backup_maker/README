@@ -144,6 +144,11 @@ that wasn't enough for 45000 file set).
 Usage
 -------------------------------------
 
+ NOTE: this 'chapter' is outdated as of PDM v2.3+. Please 
+        use -help and your imagination at the moment. Sorry
+		  ==============================================
+
+
 Run it without arguments to get help page:
 
  ./cd_dump_maker.php mode src [dest]
@@ -239,5 +244,5 @@ Author
 
 
 --
-$Id: README,v 1.5 2003/01/18 21:32:57 carl-os Exp $
+$Id: README,v 1.6 2003/03/06 20:08:27 carl-os Exp $
 

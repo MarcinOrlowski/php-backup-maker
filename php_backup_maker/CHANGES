@@ -17,6 +17,10 @@
                      used mode. Since these sets are in fact final results
                      of 'link', 'move' and 'copy' modes it could hurt you 
                      badly (in 'move' mode especialy').
+                   - added 'pattern' option to let you filter out files
+                     you process with aid of regexp patterns. This option
+                     is only available if you run at least PHP 4.3.0
+                     (feature request #698839 by Marcin Juszkiewicz)
 
  2003.02.11 - v2.4 - fixed incorrect KB definition (was 10 times too big).
                      Fortunately there's no inpact as this was mostly
@@ -142,4 +146,4 @@
 
 
 --
-$Id: CHANGES,v 1.20 2003/02/24 23:43:30 carl-os Exp $
+$Id: CHANGES,v 1.21 2003/03/06 20:08:26 carl-os Exp $

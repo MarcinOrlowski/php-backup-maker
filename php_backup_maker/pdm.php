@@ -5,7 +5,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.23 2003/02/24 23:43:31 carl-os Exp $
+// $Id: pdm.php,v 1.24 2003/03/06 20:08:27 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -370,6 +370,10 @@ if( $argc >= 1 )
 												"long"		=> 'out-core',
 												"info"		=> 'Specifies name prefix used for CD sets directories. If not specified, Current date in YYYYMMDD format will be taken.'
 												),
+
+					"pattern"		=>	array('long'	=> 'pattern',
+													'info'	=> 'Specifies regular expression pattern for files to be processed. By default it defines "*" which means any file.'
+													),
 
 					"help-mode"		=> array('long'	=> 'help-mode',
 													'info'	=> 'Shows more information about available work modes.',
@@ -798,6 +802,20 @@ function AbortIfNoTool( $tool )
 }
 
 
+
+// fnmatch wrapping code
+
+function fnmatch_fake( $pattern, $str )
+{
+	return( TRUE );
+}
+function fnmatch_real( $pattern, $str )
+{
+	return( fnmatch( $pattern, $str ) );
+}
+
+	$FNMATCH_WRAPPER = fnmatch_real;
+
 /******************************************************************************/
 
 
@@ -898,6 +916,24 @@ function AbortIfNoTool( $tool )
 			}
 
 
+	// let's check if we can use pattern features with user PHP
+	$VERSION_FNMATCH = "4.3.0";
+
+	if( (version_compare( phpversion(), $VERSION_FNMATCH , "<") ) )
+		{
+		if( $cCLI->IsOptionSet("pattern") )
+			{
+			printf("ERROR: pattern matching requires PHP %s or higher\n", $VERSION_FNMATCH);
+			printf("       Please upgrade or omit this option.\n");
+			Abort();
+			}
+
+		// setting up fake wrapper - using wrapper speeds upi further processing
+		// as we don't need any comparisions for each call, which would punish
+		// us whenever number of processing files exceeds 10 ;)
+		$FNMATCH_WRAPPER = fnmatch_fake;
+		}
+
 
 	// geting user params...
 	$COPY_MODE		= ($cCLI->IsOptionSet("mode")) ? $cCLI->GetOptionArg("mode") : "test";
@@ -905,6 +941,7 @@ function AbortIfNoTool( $tool )
 	$DESTINATION	= ($cCLI->IsOptionSet("dest"))  ? $cCLI->GetOptionArg("dest")  	: getenv("PWD");
 	$MEDIA 			= ($cCLI->IsOptionSet("media"))	? $cCLI->GetOptionArg("media") 	: $config["PDM"]["media"];
 	$OUT_CORE		= ($cCLI->IsOptionSet("out-core")) ? $cCLI->GetOptionArg("out-core")	: date("Ymd");
+	$PATTERN			= ($cCLI->IsOptionSet("pattern")) ? $cCLI->GetOptionArg("pattern") : "*";
 	
 
    // lets check user input
@@ -1045,6 +1082,7 @@ function AbortIfNoTool( $tool )
 	printf("Processing file list...\n");
 
 	printf("  Gettings file sizes...\n");
+	$pattern_skipped_files = 0;
 	foreach( $files AS $key=>$val )
 		{
 		$size = filesize( $val );
@@ -1067,17 +1105,29 @@ function AbortIfNoTool( $tool )
 				$fatal_errors++;
 				}
 
-		$file_size = filesize( $val );
-		$target[$i++] = array(	"name"	=> $name,
-										"path"	=> $dir,
-										"size"	=> $file_size,
-										"sectors"=> round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 ),
-										"cd"		=> 0						// #of CD we move this file into
-									);
+		// let's check if file matches our pattern finally
+	
+		if( $FNMATCH_WRAPPER( $PATTERN, $val ) )
+			{
+			$file_size = filesize( $val );
+			$target[$i++] = array(	"name"	=> $name,
+											"path"	=> $dir,
+											"size"	=> $file_size,
+											"sectors"=> round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 ),
+											"cd"		=> 0						// #of CD we move this file into
+										);
+			}
+		else
+			{
+			$pattern_skipped_files++;
+			}
 
 		unset( $files[ $key ] );
 		}
 	AbortOnErrors( $fatal_errors );
+
+	if( $pattern_skipped_files > 0 )
+		printf("    Pattern skipped files: %d\n", $pattern_skipped_files);
 
 
 	// filtering out dirs we don't want to backup
