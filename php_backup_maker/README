@@ -33,14 +33,16 @@ Optional:
 Configuration
 -------------------------------------
 
-To make script to work well, you should configure it first,
-by doing the following (I will simplify this later)
+Most parameters can be passed as argument when script
+is invoked. But some of them (i.e. cd recording related)
+have to be configured first by creating valid pdm.ini
+file. Here's how to do so (I will simplify this later):
 
   cd ~
   mkdir .pdm
   cp PATH_TO_PDM_UNPACKED/pdm.ini.orig ~/.pdm/pdm.ini
-  
-Then use any text editor, and open the pdm.ini file, 
+
+Then use any text editor, and open the pdm.ini file,
 and configure whatever you wish (pleasae note, that
 the script does NOT validate these values. If you put
 "abcd" as i.e. capacity you will get unexpected errors
@@ -49,38 +51,43 @@ in the script.
 
  General settings (PDM section):
  ----------------------------------
- 
- capacity = 700
+
+ media = 700
 
  Specify how many megabytes (MB) fits on your CDRs. 700MB
  are most widely used. Check the booklet for details.
+ This can be overwriten with -media option
 
 
- reserved = 5
+ ignore_file = .pdm_ignore
 
- We need to reserve some space for internal data stuctures
- CD needs. Default 4MB of reserved space shall be fine
- for most burnouts, but if you got lot of small files to
- process (say 30000 or 45000 files in total) you most probably
- will may need to increase this (even up to 40MB).
- It's all because of technical requirements: each file written
- on CD takes some space for its 'body' (the data it really holds),
- but we also need to store file  name, it's attributes and
- so on. And this data also needs to fit on the CD. If you
- reserve insufficient space, you get 'broken' ISO images
- (exceeding real CD capacity) or broken CDs.
+ This is ignore marker. Ignore marker is a file
+ that tells PDM to skip the directory it resides in from
+ being processed. It can be 0 bytes large (content
+ just does not matter, so you can create it by calling:
+    echo -n >.pdm_ignore
 
- I plan to implement smarter computation in future for this.
 
- Yes, the more you reserve, the less 'real data' fits on
- the CD (on the above example we really fit 696MB on
- each CD), but you can't change it.
+ ignore_subdirs = On
 
- NOTE: If you don't plan to burn anything nor create ISO
-       images you can set RESERVED to 0 and CAPACITY
-       to the value you want per set.
-										
-			  
+ If ignore_file is found PDM may also skip all subdirs
+ that can be found in this directory too (this is default
+ behaviour). Set it to Off, to avoid this (you'll have
+ to put ignore_file in each subdir if you would like it
+ to be skipped
+
+
+ check_files_readability = On
+
+ By default PDM checks if each file can be read. This
+ prevents i.e. mkisofs from terminating in the middle
+ of its work with error "Can't read file". However this
+ option slows file processing a bit, I stronly suggest
+ to keep it on for safety. If PDM is called by root,
+ check_files_readability is automatically deactivated
+ (as it makes no sense for might root).
+
+
 
  CD recording (CDRECORD section)
  -----------------------------------
@@ -99,7 +106,7 @@ in the script.
 
  device = "1,0,0"
 
- if you want to burn anything you need to tell on which 
+ if you want to burn anything you need to tell on which
  device your CDR burner is. Use "cdrecord -scanbus" to
  find this out, and put the 1st column value as shown
  on above example. If you don't plan to burn, nor have
@@ -124,7 +131,7 @@ Configuring PHP
 
 No special configuration is needed, but please make sure you
 don't have command line scripts working in Safe Mode (most
-probably you have this option turned off), as it needs to 
+probably you have this option turned off), as it needs to
 disable script timeout limits (it takes some time to process
 all the data). You also should check if memory_limit in your
 config file (/etc/php4/CGI/php.ini) is high enough. I don't
@@ -159,7 +166,7 @@ mode - specify method of CD set creation. Available:
                 CD burning software needs to be ordered
                 to follow symlinks, otherwise you burn
                 no data!
-					 
+
        "iso"  - acts as "link" described above, but
                 additionally creates ISO image files for
                 each CD created. Requires mkisofs and
@@ -181,11 +188,11 @@ How it works:
 
 First, it scans source directory to learn its structure,
 get files and subdirs. Then it toss the data to fit in
-given CD_CAPACITY capacity. Then, depending on the 
+given CD_CAPACITY capacity. Then, depending on the
 work mode it either copies the data, moves it or links.
-Additionally it may burn it. 
+Additionally it may burn it.
 
-For "iso" and "burn" it needs to create temporary data 
+For "iso" and "burn" it needs to create temporary data
 sets, which are produced as in "link" mode.
 
 
@@ -206,10 +213,10 @@ to create ISO images (for any reason ;-)
 
  ./cd_dump_maker.php iso STUFF
 
- 
+
 I want to know more about CD Burning
 -------------------------------------
- 
+
 Bother to know more about all the CDs and CD burning topics?
 Visit a great source of practical information at:
 
@@ -232,5 +239,5 @@ Author
 
 
 --
-$Id: README,v 1.4 2003/01/14 09:13:02 carl-os Exp $
+$Id: README,v 1.5 2003/01/18 21:32:57 carl-os Exp $
 
