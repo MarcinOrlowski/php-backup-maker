@@ -18,7 +18,7 @@ rm -r rel.sh
 cd ..
 
 tar -zcvf "pdm-${1}.tgz" pdm_${1}
-md5sum -b /tmp/pdm-${1}.tgz >/tmp/pdm-${1}.md5sum
+md5sum -b pdm-${1}.tgz >pdm-${1}.md5sum
 
 lukemftp -u ftp://upload.sf.net/incoming/ pdm-${1}.md5sum  pdm-${1}.tgz
 
