@@ -185,6 +185,10 @@ Known options and switches are detailed below.
   -c -out-core     Specifies name prefix used for CD sets directories.
                    If not specified, Current date in YYYYMMDD format
                    will be taken.
+  -p -split        Enables file splitting feature (files bigger than
+                   media size will be splitted into smaller hunks and
+                   auto-join shell script will be generated to join
+                   them back on restore
      -pattern      Specifies regular expression pattern for files to be
                    processed. Supports shell "?" and "*" patterns. Needs
                    PHP 4.3.0+
@@ -193,6 +197,7 @@ Known options and switches are detailed below.
      -help-mode    [S] Shows more information about available work modes.
      -help-media   [S] Show media type related help page.
   -h -help         [S] Shows this help page.
+
 
 How it works:
 -------------------------------------
@@ -205,6 +210,21 @@ Additionally it may burn it.
 
 For "iso" and "burn" it needs to create temporary data
 sets, which are produced as in "link" mode.
+
+
+File splitting
+-------------------------------------
+
+Since relese 2.6 PDM know how to handle files bigger than 
+media size. If -split option is specified PDM will hunk
+any file that exceeds media size. However current file
+splitting implementation works fine, I consider it beta
+and due to some 'design' issues I've encountered (and
+wasn't able to solve in elegant manner) it won't work with
+'copy' and 'move' modes.
+
+NOTE: When file is to splitted, PDM will create its copy
+      and therefore will need additional disk space.
 
 
 Examples
@@ -250,5 +270,5 @@ Author
 
 
 --
-$Id: README,v 1.8 2003/03/12 09:54:50 carl-os Exp $
+$Id: README,v 1.9 2003/03/31 21:02:33 carl-os Exp $
 

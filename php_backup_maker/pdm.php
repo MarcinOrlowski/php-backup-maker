@@ -2,10 +2,11 @@
 <?php
 /* vim: set tabstop=3 shiftwidth=3: */
 
+
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.30 2003/03/12 21:36:48 carl-os Exp $
+// $Id: pdm.php,v 1.31 2003/03/31 21:02:35 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -14,7 +15,14 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/~carlos/
 //
-define( "SOFTWARE_VERSION", "2.5" );
+define( "SOFTWARE_VERSION", "2.6 beta" );
+
+
+// argv/argc workaround for register_globals disabled
+
+if( !(isset( $argc )) )	$argc = $_SERVER['argc'];
+if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
+
 
 
 //{{{ class_cli							.
@@ -373,7 +381,7 @@ if( $argc >= 1 )
 																	'If not specified, Current date in YYYYMMDD format will be taken.'
 												),
 					"split"		=> array('short'		=> 'p',
-												'long'		=> 'split'
+												'long'		=> 'split',
 												'info'		=> 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).'
 												),
 
@@ -431,36 +439,43 @@ if( $argc >= 1 )
 	$KNOWN_MODES = array("test"		=> array("write"			=> FALSE,
 															"mkisofs"		=> FALSE,
 															"cdrecord"		=> FALSE,
+															"FileSplit"		=> TRUE,
 															"RemoveSets"	=> FALSE
 															),
 								"link"		=> array("write"			=> TRUE,
 															"mkisofs"		=> FALSE,
 															"cdrecord"		=> FALSE,
+															"FileSplit"    => TRUE,
 															"RemoveSets"	=> FALSE
 															),
 								"copy"		=> array("write"			=> TRUE,
 															"mkisofs"		=>	FALSE,
 															"cdrecord"		=> FALSE,
+															"FileSplit"    => FALSE,
 															"RemoveSets"	=> FALSE
 															),
 								"move"		=> array("write"			=> TRUE,
 															"mkisofs"		=> FALSE,
 															"cdrecord"		=> FALSE,
+															"FileSplit"    => FALSE,
 															"RemoveSets"	=> FALSE
 															),
 								"iso"			=> array("write"			=> TRUE,
 															"mkisofs"		=> TRUE,
 															"cdrecord"		=> FALSE,
+															"FileSplit"    => TRUE,
 															"RemoveSets"	=> TRUE
 															),
 								"burn"		=> array("write"			=> TRUE,
 															"mkisofs"		=> TRUE,
 															"cdrecord"		=> FALSE,
+															"FileSplit"    => TRUE,
 															"RemoveSets"	=> TRUE
 															),
 								"burn-iso"	=> array("write"			=> TRUE,
 															"mkisofs"		=> TRUE,
 															"cdrecord"		=> TRUE,
+															"FileSplit"    => TRUE,
 															"RemoveSets"	=> TRUE
 															)
 								);
@@ -980,8 +995,6 @@ function filematch_ereg( $pattern, $str )
 			$PATTERN = $cCLI->GetOptionArg("ereg-pattern");
 		else
 			$PATTERN = "";
-		
-	
 
    // lets check user input
    if( array_key_exists( $COPY_MODE, $KNOWN_MODES ) === FALSE )
@@ -997,6 +1010,14 @@ function filematch_ereg( $pattern, $str )
 	  ShowMediaHelp();
 	  Abort();
 	  }
+
+
+	// can we split in this mode?
+	if( $cCLI->IsOptionSet('split') && ($KNOWN_MODES[$COPY_MODE]['FileSplit'] == FALSE) )
+		{
+		printf("ERROR: Splitting is not available for '%s' mode\n\n", $COPY_MODE);
+		Abort();
+		}
 
 	// go to dest dir...
 	chdir( $DESTINATION );
@@ -1149,11 +1170,12 @@ function filematch_ereg( $pattern, $str )
 		if( $FILEMATCH_WRAPPER( $PATTERN, $val ) )
 			{
 			$file_size = filesize( $val );
-			$target[$i++] = array(	"name"	=> $name,
-											"path"	=> $dir,
-											"size"	=> $file_size,
-											"sectors"=> round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 ),
-											"cd"		=> 0						// #of CD we move this file into
+			$target[$i++] = array(	"name"		=> $name,
+											"path"		=> $dir,
+											"size"		=> $file_size,
+											"split"		=> FALSE,			// do we need to split this file?
+											"sectors"	=> round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 ),
+											"cd"			=> 0						// #of CD we move this file into
 										);
 			}
 		else
@@ -1206,13 +1228,26 @@ function filematch_ereg( $pattern, $str )
 	// with the above preprocessing, but due to skipping feature we need to slow things
 	// down at the moment
 	printf("  Checking filesize limits...\n");
-	foreach( $target AS $key=>$entry )
+
+	$files_to_spit = array();
+	$split_active = $cCLI->IsOptionSet('split');
+
+	// can't use foreach due its 'work-on-copy' issue
+	reset( $target );
+	while( list($key, $entry) = each( $target ) )
 		{
 		if( $entry["size"] >= $MEDIA_SPECS[ $MEDIA ]["capacity"] )
 			{
-			// we have to give up all the files bigger than the CD capacity
-			printf("  *** File %s is too big (%d bytes)\n", $val, $size );
-			$fatal_errors++;
+			if( $split_active )
+				{
+				$entry['split'] = TRUE;
+				}
+			else
+				{
+				// we have to give up all the files bigger than the CD capacity
+				printf("  *** File %s is too big (%d bytes)\n", $val, $size );
+				$fatal_errors++;
+				}
 			}
 		}
 	AbortOnErrors( $fatal_errors );
@@ -1223,7 +1258,9 @@ function filematch_ereg( $pattern, $str )
 	// sucks as well (or even more)...
 	$total_files = 0;
 	$total_size = 0;
-	foreach( $target AS $file )
+	
+	reset( $target );
+	while( list($key, $file) = each( $target ) )
 		{
 		$total_files++;
 		$total_size += $file["size"];
@@ -1313,7 +1350,9 @@ function filematch_ereg( $pattern, $str )
 	// ok, let's move the files into CD sets
 	printf("Creating CD sets (mode: %s) in '%s'...\n", $COPY_MODE, $DESTINATION);
 	$cnt = $total_files;
-	foreach( $tossed AS $file )
+
+	reset( $tossed );
+	while( list($key, $file) = each( $tossed ) )
 		{
 		if( $cnt > 2500 )
 			$base = 1000;
@@ -1376,7 +1415,7 @@ function filematch_ereg( $pattern, $str )
 	printf("Building index files...\n");
 	if( $KNOWN_MODES[$COPY_MODE]['write'] )
 		{
-		$cdindex  = "\n Created by PDM: http://freshmeat.net/projects/pdm\n";
+		$cdindex  = sprintf("\n Created by PDM v%s: http://freshmeat.net/projects/pdm\n", SOFTWARE_VERSION );
 		$cdindex .= sprintf(" Create date: %s, %s\n\n", date("Y.m.d"), date("H:m:s"));
 		$cdindex .= sprintf("%3.3s | %s\n", "CD", "Full path");
 		$cdindex .= "----+----------------------------------------------------\n";
@@ -1396,27 +1435,27 @@ function filematch_ereg( $pattern, $str )
 				$cdindex .= sprintf("%3d | %s\n", $i, $entry);
 
 			$cdindex .= "\n";
+			}
 
 
-			// writting index and stamps...
-			$fh = fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
-			if( $fh )
-				{
-				fputs( $fh, $cdindex );
-				fclose( $fh );
-				}
-			else
-				{
-				printf("*** Can't write index to '%s/%s'\n", $DESTINATION, $set_name);
-				}
+		// writting index and stamps...
+		$fh = fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
+		if( $fh )
+			{
+			fputs( $fh, $cdindex );
+			fclose( $fh );
+			}
+		else
+			{
+			printf("*** Can't write index to '%s/%s'\n", $DESTINATION, $set_name);
+			}
 
-			// CD stamps
-			$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
-			if( $fh )
-				{
-				fputs( $fh, sprintf("Out Core: %s", $OUT_CORE) );
-				fclose( $fh );
-				}
+		// CD stamps
+		$fh = fopen( sprintf("%s/%s/THIS_IS_CD_%d_OF_%d", $DESTINATION, $set_name, $i, $total_cds), "wb+");
+		if( $fh )
+			{
+			fputs( $fh, sprintf("Out Core: %s", $OUT_CORE) );
+			fclose( $fh );
 			}
 		}
 
