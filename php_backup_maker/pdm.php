@@ -6,7 +6,7 @@
 // don't remove this. I don't expect you see any warning/error in my c00l c0d3{tm} ;-)
 error_reporting(E_ALL);
 
-// $Id: pdm.php,v 1.52 2004/08/13 18:12:17 carl-os Exp $
+// $Id: pdm.php,v 1.53 2004/08/18 11:00:55 carl-os Exp $
 //
 // Scans $source_dir (and subdirs) and creates set of CD with the content of $source_dir
 //
@@ -30,7 +30,7 @@ if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 
 /***************************************************************************
 **
-** $Id: pdm.php,v 1.52 2004/08/13 18:12:17 carl-os Exp $
+** $Id: pdm.php,v 1.53 2004/08/18 11:00:55 carl-os Exp $
 **
 ** (C) Copyright 2003-2003 * All rights reserved
 **     Marcin Orlowski <carlos@wfmh.org.pl>
@@ -2126,8 +2126,6 @@ function ProgressBarCalcPercent( $total, $current )
 function ProgressBar( $cmd, $msg )
 {
 	$pattern = '\'(\ [0-9]{1,2})*\.([0-9]{2})*% done, estimate finish (.*)+\'siU';
-
-	printf("CMD: %s\n", $cmd);
 
 	$ph = popen( $cmd, "r" );
 	while (!feof($ph))

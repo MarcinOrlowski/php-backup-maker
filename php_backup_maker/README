@@ -196,28 +196,31 @@ in the script (I am not going to fix this in near future).
  buffer_size = 0
 
  PDM is able to split files exceeding media capacity into
- smaller chunks to fit the media. For some reasons I decided
- not to use split tool and wrote my own function for this.
- The only problem I've encountered is due to the current PHP
- memory model, which does not allow application to exceed
- given memory_limit but also (strange to me) does not offer
- any function to determine how many spare bytes remains.
- PDM deals with this as follow. If buffer_size is set to
- 0 or is not specified, we take 3rd part of chunk size
- or php.ini/memory_limit value, taking the lower one.
- For example, if we got 200MB file to split into 100MB
- chunks and current memory limit is set to 30MB, PDM
- will use 10MB for splitting buffer. This slows us a bit
- as we have to do 10 reads/writes per chunk, but prevents
- against memory exchausting problem. Alternate approach
- is to specify buffer_size manually. Write how many
- MB you want PDM to *always* use (ie. to set it up
- to 22MB, set buffer_size = 22). If you got memory_limit
- set high enough (i.e 200MB) 4th part of it is only 50MB.
- However PDM is memory hungry tool sometimes, it safely
- deals with 50000 files even with i64MB memory_limit.
- If you do not backup zillions of files, specifing
- buffer_size = 100 looks quite safe in this example.
+ smaller chunks to fit the media (and only such - read NOTES).
+ For some reasons I decided not to use any external splitting
+ tools and wrote my own function to handle that.  The only
+ problem I've encountered is PHP memory management model or
+ its imits to be exact. PDM deals with this as follow. If 
+ buffer_size is set to 0 or is not specified, we take 3rd 
+ part of chunk size or php.ini/memory_limit value, picking
+ the smaller value. For example, we got 200MB file to split
+ into 100MB chunks and current memory limit is set to 30MB,
+ PDM will use 10MB for splitting buffer (1/3rd of 30MB).
+ This slows us a bit as we have to do 10 reads/writes per
+ chunk, but prevents against memory exchausting problem.
+ Alternate approach is to specify buffer_size manually.
+ Write how many MB you want PDM to *always* use (ie. 
+ to set it up to 22MB, set buffer_size = 22). If you
+ got memory_limit set high enough (i.e 200MB) 4th part
+ of it is only 50MB. However PDM is memory hungry tool
+ sometimes, it safely  deals with 50000 files even with
+ 64MB memory_limit. If you do not backup zillions of 
+ files, specifing buffer_size = 100 looks quite safe
+ in this example.
+
+ NOTE: splitting is NOT used for files smaller than
+       media capacity. This means PDM does NOT optimise
+       media usage by using each byte of its capactity.
 
  If you rarely need splitting, you can leave defaults.
 
@@ -409,5 +412,5 @@ Author
 
 
 --
-$Id: README,v 1.18 2004/08/02 06:35:00 carl-os Exp $
+$Id: README,v 1.19 2004/08/18 11:00:55 carl-os Exp $
 
