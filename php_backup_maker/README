@@ -2,9 +2,9 @@
 PDM? What a jerky name...
 -------------------------------------
 
-PDM stands for PHP Dump Maker. I (formerly as "php backup maker")
-wrote it as a quick solution to my 'why-there-is-not-useful-backup-tool'
-problem I've encountered one day wishing to backup some GB of my
+PDM stands for PHP Dump Maker. I wrote it, formerly as "php backup
+maker", as a quick solution to my 'why-there-is-not-useful-backup-tool'
+problem I've encountered one day wishing to backup some GBs of my
 data to CD "my way{tm}". As it started to be useful, I decided
 to give it a public release, to both help one having similar problems
 I had and to give my small contribution to Open Source movement
@@ -20,8 +20,8 @@ This is a PHP script which reads a given source directory
 (or multiple directories) with its subdirectories and creates
 set of directories filled with the content of the source
 directory, arranged in groups to fit a given capacity.
-It can be used to create CD sets for backups. It also supports
-ISO image creation, direct CD burning via cdrecord, automatic
+It can be used to create CD/DVD sets for backups. It also supports
+ISO image creation, direct CD/DVD burning via cdrecord, automatic
 file index creation and more.
 
 
@@ -48,10 +48,10 @@ Requirements
 
 Obligatory:
 
- - PHP interpreter <http://php.net>. This script is developed
-   with PHP 4.2.x but any 4.x would do (it will fail on 3.x
+ - PHP interpreter <http://php.net/>. This script is developed
+   with PHP 4.2+ but any 4.x would do (it will fail on 3.x
    as it uses PHP 4.x specific functions here and there).
-   Core installation will do. No extra modules is required.
+   Core installation will do. No extra modules required.
 
 Optional:
 
@@ -248,50 +248,8 @@ to get detailed usage information:
 
  ./pdm.php -help
 
-
-Usage template:
-
-  ./pdm.php -opt=val -switch ...
-
-Known options and switches are detailed below.
- [R] means the option is required (you can't ommit it)
- [S] stands for valueless switch. If no [S] specified
-     next to the option name option requires an value
- [M] means you can use this option as many times,
-     as you need,
-
-  -s -src          [RM] Source directory (i.e. "data/")
-                   which you are going to process and backup.
-  -d -dest         Destination directory where CD sets will be
-                   created. If ommited, your current working
-                   directory will be used.
-     -media        Specifies destination media type to be used.
-                   See help-media for details. Default is 700MB
-  -m -mode         Specifies working mode. See help-mode for details.
-                   Default mode is 'test'
-  -c -out-core     Specifies name prefix used for CD sets directories.
-                   If not specified, Current date in YYYYMMDD format
-                   will be taken.
-  -t -iso-dest     Specifies destination directory for ISO images ('iso'
-                   mode only). If not specified, '-dest' will be used.
-                   If you don't use NFS, this option is useless for you.
-                   See below for closer explanation.
-     -data-dir		 By default all backuped data is kept in "backup" subdir
-                   on each CD set. If you want to override this (don't!)
-                   this is for you. NOTE: PDM does NOT check for potential
-                   filename clash!
-  -p -split        Enables file splitting feature (files bigger than
-                   media size will be splitted into smaller hunks and
-                   auto-join shell script will be generated to join
-                   them back on restore
-     -pattern      Specifies regular expression pattern for files to be
-                   processed. Supports shell "?" and "*" patterns. Needs
-                   PHP 4.3.0+
-     -ereg-pattern Simmilar to "pattern" but uses plain regular
-                   expression without any shell pattern support.
-     -help-mode    [S] Shows more information about available work modes.
-     -help-media   [S] Show media type related help page.
-  -h -help         [S] Shows this help page.
+Each option is described, so no need to repeat myself
+here.
 
 
 How it works:
@@ -393,7 +351,7 @@ I want to know more about CD Burning
 Bother to know more about all the CDs and CD burning topics?
 Visit a great source of practical information at:
 
-  http://www.cdrfaq.org
+  http://www.cdrfaq.org/
 
 
 Bugs? Suggestions?
@@ -412,5 +370,5 @@ Author
 
 
 --
-$Id: README,v 1.19 2004/08/18 11:00:55 carl-os Exp $
+$Id: README,v 1.20 2006/03/11 19:58:18 carl-os Exp $
 
