@@ -13,6 +13,8 @@
 
  Development history:
  ------------------------
+ 2013.11.24 - v5.0 - updated to support PHP 5+ (which is now required)
+
  2004.08.18 - v4.1 - dropped -volnum-size and -volset-seqno due to mkisofs'
                      announement as read on their mailing list:
                      http://lists.berlios.de/pipermail/cdrecord-support/2004-July/003768.html
