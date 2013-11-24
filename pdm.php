@@ -1,4 +1,4 @@
-#!/usr/bin/php4 -q
+#!/usr/bin/php -q
 <?php
 /* vim: set tabstop=3 shiftwidth=3: */
 
@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/carlos/
 //
-define( "SOFTWARE_VERSION"				, "4.0" );
+define( "SOFTWARE_VERSION"				, "5.0" );
 define( "SOFTWARE_VERSION_BETA"		, FALSE );
 define( "SOFTWARE_VERSION_BETA_STR"	, " beta");
 define( "SOFTWARE_URL"					, "http://freshmeat.net/projects/pdm" );
@@ -450,7 +450,7 @@ if( $argc >= 1 )
 												),
 
 					"media"      => array("long"	=> "media",
-												 "info"	=> "Specifies destination media type to be used. See help-media for details. Default media capacity is 700MB."
+												 "info"	=> "Specifies destination media type to be used. See help-media for details. Default media capacity is 8,5GB (DVD SingleLayer)."
 												 ),
 
 					"mode"		=> array("short"		=> 'm',
@@ -515,7 +515,7 @@ if( $argc >= 1 )
 	$config_default = array(
 						"CONFIG"		=> array("version"							=> 0
 												  ),
-						"PDM"			=> array("media"								=> 700,
+						"PDM"			=> array("media"								=> 8500,
 													"ignore_file"						=> ".pdm_ignore",
 													"ignore_subdirs"					=> TRUE,
 													"check_files_readability"		=> TRUE
@@ -664,7 +664,14 @@ if( $argc >= 1 )
 														'type'				=> 'DVD',
 														'handler'			=> 'dvd',
 														'notes'				=> 'DVD-RW/DVD-R 12cm'
-														)
+														),
+									8500	=> array("capacity"			=> 8.5 * GB,
+														"max_file_size"   => (8.5 * GB) - (RESERVED_CAPACITY * 2),
+														"sectors"			=> 4171712 - RESERVED_SECTORS,
+														'type'				=> 'DVD+R',
+														'handler'			=> 'dvd',
+														'notes'				=> 'DVD+R Single Layer'
+														),
 								);
 
 
@@ -747,22 +754,10 @@ function GetInput()
 }
 //}}}
 //{{{ MakeDir								.
-function MakeDir( $path )
-{
-	$tmp = explode("/", $path);
-	$dir = "/";
-
-	for( $i=0; $i<count($tmp); $i++ )
-		{
-		if( $tmp[$i] != "" )
-			$dir .= sprintf("%s/", $tmp[$i]);
-
-		if( $dir != "" )
-			{
-			if( file_exists( $dir ) === FALSE )
-				mkdir( $dir, 0700 );
-			}
-		}
+function MakeDir( $path ) {
+	if( file_exists($path)===false) {
+		mkdir( $path, 0700, true );
+	}
 }
 //}}}
 //{{{ SizeStr								.
@@ -1062,7 +1057,7 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter="" )
 		{
 		if( $fh_in = fopen( $in, "rb+" ) )
 			{
-			$file_size = filesize( $in );
+			$file_size = GetFileSize( $in );
 			$parts = ceil( $file_size/$chunk_size );
 
 			for( $i=0; $i<$parts; $i++ )
@@ -1077,7 +1072,7 @@ function FileSplit( $in, $out_array, $chunk_size, $progress_meter="" )
 						{
 						$buffer = fread( $fh_in, $step );
 
-						fwrite( $fh_out, &$buffer );
+						fwrite( $fh_out, $buffer );
 
 						if( $progress_meter!="" )
 							printf( str_replace( array("#NAME#", "#SIZE#"), array( basename($in), SizeStr($file_size)), $progress_meter ) );
@@ -1130,7 +1125,7 @@ function MakePath()
 			}
 		}
 
-	return( eregi_replace( "//+", "/", $path) );
+	return preg_replace('#\/+#', "/", $path);
 }
 //}}}
 //{{{ MakeEntryPath						.
@@ -1372,19 +1367,17 @@ function CreateSet( &$stats, $current_cd, $capacity )
 			$PATTERN = "";
 
    // lets check user input
-   if( array_key_exists( $COPY_MODE, $KNOWN_MODES ) === FALSE )
-		{
+   if( array_key_exists( $COPY_MODE, $KNOWN_MODES ) === FALSE ) {
 		printf("ERROR: Unknown mode: '%s'\n\n", $COPY_MODE );
 		ShowModeHelp();
 		Abort();
-		}
+	}
 
-  if( array_key_exists( $MEDIA, $MEDIA_SPECS ) === FALSE )
-     {
+  if( array_key_exists( $MEDIA, $MEDIA_SPECS ) === FALSE ) {
 	  printf("ERROR: Unknown media type: '%s'\n\n", $MEDIA);
 	  ShowMediaHelp();
 	  Abort();
-	  }
+	}
 
 
 	// can we split in this mode?
@@ -1504,35 +1497,32 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	$files = array();
 
 	printf("Scanning. Please wait...\n");
-	foreach( $source_dir_array AS $source_dir )
-		{
-		$source_dir = eregi_replace( "//+", "/", $source_dir );
+	foreach( $source_dir_array AS $source_dir ) {
+		$soure_dir = preg_replace('#\/+#', '/', $source_dir);
 
 		printf("  Dir: '%s'... ", $source_dir);
 
-		// lets scan $source_dir and subdirectories
-		// and look for files...
+		// lets scan $source_dir and subdirectories and look for files...
 		$modes = array('f'=>'regular files','l'=>'symbolic links');
 
 		$empty_counter = count($modes);
-		foreach( $modes AS $scan_mode=>$scan_mode_name )
-			{
+		foreach( $modes AS $scan_mode=>$scan_mode_name ) {
 			$a = trim( `find $source_dir/ -depth -type $scan_mode -print` );
 
-			if( $a != "" )
-				{
+			if( $a != "" ) 	{
 				$files_tmp = explode("\n", $a);
 				$files = array_merge_recursive( $files, $files_tmp );
-				}
-			else
+			} else {
 				$empty_counter++;
 			}
+		}
 
-		if( $empty_counter == 0 )
+		if( $empty_counter == 0 ) {
 			printf("Directory seems to be empty.");
+		}
 
 		echo "\n";
-		}
+	}
 
 	asort($files);
 
@@ -1549,32 +1539,32 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 	printf("  Gettings file sizes...\n");
 	$pattern_skipped_files = 0;
-	foreach( $files AS $key=>$val )
-		{
-		$size = @filesize( $val );
+	foreach( $files AS $key=>$val ) {
+		$size = GetFileSize( $val );
 
 		$dir = dirname( $val );
 		$name = basename( $val );
 
 		// is it our special file? if so, we should remember this dir for
 		// further processing...
-		if( $name == $config["PDM"]["ignore_file"] )
-			if( isset( $dirs_to_ommit[$dir] ) == FALSE )
+		if( $name == $config["PDM"]["ignore_file"] ) {
+			if( isset( $dirs_to_ommit[$dir] ) == FALSE ) {
 				$dirs_to_ommit[$dir] = $dir;
+			}
+		}
 
 		// if enabled, let's check if user can read this file
-		if( $config["PDM"]["check_files_readability"] )
-			if( !(is_readable( $val )) )
-				{
+		if( $config["PDM"]["check_files_readability"] ) {
+			if( !(is_readable( $val )) ) {
 				printf("  *** User '%s' can't read '%s' file...\n", USER, $val);
 				$fatal_errors++;
-				}
+			}	
+		}
 
 		// let's check if file matches our pattern finally
 
-		if( $FILEMATCH_WRAPPER( $PATTERN, $val ) )
-			{
-			$file_size = @filesize( $val );
+		if( $FILEMATCH_WRAPPER( $PATTERN, $val ) ) {
+			$file_size = GetFileSize( $val );
 			$target[$i++] = array(	"name"		=> $name,
 											"path"		=> $dir,
 											"size"		=> $file_size,
@@ -1582,26 +1572,23 @@ function CreateSet( &$stats, $current_cd, $capacity )
 											"sectors"	=> round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 ),
 											"cd"			=> 0						// #of CD we move this file into
 										);
-			}
-		else
-			{
+		} else {
 			$pattern_skipped_files++;
-			}
+		}
 
 		unset( $files[ $key ] );
-		}
+	}
 	AbortOnErrors( $fatal_errors );
 
-	if( $pattern_skipped_files > 0 )
+	if( $pattern_skipped_files > 0 ) {
 		printf("    Pattern skipped files: %d\n", $pattern_skipped_files);
+	}
 
 
 	// filtering out dirs we don't want to backup
-	if( count( $dirs_to_ommit ) > 0 )
-		{
+	if( count( $dirs_to_ommit ) > 0 ) {
 		printf("  Filtering out content marked with '%s' in:\n", $config["PDM"]["ignore_file"]);
-		foreach( $dirs_to_ommit AS $dir )
-			{
+		foreach( $dirs_to_ommit AS $dir ) {
 			$reduced_cnt = 0;
 			$reduced_size = 0;
 
@@ -1609,24 +1596,22 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 			$dir_len = strlen( $dir );
 
-			foreach( $target AS $key=>$entry )
-				{
+			foreach( $target AS $key=>$entry ) {
 				if( $config["PDM"]["ignore_subdirs"] == FALSE )
 					$match = ( $entry["path"] == $dir );
 				else
 					$match = ( substr($entry["path"], 0, $dir_len) == $dir );
 
-				if( $match )
-					{
+				if( $match ) {
 					$reduced_cnt++;
 					$reduced_size += $entry["size"];
 					unset( $target[$key] );
-					}
 				}
 			}
+		}
 
 //		printf("  Filtered out %s in %d files\n", SizeStr( $reduced_size ), $reduced_cnt);
-		}
+	}
 
 
 	// let's check if file will fit... Prior v2.1 we had this nicely done in one pass
@@ -1640,29 +1625,25 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	// can't use foreach due its 'work-on-copy' issue
 	$big_files = 0;
 	reset( $target );
-	while( list($key, $entry) = each( $target ) )
-		{
-		if( $entry["size"] >= $MEDIA_SPECS[ $MEDIA ]["max_file_size"] )
-			{
-			if( $split_active )
-				{
+	while( list($key, $entry) = each( $target ) ) {
+		if( $entry["size"] >= $MEDIA_SPECS[ $MEDIA ]["max_file_size"] ) {
+			if( $split_active ) {
 				$target[$key]['split'] = TRUE;
 
 				$files_to_split[ $key ] = $target[ $key ];
 				$files_to_split[ $key ]['splitted'] = FALSE;
 				$files_to_split[ $key ]['parts'] = array();
-				}
-			else
-				{
+			} else {
 				// we have to give up all the files bigger than the CD capacity
 				printf("  *** File \"%s\" is too big (%s)\n", MakeEntryPath( $entry ), SizeStr($entry['size']) );
 				$fatal_errors++;
 				$big_files++;
-				}
 			}
 		}
-	if( $big_files > 0 )
+	}
+	if( $big_files > 0 ) {
 		printf("\nUse -split feature to handle big files.\nSee README for more information\n");
+	}
 	AbortOnErrors( $fatal_errors );
 
 
@@ -1671,25 +1652,21 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	// really split the file. This kind of trickery is somehow required here, to have splitting
 	// added without wrecking PDM internals. It could and should be made in clearer way, but since
 	// it's not as painful as it looks I keep it instead of rewriting the whole PDM (for now)
-	if( count( $files_to_split ) > 0 )
-		{
+	if( count( $files_to_split ) > 0 ) {
 		printf("  Splitting files bigger than %s...\n", SizeStr( $MEDIA_SPECS[ $MEDIA ]['max_file_size'] ) );
 
 		$trashcan = array();
 
 		reset( $files_to_split );
-		while( list($key, $file) = each( $files_to_split ) )
-			{
-			if( $file['split'] == TRUE )
-				{
+		while( list($key, $file) = each( $files_to_split ) ) {
+			if( $file['split'] == TRUE ) {
 				$chunk_size = $MEDIA_SPECS[ $MEDIA ]['max_file_size'];
 				$parts = ceil( $file['size'] / $chunk_size );
 
 				printf("    '%s' (%s) into %d chunks\n", $file['name'], SizeStr( $file['size'] ), $parts );
 
 				$tmp_size = $file['size'];
-				for( $i=0; $i<$parts; $i++ )
-					{
+				for( $i=0; $i<$parts; $i++ ) {
 					$tmp = $file;
 
 					$file_size = intval(($tmp_size > $chunk_size) ? $chunk_size : $tmp_size);
@@ -1721,24 +1698,23 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	$total_size_std = 0;
 
 	reset( $target );
-	while( list($key, $file) = each( $target ) )
-		{
+	while( list($key, $file) = each( $target ) ) {
 		$total_files_std++;
-		$total_size_std += $file["size"];
-		}
+		$total_size_std = bcadd($total_size_std, $file["size"]);
+	}
 	reset( $target_split );
-	while( list($key, $file) = each( $target_split ) )
-		{
+	while( list($key, $file) = each( $target_split ) ) {
 		$total_files_split++;
-		$total_size_split += $file["size"];
-		}
+		$total_size_split = bcadd($total_size_split, $file["size"]);
+	}
 
-	$total_files = $total_files_std + $total_files_split;
-	$total_size = $total_size_std + $total_size_split;
+	$total_files = bcadd($total_files_std, $total_files_split);
+	$total_size = bcadd($total_size_std, $total_size_split);
 
-	printf( "\n%d items (%s) remains for further processing.\n\n", $total_files, SizeStr($total_size) );
-	if( $total_files <= 0 )
+	printf( "\n%d items (%s) found to be processed.\n\n", $total_files, SizeStr($total_size) );
+	if( $total_files <= 0 ) {
 		Abort();
+	}
 
 
 	// let's go, as long as we got something to process...
@@ -1761,9 +1737,10 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 
 	// tell me what we have done...
-	foreach( $stats AS $item )
+	foreach( $stats AS $item ) {
 		printf(" %s: %2d, files: %5d, ISO FS: %9.9s + specials\n", $MEDIA_SPECS[$MEDIA]['type'], $item["cd"],
 					$item["files"], SizeStr($item["bytes"]), SizeStr( $item["files"] * AVG_BYTES_PER_TOC_ENTRY) );
+	}
 
 	printf("\n");
 
@@ -1774,8 +1751,9 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 
 	printf("I'm about to create %s sets from your data (mode: '%s')\n", $MEDIA_SPECS[$MEDIA]['type'], $COPY_MODE);
-	if( GetYN(TRUE) != ANSWER_YES )
+	if( GetYN(TRUE) != ANSWER_YES ) {
 		Abort();
+	}
 
 
 	// ok, let's move the files into CD sets
@@ -1784,24 +1762,28 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 
 	// creating dirs...
-	for($i=1;$i<=$total_cds;$i++)
+	for($i=1;$i<=$total_cds;$i++) {
       MakeDir( sprintf("%s/%s_%02d/%s", $DESTINATION, $OUT_CORE, $i, $DATA_DIR ) );
+	}
 
 
 	// tossing standard (non splitted files)
 	reset( $tossed );
 	while( list($key, $file) = each( $tossed ) )
 		{
-		if( $cnt > 2500 )
+		if( $cnt > 2500 ) {
 			$base = 1000;
-		else
-			if( $cnt > 1000 )
+		} else {
+			if( $cnt > 1000 ) {
 				$base = 400;
-			else
-				if( $cnt > 200 )
+			} else {
+				if( $cnt > 200 ) {
 					$base = 100;
-				else
+				} else {
 					$base = 1;
+				}
+			}
+		}
 
 		if( $file['split'] == FALSE )
 			{
@@ -1847,8 +1829,9 @@ function CreateSet( &$stats, $current_cd, $capacity )
 					$_path = MakePath( $prefix, $src );
 */
 					$_path = realpath( $src );
-					if( symlink( $_path, $dest ) == FALSE )
+					if( symlink( $_path, $dest ) == FALSE ) {
 						printf("symlink() failed: %s => %s\n", $_path, $dest);
+					}
 					break;
 				}
 
@@ -2141,4 +2124,46 @@ function ProgressBar( $cmd, $msg )
 	ProgressBarRaw( 100, $msg );
 	printf("\n");
 }
-?>
+
+
+// filesize wrapper to solve >2GB size issue 
+function GetFileSize($file) {
+
+	static $iswin;
+	if (!isset($iswin)) {
+	    $iswin = (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN');
+	}
+	
+	static $exec_works;
+	if (!isset($exec_works)) {
+	    $exec_works = (function_exists('exec') && !ini_get('safe_mode') && @exec('echo EXEC') == 'EXEC');
+	}
+	
+	// try a shell command
+	if ($exec_works) {
+	    $cmd = ($iswin) ? "for %F in (\"$file\") do @echo %~zF" : "stat -c%s \"$file\"";
+	    @exec($cmd, $output);
+	    if (is_array($output) && ctype_digit($size = trim(implode("\n", $output)))) {
+	        return $size;
+	    }
+	}
+	
+	// try the Windows COM interface
+	if ($iswin && class_exists("COM")) {
+	    try {
+	        $fsobj = new COM('Scripting.FileSystemObject');
+	        $f = $fsobj->GetFile( realpath($file) );
+	        $size = $f->Size;
+	    } catch (Exception $e) {
+	        $size = null;
+	    }
+	    if (ctype_digit($size)) {
+	        return $size;
+	    }
+	}
+	
+	// if all else fails
+	return filesize($file);
+
+
+}
