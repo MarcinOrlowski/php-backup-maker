@@ -49,9 +49,7 @@ Requirements
 Obligatory:
 
  - PHP interpreter <http://php.net/>. This script is developed
-   with PHP 4.2+ but any 4.x would do (it will fail on 3.x
-   as it uses PHP 4.x specific functions here and there).
-   Core installation will do. No extra modules required.
+   with PHP 5.3+ in mind.
 
 Optional:
 
