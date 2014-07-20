@@ -670,7 +670,7 @@ if( $argc >= 1 )
 														"sectors"			=> 4171712 - RESERVED_SECTORS,
 														'type'				=> 'DVD+R',
 														'handler'			=> 'dvd',
-														'notes'				=> 'DVD+R Single Layer'
+														'notes'				=> 'DVD+R Double Layer'
 														),
 								);
 
