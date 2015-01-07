@@ -15,7 +15,7 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/carlos/
 //
-define( "SOFTWARE_VERSION"			, "5.0" );
+define( "SOFTWARE_VERSION"			, "5.0.1" );
 define( "SOFTWARE_VERSION_BETA"		, false );
 define( "SOFTWARE_VERSION_BETA_STR"	, " beta");
 define( "SOFTWARE_URL"				, "http://freshmeat.net/projects/pdm" );
@@ -586,15 +586,15 @@ class CLI
 	define("ANSWER_YES"     , 1 );
 	define("ANSWER_ABORT"	, 2 );
 
-function GetYN($defaultResponse = false, $prompt = "", $appendKeys = true) {
+function getYN($defaultResponse = false, $prompt = "", $appendKeys = true) {
 	if( $defaultResponse ) {
-		return (GetYes($prompt, $appendKeys));
+		return (getYes($prompt, $appendKeys));
 	} else {
-		return (GetNo($prompt, $appendKeys));
+		return (getNo($prompt, $appendKeys));
 	}
 }
 
-function GetNo($prompt = "", $appendKeys = true) {
+function getNo($prompt = "", $appendKeys = true) {
 	$result = ANSWER_ABORT;
 
 	if( $prompt == "" ) {
@@ -605,7 +605,7 @@ function GetNo($prompt = "", $appendKeys = true) {
 
 	while(true) {
 		echo $prompt;
-		$answer = strtolower(GetInput());
+		$answer = strtolower(getInput());
 
 		if( $answer == 'y' ) {
 			$result = ANSWER_YES;
@@ -619,7 +619,7 @@ function GetNo($prompt = "", $appendKeys = true) {
 	return $result;
 }
 
-function GetYes($prompt = "", $appendKeys = true) {
+function getYes($prompt = "", $appendKeys = true) {
 	$result = ANSWER_ABORT;
 
 	if( $prompt == "" ) {
@@ -630,7 +630,7 @@ function GetYes($prompt = "", $appendKeys = true) {
 
 	while(true) {
 		echo $prompt;
-		$answer = strtolower(GetInput());
+		$answer = strtolower(getInput());
 
 		if( ($answer == 'y' )  || ($answer == "") ) {
 			$result = ANSWER_YES;
@@ -645,7 +645,7 @@ function GetYes($prompt = "", $appendKeys = true) {
 }
 
 /** @noinspection PhpInconsistentReturnPointsInspection */
-function GetInput() {
+function getInput() {
 	if( $fh = fopen("php://stdin", "rb") ) {
 		$result = chop(fgets($fh, 4096));
 		fclose($fh);
@@ -657,7 +657,7 @@ function GetInput() {
 	}
 }
 
-function MakeDir($path) {
+function makeDir($path) {
 	if( file_exists($path) === false ) {
 		mkdir($path, 0700, true);
 	}
@@ -681,7 +681,7 @@ function SizeStr($fileSize, $precision = -1) {
 
 // reads configuration pdm.ini file, checks for known items,
 // fills missing with default values etc...
-function GetConfig() {
+function getConfig() {
 	global $config_default;
 
 	$result = array("rc"          => false,
@@ -715,7 +715,7 @@ function GetConfig() {
 	return $result;
 }
 
-function ShowModeHelp() {
+function showModeHelp() {
 	global $argv;
 
 	printf('
@@ -750,7 +750,7 @@ mode - specify method of CD/DVD set creation. Available modes:
 
 }
 
-function ShowMediaHelp() {
+function showMediaHelp() {
 	global $MEDIA_SPECS;
 
 	printf("\nKnown media types are:\n\n");
@@ -764,11 +764,11 @@ function ShowMediaHelp() {
 	printf("\n");
 }
 
-function UpdateCheck() {
+function updateCheck() {
 	printf("For software updates check: " . SOFTWARE_URL ."\n");
 }
 
-function CleanUp($force = false) {
+function cleanUp($force = false) {
 	global $KNOWN_MODES, $COPY_MODE, $total_cds, $OUT_CORE;
 
 	// probably not set yet?
@@ -784,17 +784,17 @@ function CleanUp($force = false) {
 
 			default:
 				printf("\nCleaning up temporary data...\n");
-				$do_clean = (GetYN(true, "  Clean temporary directories? [Y/n]: ", false) == ANSWER_YES);
+				$do_clean = (getYN(true, "  Clean temporary directories? [Y/n]: ", false) == ANSWER_YES);
 				break;
 		}
 
 		if( $do_clean ) {
-			CleanUp_RemoveSets($total_cds);
+			cleanUpRemoveSets($total_cds);
 		}
 	}
 }
 
-function CleanUp_RemoveSets($total_cds) {
+function cleanUpRemoveSets($total_cds) {
 	global $OUT_CORE, $DESTINATION;
 
 	for( $i = 1; $i <= $total_cds; $i++ ) {
@@ -816,7 +816,7 @@ function Abort($rc = 10) {
 	if( $rc != 0 ) {
 		echo "\n*** Cleaning...\n";
 	}
-	CleanUp(true);
+	cleanUp(true);
 
 	if( $rc != 0 ) {
 		echo "*** Script terminated\n\n";
@@ -866,7 +866,7 @@ function filematch_ereg($pattern, $str) {
 $FILEMATCH_WRAPPER = 'filematch_fake';
 
 
-function FileSplit($in, $out_array, $chunk_size, $progress_meter = "") {
+function fileSplit($in, $out_array, $chunk_size, $progress_meter = "") {
 	global $config;
 
 	$result = false;
@@ -878,11 +878,11 @@ function FileSplit($in, $out_array, $chunk_size, $progress_meter = "") {
 
 	if( file_exists($in) ) {
 		if( $fh_in = fopen($in, "rb+") ) {
-			$file_size = GetFileSize($in);
+			$file_size = getFileSize($in);
 			$parts = ceil($file_size / $chunk_size);
 
 			for( $i = 0; $i < $parts; $i++ ) {
-				MakeDir($out_array[$i]['path']);
+				makeDir($out_array[$i]['path']);
 
 				$write_name = sprintf("%s/%s_%03d", $out_array[$i]['path'], $out_array[$i]['name'], $i + 1);
 				if( $fh_out = fopen($write_name, "wb+") ) {
@@ -926,7 +926,7 @@ function FileSplit($in, $out_array, $chunk_size, $progress_meter = "") {
 	return ($result);
 }
 
-function MakePath() {
+function makePath() {
 	$cnt = func_num_args();
 	$path = "";
 
@@ -943,11 +943,11 @@ function MakePath() {
 	return preg_replace('#\/+#', "/", $path);
 }
 
-function MakeEntryPath($entry) {
-	return MakePath($entry['path'], $entry['name']);
+function makeEntryPath($entry) {
+	return makePath($entry['path'], $entry['name']);
 }
 
-function Toss(&$src, &$tossed, &$stats) {
+function tossFiles(&$src, &$tossed, &$stats) {
 	global $MEDIA_SPECS, $MEDIA;
 
 	if( count($stats) == 0 ) {
@@ -1032,17 +1032,17 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	}
 
 	if( $cCLI->IsOptionSet("help-media") ) {
-		ShowMediaHelp();
+		showMediaHelp();
 		Abort(0);
 	}
 
 	if( $cCLI->IsOptionSet("help-mode") ) {
-		ShowModeHelp();
+		showModeHelp();
 		Abort(0);
 	}
 
 	if( $cCLI->IsOptionSet('update-check') ) {
-		UpdateCheck();
+		updateCheck();
 		Abort(0);
 	}
 
@@ -1075,7 +1075,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	set_time_limit(0);
 
 	// reading user config
-	$config_array = GetConfig();
+	$config_array = getConfig();
 	if( $config_array["rc"] ) {
 		$config = $config_array["config"];
 	} else {
@@ -1096,7 +1096,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 			printf("NOTE: It seems your %s is outdated.\n", $config_array["config_file"]);
 			printf("      This PDM version offers bigger configurability.\n");
 			printf("      Please check 'pdm.ini.orig' to find out what's new\n\n");
-			if( GetYN( FALSE ) != ANSWER_YES ) {
+			if( getYN( FALSE ) != ANSWER_YES ) {
 				Abort();
 			}
 		}
@@ -1149,13 +1149,13 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	// lets check user input
 	if( array_key_exists($COPY_MODE, $KNOWN_MODES) === false ) {
 		printf("ERROR: Unknown mode: '%s'\n\n", $COPY_MODE);
-		ShowModeHelp();
+		showModeHelp();
 		Abort();
 	}
 
 	if( array_key_exists($MEDIA, $MEDIA_SPECS) === false ) {
 		printf("ERROR: Unknown media type: '%s'\n\n", $MEDIA);
-		ShowMediaHelp();
+		showMediaHelp();
 		Abort();
 	}
 
@@ -1171,7 +1171,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	// for now we complain and abort
 	$dest_roots = array();
 	foreach( $source_dir_array AS $source_dir ) {
-		$dir = MakePath($source_dir);        // cleaning up, to avoid "/dir///dir" mess
+		$dir = makePath($source_dir);        // cleaning up, to avoid "/dir///dir" mess
 		$tmp = explode('/', $dir);
 		$dir = ($source_dir{0} == '/') ? $tmp[1] : $tmp[0];
 		if( in_array($dir, $dest_roots) ) {
@@ -1242,10 +1242,10 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		$name = sprintf("%s/%s_%02d", $DESTINATION, $OUT_CORE, $i);
 		if( file_exists($name) ) {
 			printf("Found old sets in '%s'.\n", $DESTINATION);
-			if( GetNo("Shall I remove them and proceed") != ANSWER_YES ) {
+			if( getNo("Shall I remove them and proceed") != ANSWER_YES ) {
 				Abort();
 			} else {
-				CleanUp_RemoveSets(99);
+				cleanUpRemoveSets(99);
 				break;
 			}
 		}
@@ -1308,7 +1308,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	printf("  Gettings file sizes...\n");
 	$pattern_skipped_files = 0;
 	foreach( $files AS $key=>$val ) {
-		$size = GetFileSize( $val );
+		$size = getFileSize( $val );
 
 		$dir = dirname( $val );
 		$name = basename( $val );
@@ -1332,7 +1332,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		// let's check if file matches our pattern finally
 
 		if( $FILEMATCH_WRAPPER( $PATTERN, $val ) ) {
-			$file_size = GetFileSize( $val );
+			$file_size = getFileSize( $val );
 			$target[$i++] = array(	"name"		=> $name,
 									"path"		=> $dir,
 									"size"		=> $file_size,
@@ -1404,7 +1404,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 				$files_to_split[ $key ]['parts'] = array();
 			} else {
 				// we have to give up all the files bigger than the CD capacity
-				printf("  *** File \"%s\" is too big (%s)\n", MakeEntryPath( $entry ), SizeStr($entry['size']) );
+				printf("  *** File \"%s\" is too big (%s)\n", makeEntryPath( $entry ), SizeStr($entry['size']) );
 				$fatal_errors++;
 				$big_files++;
 			}
@@ -1494,9 +1494,9 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	// Tossing...
 	printf("Tossing...\n");
 
-	Toss( $target, $tossed, $stats );
+	tossFiles( $target, $tossed, $stats );
 	$tmp_split = $target_split;					// since Toss() unset()'s elements, we use tmp array, as we need target_split later on...
-	Toss( $tmp_split, $tossed, $stats );
+	tossFiles( $tmp_split, $tossed, $stats );
 
 	$total_cds = count($stats);
 	printf("%-70s\n", sprintf("Tossed into %d %s%s of %s each...",
@@ -1520,7 +1520,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 
 	printf("I'm about to create %s sets from your data (mode: '%s')\n", $MEDIA_SPECS[$MEDIA]['type'], $COPY_MODE);
-	if( GetYN(TRUE) != ANSWER_YES ) {
+	if( getYN(TRUE) != ANSWER_YES ) {
 		Abort();
 	}
 
@@ -1532,7 +1532,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 	// creating dirs...
 	for($i=1;$i<=$total_cds;$i++) {
-      MakeDir( sprintf("%s/%s_%02d/%s", $DESTINATION, $OUT_CORE, $i, $DATA_DIR ) );
+      makeDir( sprintf("%s/%s_%02d/%s", $DESTINATION, $OUT_CORE, $i, $DATA_DIR ) );
 	}
 
 
@@ -1554,11 +1554,11 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 				printProgressBarRaw(calculateProgressBarPercent($total_files, $cnt), "Preparing");
 			}
 
-			$src = MakePath($file['path'], $file["name"]);
+			$src = makePath($file['path'], $file["name"]);
 			$dest_dir = sprintf("%s/%s_%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"]);
-			$dest = MakePath($dest_dir, $file["name"]);
+			$dest = makePath($dest_dir, $file["name"]);
 
-			MakeDir($dest_dir);
+			makeDir($dest_dir);
 
 			switch($COPY_MODE) {
 				case "copy":
@@ -1596,7 +1596,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		if( $file['split'] ) {
 			$src_idx = $file['source_file_index'];
 
-			$src = MakePath("%s%s", $file['path'], $files_to_split[$src_idx]["name"]);
+			$src = makePath("%s%s", $file['path'], $files_to_split[$src_idx]["name"]);
 			$dest_dir = sprintf("%s/%s_%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"]);
 
 			reset($files_to_split);
@@ -1615,9 +1615,9 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	while(list($key, $file) = each($files_to_split)) {
 		$cnt--;
 
-		$src = MakeEntryPath($file);
+		$src = makeEntryPath($file);
 		$progress = sprintf("%3d:  Splitting '#NAME#' (#SIZE# to go)...\r", $cnt);
-		FileSplit($src, $file['parts'], $MEDIA_SPECS[$MEDIA]['max_file_size'], $progress);
+		fileSplit($src, $file['parts'], $MEDIA_SPECS[$MEDIA]['max_file_size'], $progress);
 	}
 
 
@@ -1634,7 +1634,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 			$tmp = array();
 			foreach( $tossed AS $file ) {
 				if( $file["cd"] == $i ) {
-					$tmp[] = MakePath($file["path"], $file["name"]);
+					$tmp[] = makePath($file["path"], $file["name"]);
 				}
 			}
 
@@ -1672,7 +1672,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 	if( ($COPY_MODE == "iso") || ($COPY_MODE == "burn") || ($COPY_MODE == "burn-iso") ) {
 		printf("\nI'm about to process %s sets (mode '%s') in '%s' directory\n", $MEDIA_SPECS[$MEDIA]['type'], $COPY_MODE, $DESTINATION);
-		if( GetYN(true) != ANSWER_YES ) {
+		if( getYN(true) != ANSWER_YES ) {
 			Abort();
 		}
 
@@ -1701,7 +1701,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 					do {
 						printf("\nAttemting to burn %s (#%d of %d) %s (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds, $_type);
-						switch(GetYN(true)) {
+						switch(getYN(true)) {
 							case ANSWER_YES:
 								switch($COPY_MODE) {
 									case "burn-iso": {
@@ -1744,7 +1744,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 								printProgressBar($burn_cmd, "Burning");
 								printf("\nThe '%s' has been burnt.\n\n", $src_name);
 
-								$burn_again = GetYN(false, sprintf("Do you want to burn '%s' again?", $src_name));
+								$burn_again = getYN(false, sprintf("Do you want to burn '%s' again?", $src_name));
 
 								switch($burn_again) {
 									case ANSWER_YES:
@@ -1780,7 +1780,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		printf("\n\nOperation done.\n");
 		switch($COPY_MODE) {
 			case "burn":
-				$repeat_process = GetYN(false, sprintf("\nDo you want to %s all the %d sets again?", $COPY_MODE, $total_cds));
+				$repeat_process = getYN(false, sprintf("\nDo you want to %s all the %d sets again?", $COPY_MODE, $total_cds));
 				break;
 
 			default:
@@ -1798,7 +1798,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 	// cleaning temporary data files...
 	if( $KNOWN_MODES[$COPY_MODE]['RemoveSets'] )
-		CleanUp();
+		cleanUp();
 
 	printf("\nDone.\n\n");
 
@@ -1830,7 +1830,7 @@ function printProgressBar($cmd, $msg) {
 
 
 // filesize wrapper to solve >2GB size issue
-function GetFileSize($file) {
+function getFileSize($file) {
 
 	static $iswin;
 
