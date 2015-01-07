@@ -7,12 +7,15 @@
 
  NOTE: However I did my best to make sure each release contain non
        big bugs, they may still lurk inside. Whenever you notice
-       PDM to malfunction report this immidiately! Thanks.
+       PDM to malfunction report this immediately! Thanks.
 
 
 
  Development history:
  ------------------------
+ 2015.01.08 - v5.0.1 - removed updateChecker
+                     - code cleanup
+                     
  2013.11.24 - v5.0 - updated to support PHP 5+ (which is now required)
 
  2004.08.18 - v4.1 - dropped -volnum-size and -volset-seqno due to mkisofs'
@@ -133,7 +136,7 @@
 
  2003.02.11 - v2.4 - fixed incorrect KB definition (was 10 times too big).
                      Fortunately there's no inpact as this was mostly
-                     never used. Reported by Jörg Schwiemann
+                     never used. Reported by Jï¿½rg Schwiemann
                    - PDM no longer checks if destination is writable if
                      it's not going to write anything (mostly in -mode=test)
                    - "mode" switch is now optional. When not specified, PDM
@@ -252,7 +255,3 @@
                      by default (modify "COPY_MODE" to change this).
 
  2002.07.30 - v1.0 - initial release.
-
-
---
-$Id: CHANGES,v 1.44 2004/08/18 12:03:47 carl-os Exp $
