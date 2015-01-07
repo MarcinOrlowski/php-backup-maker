@@ -18,7 +18,7 @@ error_reporting(E_ALL);
 define( "SOFTWARE_VERSION"			, "5.0.1" );
 define( "SOFTWARE_VERSION_BETA"		, false );
 define( "SOFTWARE_VERSION_BETA_STR"	, " beta");
-define( "SOFTWARE_URL"				, "http://freshmeat.net/projects/pdm" );
+define( "SOFTWARE_URL"				, "https://bitbucket.org/borszczuk/php-backup-maker/" );
 
 
 // argv/argc workaround for register_globals disabled
