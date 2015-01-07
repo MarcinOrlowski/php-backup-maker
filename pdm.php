@@ -15,10 +15,10 @@ error_reporting(E_ALL);
 // Project home: http://pdm.sf.net/
 //               http://wfmh.org.pl/carlos/
 //
-define( "SOFTWARE_VERSION"				, "5.0" );
-define( "SOFTWARE_VERSION_BETA"		, FALSE );
+define( "SOFTWARE_VERSION"			, "5.0" );
+define( "SOFTWARE_VERSION_BETA"		, false );
 define( "SOFTWARE_VERSION_BETA_STR"	, " beta");
-define( "SOFTWARE_URL"					, "http://freshmeat.net/projects/pdm" );
+define( "SOFTWARE_URL"				, "http://freshmeat.net/projects/pdm" );
 
 
 // argv/argc workaround for register_globals disabled
@@ -26,14 +26,13 @@ if( !(isset( $argc )) )	$argc = $_SERVER['argc'];
 if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 
 
-//{{{ class_cli							.
 
 /***************************************************************************
 **
 ** $Id: pdm.php,v 1.53 2004/08/18 11:00:55 carl-os Exp $
 **
-** (C) Copyright 2003-2003 * All rights reserved
-**     Marcin Orlowski <carlos@wfmh.org.pl>
+** (C) Copyright 2003-2015 * All rights reserved
+**     Marcin Orlowski <carlos (AT) wfmh.org.pl>
 **
 ** Function: (C)command (L)ine (I)nterface - shell argument parsing
 **           and handling class. Features automatic required arguments
@@ -49,8 +48,7 @@ class CLI
 
 	var	$errors;
 
-	var	$version_str = "CLI class 1.3 by Marcin Orlowski <carlos@wfmh.org.pl>";
-
+	var	$version_str = "CLI class 1.3 by Marcin Orlowski <carlos (AT) wfmh.org.pl>";
 
 	// this array describes all the fields args array should define
 	// In any of these is missing, we sert up this defaults instead
@@ -58,7 +56,7 @@ class CLI
 													"long"		=> FALSE,
 													"info"		=> "--- No description. Complain! ---",
 													"required"	=> FALSE,
-													"switch"		=>	FALSE,
+													"switch"	=>	FALSE,
 													"multi"		=> FALSE,
 													"param"		=> array(),
 
@@ -433,8 +431,7 @@ if( $argc >= 1 )
 // ond of class
 }
 
-//}}}
-//{{{ Command Line Options Array		.
+// Command Line Options Array		.
 		$args = array(
 					"source"		=> array( "short"		=> 's',
 												 "long"		=> "src",
@@ -593,7 +590,7 @@ if( $argc >= 1 )
 	// user name we run under
 	define("USER", getenv("USER"));
 
-	// some useful constans
+	// some useful constants
 	define("GB",	pow(1024,3));
 	define("MB",	pow(1024,2));
 	define("KB",	pow(1024,1));
@@ -679,152 +676,136 @@ if( $argc >= 1 )
 	define("ANSWER_NO"		, 0 );
 	define("ANSWER_YES"     , 1 );
 	define("ANSWER_ABORT"	, 2 );
-//}}}
 
-//{{{ GetYN									.
-function GetYN( $default_reponse=FALSE, $prompt="", $append_keys=TRUE )
-{
-	if( $default_reponse )
-		return( GetYes( $prompt, $append_keys ) );
-	else
-		return( GetNo( $prompt, $append_keys ) );
-}
-//}}}
-//{{{   GetNo								.
-function GetNo( $prompt="", $append_keys = TRUE )
-{
-	if( $prompt=="" )
-		$prompt="Do you want to proceed [N]o/[y]es/[a]bort: ";
-	else
-		if( $append_keys )
-			$prompt = $prompt . " [N]o/[y]es/[a]bort]: ";
-
-	while( TRUE )
-		{
-		echo $prompt;
-		$answer = strtolower( GetInput() );
-
-		if( $answer == 'y' )
-			return( ANSWER_YES );
-		if( ($answer == 'n') || ($answer == "") )
-			return( ANSWER_NO );
-		if( $answer == 'a' )
-			return( ANSWER_ABORT );
-		}
-}
-//}}}
-//{{{   GetYes								.
-function GetYes( $prompt="", $append_keys=TRUE )
-{
-	if( $prompt == "" )
-		$prompt="Do you want to proceed [Y]es/[n]o/[a]bort: ";
-	else
-		if( $append_keys )
-			$prompt = $prompt . " [Y]es/[n]o/[a]bort: ";
-
-	while( TRUE )
-		{
-		echo $prompt;
-		$answer = strtolower( GetInput() );
-
-		if( ($answer == 'y') || ($answer == "") )
-			return( ANSWER_YES );
-		if( $answer == 'n' )
-			return( ANSWER_NO );
-		if( $answer == 'a' )
-			return( ANSWER_ABORT );
-		}
-}
-//}}}
-//{{{ GetInput								.
-function GetInput()
-{
-	if( $fh = fopen( "php://stdin", "rb" ) )
-		{
-		$result = chop( fgets( $fh, 4096 ) );
-		fclose( $fh );
-		}
-	else
-		{
-		echo "\n*** FATAL ERROR: Can't open STDIN for reading!\n";
-		Abort();
-		}
-
-	return( $result );
-}
-//}}}
-//{{{ MakeDir								.
-function MakeDir( $path ) {
-	if( file_exists($path)===false) {
-		mkdir( $path, 0700, true );
+function GetYN($defaultResponse = false, $prompt = "", $appendKeys = true) {
+	if( $defaultResponse ) {
+		return (GetYes($prompt, $appendKeys));
+	} else {
+		return (GetNo($prompt, $appendKeys));
 	}
 }
-//}}}
-//{{{ SizeStr								.
-function SizeStr( $file_size, $precision=-1 )
-{
-	if( $file_size >= GB )
-		$file_size = round($file_size / GB * 100, $precision) / 100 . " GB";
-	else
-		if( $file_size >= MB )
-			$file_size = round($file_size / MB * 100, $precision) / 100 . " MB";
-		else
-			if( $file_size >= KB )
-				$file_size = round($file_size / KB * 100, $precision) / 100 . " KB";
-			else
-				$file_size = $file_size . " B";
 
-	return( $file_size );
+function GetNo($prompt = "", $appendKeys = true) {
+	if( $prompt == "" ) {
+		$prompt = "Do you want to proceed [N]o/[y]es/[a]bort: ";
+	} else {
+		if( $appendKeys ) {
+			$prompt = $prompt . " [N]o/[y]es/[a]bort]: ";
+		}
+	}
+
+	while(true) {
+		echo $prompt;
+		$answer = strtolower(GetInput());
+
+		if( $answer == 'y' ) {
+			return (ANSWER_YES);
+		} else if( ($answer == 'n') || ($answer == "") ) {
+			return (ANSWER_NO);
+		} else if( $answer == 'a' ) {
+			return (ANSWER_ABORT);
+		}
+	}
 }
-//}}}
-//{{{ GetConfig							.
+
+function GetYes($prompt = "", $appendKeys = true) {
+	if( $prompt == "" ) {
+		$prompt = "Do you want to proceed [Y]es/[n]o/[a]bort: ";
+	} else {
+		if( $appendKeys ) {
+			$prompt = $prompt . " [Y]es/[n]o/[a]bort: ";
+		}
+	}
+
+	while(true) {
+		echo $prompt;
+		$answer = strtolower(GetInput());
+
+		if( ($answer == 'y') || ($answer == "") ) {
+			return (ANSWER_YES);
+		} else if( $answer == 'n' ) {
+			return (ANSWER_NO);
+		} else if( $answer == 'a' ) {
+			return (ANSWER_ABORT);
+		}
+	}
+}
+
+function GetInput() {
+	if( $fh = fopen("php://stdin", "rb") ) {
+		$result = chop(fgets($fh, 4096));
+		fclose($fh);
+	} else {
+		echo "\n*** FATAL ERROR: Can't open STDIN for reading!\n";
+		Abort();
+	}
+
+	return $result;
+}
+
+function MakeDir($path) {
+	if( file_exists($path) === false ) {
+		mkdir($path, 0700, true);
+	}
+}
+
+function SizeStr($file_size, $precision = -1) {
+	if( $file_size >= GB ) {
+		$file_size = round($file_size / GB * 100, $precision) / 100 . " GB";
+	} else {
+		if( $file_size >= MB ) {
+			$file_size = round($file_size / MB * 100, $precision) / 100 . " MB";
+		} else {
+			if( $file_size >= KB ) {
+				$file_size = round($file_size / KB * 100, $precision) / 100 . " KB";
+			} else {
+				$file_size = $file_size . " B";
+			}
+		}
+	}
+
+	return $file_size;
+}
+
 
 // reads configuration pdm.ini file, checks for known items,
 // fills missing with default values etc...
-function GetConfig()
-{
+function GetConfig() {
 	global $config_default;
 
-	$config_read = array();
-	$result = array("rc"				=>	FALSE,
-						 "config_file"	=> "none",
-						 "config"		=> array()
-						);
+	$result = array("rc"          => false,
+	                "config_file" => "none",
+	                "config"      => array());
 
-	$locations = array(	sprintf("%s/.pdm", getenv("HOME")),
-								"/etc/pdm" );
-	foreach( $locations AS $path )
-		{
-		$config = sprintf("%s/%s", $path, "pdm.ini" );
-		if( file_exists( $config ) )
-			{
+	$locations = array(sprintf("%s/.pdm", getenv("HOME")),
+	                   "/etc/pdm");
+	foreach( $locations AS $path ) {
+		$config = sprintf("%s/%s", $path, "pdm.ini");
+		if( file_exists($config) ) {
 			$result["config_file"] = $config;
-			$config_read = parse_ini_file( $config, TRUE );
+			$config_read = parse_ini_file($config, true);
 
 			// lets sync user config with default one... In no value in user
 			// config is found we get default one...
-			foreach( $config_default AS $section=>$group )
-				{
-				foreach( $group AS $key=>$val )
-					{
-					if( isset($config_read[$section][$key]) )
+			foreach( $config_default AS $section => $group ) {
+				foreach( $group AS $key => $val ) {
+					if( isset($config_read[$section][$key]) ) {
 						$result["config"][$section][$key] = $config_read[$section][$key];
-					else
+					} else {
 						$result["config"][$section][$key] = $config_default[$section][$key];
 					}
 				}
-
-			$result["rc"] = TRUE;
-			break;
 			}
-		}
 
-	return( $result );
+			$result["rc"] = true;
+			break;
+		}
+	}
+
+	return $result;
 }
-//}}}
-//{{{ ShowModeHelp						.
-function ShowModeHelp()
-{
+
+function ShowModeHelp() {
 	global $argv;
 
 	printf('
@@ -839,7 +820,7 @@ mode - specify method of CD/DVD set creation. Available modes:
                     as source data takes,
        "link"     - creates symbolic links to source data
                     in destination directory. NOTE: some
-                    burning software needs to be explicitely
+                    burning software needs to be explicitly
                     told to follow symlinks, otherwise you burn
                     no data!
        "iso"      - acts as "link" described above, but
@@ -850,358 +831,303 @@ mode - specify method of CD/DVD set creation. Available modes:
        "burn"     - burns CD/DVD sets on-the-fly,
        "burn-iso" - compiles "iso" and "burn" modes. First
                     it creates full iso image, and then burns.
-                    Usefull for those who for any reason are
-                    unbable to enjoy on-the-fly burning
-                    offerred by "burn" mode. Use this one if
+                    Useful for those who for any reason are
+                    unable to enjoy on-the-fly burning
+                    offered by "burn" mode. Use this one if
                     your hardware really disallows "burn" mode.
 
 ');
 
 }
-//}}}
-//{{{ ShowMediaHelp						.
-function ShowMediaHelp()
-{
+
+function ShowMediaHelp() {
 	global $MEDIA_SPECS;
 
 	printf("\nKnown media types are:\n\n");
 	printf("  Type | Media | Capacity | Notes\n");
 	printf(" ------+-------+----------+-------\n");
-	foreach( $MEDIA_SPECS AS $key=>$info )
-		{
-		$notes = ( isset( $info['notes'] ) ) ? $info['notes'] : '';
-		printf( "  %4d | %-5s | %8s | %s\n", $key, $info['type'], SizeStr($info["capacity"]), $notes );
-		}
+	foreach( $MEDIA_SPECS AS $key => $info ) {
+		$notes = (isset($info['notes'])) ? $info['notes'] : '';
+		printf("  %4d | %-5s | %8s | %s\n", $key, $info['type'], SizeStr($info["capacity"]), $notes);
+	}
 
 	printf("\n");
 }
-//}}}
 
-//{{{ UpdateCheck							.
-function UpdateCheck()
-{
+function UpdateCheck() {
 	$site = 'http://wfmh.org.pl/carlos/files/soft/pdm/pdm-latest-version.txt';
 
 	printf("\n");
 
-	if( ini_get('allow_url_fopen') == "1" )
-		{
+	if( ini_get('allow_url_fopen') == "1" ) {
 		printf("Checking for available updates... Wait...\n");
 
-		$fh = @fopen( $site, 'rb' );
-		if( $fh )
-			{
-			$version = trim(fgets( $fh ));
-			fclose( $fh );
+		$fh = @fopen($site, 'rb');
+		if( $fh ) {
+			$version = trim(fgets($fh));
+			fclose($fh);
 
-			printf( "\n   Your version: %s\n", SOFTWARE_VERSION );
-			printf( "      Available: %s\n", $version );
-			printf( "         Status: " );
+			printf("\n   Your version: %s\n", SOFTWARE_VERSION);
+			printf("      Available: %s\n", $version);
+			printf("         Status: ");
 
-			if( version_compare( sprintf("%s.0",$version), sprintf("%s.0", SOFTWARE_VERSION), ">") )
-				printf("Upgrade! You're using OLD version." );
-			else
+			if( version_compare(sprintf("%s.0", $version), sprintf("%s.0", SOFTWARE_VERSION), ">") ) {
+				printf("Upgrade! You're using OLD version.");
+			} else {
 				printf("OK. You're using most recent version.");
+			}
 
 			printf("\n");
-			}
-		else
-			{
+		} else {
 			printf("FATAL: Can't open '%s'.\n", $site);
-			}
 		}
-	else
-		{
+	} else {
 		printf("FATAL: This option requires allow_fopen_url be enabled.\n");
 		printf("       Check your php.ini and enable it (it's no security\n");
 		printf("       issue to have it enabled for CLI PHP version\n");
 		printf("       Alternatively, please check the following URL by hand:\n");
 		printf("       %s\n");
-		}
+	}
 
 	printf("\n");
 }
-//}}}
 
-//{{{ CleanUp								.
-function CleanUp( $force=FALSE )
-{
+function CleanUp($force = false) {
 	global $KNOWN_MODES, $COPY_MODE, $total_cds, $OUT_CORE;
 
 	// probably not set yet?
-	if( ($total_cds < 1) || ($OUT_CORE=="") )
+	if( ($total_cds < 1) || ($OUT_CORE == "") )
 		return;
 
-	if( $KNOWN_MODES[$COPY_MODE]['write'] )
-		{
-		switch( $force )
-			{
-			case TRUE:
-				$do_clean = TRUE;
+	if( $KNOWN_MODES[$COPY_MODE]['write'] ) {
+		switch($force) {
+			case true:
+				$do_clean = true;
 				break;
 
 			default:
 				printf("\nCleaning up temporary data...\n");
-				$do_clean = (GetYN(TRUE, "  Clean temporary directories? [Y/n]: ", FALSE) == ANSWER_YES);
+				$do_clean = (GetYN(true, "  Clean temporary directories? [Y/n]: ", false) == ANSWER_YES);
 				break;
-			}
+		}
 
 		if( $do_clean )
-			CleanUp_RemoveSets( $total_cds );
-
-		}
+			CleanUp_RemoveSets($total_cds);
+	}
 }
 
-function CleanUp_RemoveSets( $total_cds )
-{
+function CleanUp_RemoveSets($total_cds) {
 	global $OUT_CORE, $DESTINATION;
 
-	for( $i=1; $i<=$total_cds; $i++ )
-		{
+	for( $i = 1; $i <= $total_cds; $i++ ) {
 		$src_name = sprintf("%s/%s_%02d", $DESTINATION, $OUT_CORE, $i);
 
-		if( file_exists( $src_name ) )
-			{
+		if( file_exists($src_name) ) {
 			$cmd = sprintf("rm -rf %s", $src_name);
-			system( $cmd );
-			}
-
-		ProgressBarRaw( ProgressBarCalcPercent( $total_cds, $i ), " Cleaning" );
+			system($cmd);
 		}
 
-	ProgressBarRaw( 100, " Cleaning" );
+		ProgressBarRaw(ProgressBarCalcPercent($total_cds, $i), " Cleaning");
+	}
+
+	ProgressBarRaw(100, " Cleaning");
 	printf("\n");
 }
-//}}}
-//{{{ Abort									.
-function Abort( $rc=10 )
-{
-	if( $rc != 0 )
+
+function Abort($rc = 10) {
+	if( $rc != 0 ) {
 		echo "\n*** Cleaning...\n";
-	CleanUp( TRUE );
+	}
+	CleanUp(true);
 
-	if( $rc != 0 )
+	if( $rc != 0 ) {
 		echo "*** Script terminated\n\n";
-	exit( $rc );
+	}
+	exit($rc);
 }
-//}}}
-//{{{ AbortOnErrors						.
-function AbortOnErrors( $error_cnt )
-{
-   if( $error_cnt > 0 )
-		{
-		printf("\n%d critical error(s) occured. Operation aborted.\n", $error_cnt );
+
+function AbortOnErrors($error_cnt) {
+	if( $error_cnt > 0 ) {
+		printf("\n%d critical error(s) occured. Operation aborted.\n", $error_cnt);
 		Abort();
-		}
+	}
 }
-//}}}
-//{{{ AbortIfNoTool						.
-function AbortIfNoTool( $tool )
-{
+
+function AbortIfNoTool($tool) {
 	// check if we can access cdrecord tool
-	$cmd = sprintf( "which %s", $tool );
-	$location = trim( `$cmd` );
+	$cmd = sprintf("which %s", $tool);
+	$location = trim(`$cmd`);
 
-	if( file_exists( $location ) )
-		{
-		if( !(is_executable( "$location" ) ))
-			{
-			printf("FATAL: User '%s' is unable to launch '%s' tool.\n", USER, $tool );
-			printf(  "       Make sure you belong to right group and have privileges\n");
+	if( file_exists($location) ) {
+		if( !(is_executable("$location")) ) {
+			printf("FATAL: User '%s' is unable to launch '%s' tool.\n", USER, $tool);
+			printf("       Make sure you belong to right group and have privileges\n");
 			Abort();
-			}
 		}
-	else
-		{
-		printf("FATAL: Can't find '%s' software. Make sure it's installed\n" .
-		       "       and is in your \$PATH. It may be that you got insufficient\n" .
-				 "       privileges to use this tool. Check it.\n", $tool);
+	} else {
+		printf("FATAL: Can't find '%s' software. Make sure it's installed\n" . "       and is in your \$PATH. It may be that you got insufficient\n" . "       privileges to use this tool. Check it.\n", $tool);
 		Abort();
-		}
-}
-//}}}
-
-//{{{ file match code					.
-function filematch_fake( $pattern, $str )
-{
-	return( TRUE );
-}
-function filematch_fnmatch( $pattern, $str )
-{
-	return( fnmatch( $pattern, $str ) );
-}
-function filematch_ereg( $pattern, $str )
-{
-	return( ereg( $pattern, $str ) );
+	}
 }
 
-	// setting up fake wrapper - using wrapper speeds upi further processing
-	// as we don't need any comparisions for each call, which would punish
-	// us whenever number of processing files exceeds 10 ;)
-	$FILEMATCH_WRAPPER = 'filematch_fake';
+function filematch_fake($pattern, $str) {
+	return (true);
+}
 
-//}}}
+function filematch_fnmatch($pattern, $str) {
+	return (fnmatch($pattern, $str));
+}
 
-//{{{ FileSplit							.
-function FileSplit( $in, $out_array, $chunk_size, $progress_meter="" )
-{
+function filematch_ereg($pattern, $str) {
+	return (ereg($pattern, $str));
+}
+
+// setting up fake wrapper - using wrapper speeds upi further processing
+// as we don't need any comparisons for each call, which would punish
+// us whenever number of processing files exceeds 10 ;)
+$FILEMATCH_WRAPPER = 'filematch_fake';
+
+
+function FileSplit($in, $out_array, $chunk_size, $progress_meter = "") {
 	global $config;
 
-	$result = FALSE;
+	$result = false;
 
 	$step = $config['SPLIT']['buffer_size'];
-	if( $step == 0)
-		$step = min( (ini_get('memory_limit')*MB), $chunk_size)/3;
+	if( $step == 0 ) {
+		$step = min((ini_get('memory_limit') * MB), $chunk_size) / 3;
+	}
 
-	if( file_exists( $in ) )
-		{
-		if( $fh_in = fopen( $in, "rb+" ) )
-			{
-			$file_size = GetFileSize( $in );
-			$parts = ceil( $file_size/$chunk_size );
+	if( file_exists($in) ) {
+		if( $fh_in = fopen($in, "rb+") ) {
+			$file_size = GetFileSize($in);
+			$parts = ceil($file_size / $chunk_size);
 
-			for( $i=0; $i<$parts; $i++ )
-				{
-				MakeDir( $out_array[$i]['path'] );
+			for( $i = 0; $i < $parts; $i++ ) {
+				MakeDir($out_array[$i]['path']);
 
-				$write_name = sprintf("%s/%s_%03d", $out_array[$i]['path'], $out_array[$i]['name'], $i+1 );
-				if( $fh_out = fopen( $write_name, "wb+" ) )
-					{
+				$write_name = sprintf("%s/%s_%03d", $out_array[$i]['path'], $out_array[$i]['name'], $i + 1);
+				if( $fh_out = fopen($write_name, "wb+") ) {
 					$read_remain = $chunk_size;
-					while( $read_remain > 0 )
-						{
-						$buffer = fread( $fh_in, $step );
+					while($read_remain > 0) {
+						$buffer = fread($fh_in, $step);
 
-						fwrite( $fh_out, $buffer );
+						fwrite($fh_out, $buffer);
 
-						if( $progress_meter!="" )
-							printf( str_replace( array("#NAME#", "#SIZE#"), array( basename($in), SizeStr($file_size)), $progress_meter ) );
-
-						unset( $buffer );
-						$read_remain -= $step;
-						$file_size -= $step;
-						if( $file_size < 0 )
-							$file_size = 0;
+						if( $progress_meter != "" ) {
+							printf(str_replace(array("#NAME#",
+							                         "#SIZE#"), array(basename($in),
+							                                          SizeStr($file_size)), $progress_meter));
 						}
 
-					fclose( $fh_out );
+						unset($buffer);
+						$read_remain -= $step;
+						$file_size -= $step;
+						if( $file_size < 0 ) {
+							$file_size = 0;
+						}
 					}
+
+					fclose($fh_out);
 				}
+			}
 
-			fclose( $fh_in );
+			fclose($fh_in);
 
-			$result = TRUE;
+			$result = true;
 
-			if( $progress_meter != "" )
+			if( $progress_meter != "" ) {
 				printf("\n");
 			}
-		else
-			{
+		} else {
 			printf("*** Can't open '%s' for read\n", $in);
-			}
 		}
-	else
-		{
+	} else {
 		printf("*** File '%s' not found for splitting\n", $in);
-		}
+	}
 
-	return( $result );
+	return ($result);
 }
-//}}}
-//{{{ MakePath								.
-function MakePath()
-{
+
+function MakePath() {
 	$cnt = func_num_args();
 	$path = "";
 
-	for($i=0; $i<$cnt; $i++ )
-		{
+	for( $i = 0; $i < $cnt; $i++ ) {
 		$tmp = func_get_arg($i);
-		if( $tmp != "" )
-			{
-			if( $path != "" )
+		if( $tmp != "" ) {
+			if( $path != "" ) {
 				$path .= "/";
-			$path .= $tmp;
 			}
+			$path .= $tmp;
 		}
+	}
 
 	return preg_replace('#\/+#', "/", $path);
 }
-//}}}
-//{{{ MakeEntryPath						.
-function MakeEntryPath( $entry )
-{
-	return( MakePath( $entry['path'], $entry['name'] ) );
-}
-//}}}
 
-//{{{ Toss									.
-function Toss( &$src, &$tossed, &$stats )
-{
+function MakeEntryPath($entry) {
+	return MakePath($entry['path'], $entry['name']);
+}
+
+function Toss(&$src, &$tossed, &$stats) {
 	global $MEDIA_SPECS, $MEDIA;
 
 	$cnt = count($src);
 
 	if( count($stats) == 0 )
-		CreateSet( $stats, 1, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
+		CreateSet($stats, 1, $MEDIA_SPECS[$MEDIA]["sectors"]);
 	$next_id = count($stats) + 1;
 
-	reset( $src );
-	while( list($key, $file) = each( $src ) )
-		{
-		$toss_ok = FALSE;
+	reset($src);
+	while(list($key, $file) = each($src)) {
+		$toss_ok = false;
 
-		reset( $stats );
-		while( list($cd_key, $cd) = each( $stats ) )
-			{
-			if( $file['sectors'] <= ($cd['remaining'] - $cd['sectors_toc']) )
-				{
+		reset($stats);
+		while(list($cd_key, $cd) = each($stats)) {
+			if( $file['sectors'] <= ($cd['remaining'] - $cd['sectors_toc']) ) {
 				$file['cd'] = $cd_key;
 				$tossed[$key] = $file;
-				unset( $src[ $key ] );
+				unset($src[$key]);
 
 				$stats[$cd_key]['remaining'] -= $file["sectors"];
-				$stats[$cd_key]["files"] ++;
+				$stats[$cd_key]["files"]++;
 				$stats[$cd_key]["bytes"] += $file["size"];
 				$stats[$cd_key]["sectors"] += $file["sectors"];
-				$stats[$cd_key]["sectors_toc"] = round( ((($stats[ $cd_key ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
+				$stats[$cd_key]["sectors_toc"] = round(((($stats[$cd_key]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0);
 
-				$toss_ok = TRUE;
+				$toss_ok = true;
 				break;
-				}
 			}
+		}
 
-		if( $toss_ok == FALSE )
-			{
+		if( $toss_ok == false ) {
 			$cd_key = $next_id;
-			CreateSet( $stats, $cd_key, $MEDIA_SPECS[ $MEDIA ]["sectors"] );
+			CreateSet($stats, $cd_key, $MEDIA_SPECS[$MEDIA]["sectors"]);
 
 			$file['cd'] = $cd_key;
 			$tossed[$key] = $file;
-			unset( $src[ $key ] );
+			unset($src[$key]);
 
 			$stats[$cd_key]['remaining'] -= $file["sectors"];
-			$stats[$cd_key]["files"] ++;
+			$stats[$cd_key]["files"]++;
 			$stats[$cd_key]["bytes"] += $file["size"];
 			$stats[$cd_key]["sectors"] += $file["sectors"];
-			$stats[$cd_key]["sectors_toc"] = round( ((($stats[ $cd_key ]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0 );
+			$stats[$cd_key]["sectors_toc"] = round(((($stats[$cd_key]["files"] * AVG_BYTES_PER_TOC_ENTRY) / SECTOR_CAPACITY) + 0.5), 0);
 
 			$next_id++;
-			}
 		}
+	}
 }
-//}}}
-//{{{ CreateSet							.
-function CreateSet( &$stats, $current_cd, $capacity )
-{
-	$stats[ $current_cd ]["cd"] = $current_cd;
-	$stats[ $current_cd ]["files"] = 0;
-	$stats[ $current_cd ]["bytes"] = 0;
-	$stats[ $current_cd ]["sectors"] = 0;
-	$stats[ $current_cd ]["sectors_toc"] = 0;
-	$stats[ $current_cd ]['remaining'] = $capacity;
+
+function CreateSet(&$stats, $current_cd, $capacity) {
+	$stats[$current_cd]["cd"] = $current_cd;
+	$stats[$current_cd]["files"] = 0;
+	$stats[$current_cd]["bytes"] = 0;
+	$stats[$current_cd]["sectors"] = 0;
+	$stats[$current_cd]["sectors_toc"] = 0;
+	$stats[$current_cd]['remaining'] = $capacity;
 }
-//}}}
 
 /******************************************************************************/
 
@@ -1211,59 +1137,47 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		"\n" .
 		"PHP Backup Maker v%s%s by Marcin Orlowski <carlos@wfmh.org.pl>\n" .
 		"----------------------------------------------------------------\n" .
-		"Visit project home page: http://pdm.sf.net/ for newest releases\n" .
-		"DO NOT report bugs by mail. Use bugtracker on project home page!\n" .
-		"Visit http://www.amazon.com/o/registry/20QXY0H72WMJK too!\n"
-		, SOFTWARE_VERSION
-		, (SOFTWARE_VERSION_BETA) ? SOFTWARE_VERSION_BETA_STR : ""
+		"Project home: https://bitbucket.org/borszczuk/php-backup-maker/\n"
+			, SOFTWARE_VERSION
+			, (SOFTWARE_VERSION_BETA) ? SOFTWARE_VERSION_BETA_STR : ""
+	);
 
-
-		);
-
-	if( SOFTWARE_VERSION_BETA )
+	if( SOFTWARE_VERSION_BETA ) {
 		printf("\n*** This is BETA version. May crash, trash, splash... Be warned!\n");
-
+	}
 
 	$cCLI = new CLI( $args );
 
-
 	$args_result = $cCLI->Parse( $argc, $argv );
 
-	if( $cCLI->IsOptionSet("help") )
-		{
+	if( $cCLI->IsOptionSet("help") ) {
 		$cCLI->ShowHelpPage();
-		Abort( 0 );
-		}
+		Abort(0);
+	}
 
-	if( $cCLI->IsOptionSet("help-media") )
-		{
+	if( $cCLI->IsOptionSet("help-media") ) {
 		ShowMediaHelp();
-		Abort( 0 );
-		}
+		Abort(0);
+	}
 
-	if( $cCLI->IsOptionSet("help-mode") )
-		{
+	if( $cCLI->IsOptionSet("help-mode") ) {
 		ShowModeHelp();
-		Abort( 0 );
-		}
+		Abort(0);
+	}
 
-	if( $cCLI->IsOptionSet('update-check') )
-		{
+	if( $cCLI->IsOptionSet('update-check') ) {
 		UpdateCheck();
-		Abort( 0 );
-		}
+		Abort(0);
+	}
 
-	if( $args_result == FALSE )
-		{
+	if( $args_result == false ) {
 		$cCLI->ShowHelpPage();
 		$cCLI->ShowErrors();
-		Abort( 0 );
-		}
-
+		Abort(0);
+	}
 
 	// checking how is your PHP configured...
-	if( ini_get('safe_mode') != "" )
-		{
+	if( ini_get('safe_mode') != "" ) {
 		// Franly it's not fully true. The script would work with
 		// safe mode too, but since we wouldn't be able to i.e.
 		// increate time limit, nor to read some files or calls
@@ -1272,7 +1186,7 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		printf("FATAL: You got Safe Mode turned ON in php.ini file\n");
 		printf("       You have to turn it OFF to let this script work\n");
 		Abort();
-		}
+	}
 
 
 	// make sure it works. I don't expect you got CGI php running in safe mode
@@ -1284,213 +1198,190 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	// 30MB (but even that wasn't enough for 45000 file set).
 	set_time_limit(0);
 
-
 	// reading user config
 	$config_array = GetConfig();
-	if( $config_array["rc"] )
+	if( $config_array["rc"] ) {
 		$config = $config_array["config"];
-	else
+	} else {
 		$config = $config_default;
-
+	}
 
 	// some tweaks
-	if( USER == "root" )
-		$config["PDM"]["check_files_readability"] = FALSE;		// makes no sense for root...
-
+	if( USER == "root" ) {
+		$config["PDM"]["check_files_readability"] = false;        // makes no sense for root...
+	}
 
 	// some 'debug' info...
-	printf("Your memory_limit: %s, config: %s\n\n",
-					ini_get('memory_limit'),
-					$config_array["config_file"]
-			);
+	printf("Your memory_limit: %s, config: %s\n\n", ini_get('memory_limit'), $config_array["config_file"] );
 
    // let's check for outdated configs (if there's any)
-	if( $config_array["rc"] )
-		if( $config["CONFIG"]["version"] < $min_config_version )
-			{
+	if( $config_array["rc"] ) {
+		if( $config["CONFIG"]["version"] < $min_config_version ) {
 			printf("NOTE: It seems your %s is outdated.\n", $config_array["config_file"]);
 			printf("      This PDM version offers bigger configurability.\n");
 			printf("      Please check 'pdm.ini.orig' to find out what's new\n\n");
-			if( GetYN( FALSE ) != ANSWER_YES )
+			if( GetYN( FALSE ) != ANSWER_YES ) {
 				Abort();
 			}
-
+		}
+	}
 
 	// let's check if we can use pattern features with user PHP
 	$VERSION_FNMATCH = "4.3.0";
 
-	if( $cCLI->IsOptionSet("ereg-pattern") && $cCLI->IsOptionSet("pattern") )
-		{
+	if( $cCLI->IsOptionSet("ereg-pattern") && $cCLI->IsOptionSet("pattern") ) {
 		printf("ERROR: You can use one type of pattern matching at a time.\n");
 		Abort();
-		}
+	}
 
 	// pattern uses fnmatch() which is PHP 4.3.0+ enabled only
-	if( $cCLI->IsOptionSet("pattern") )
-		{
-		if( (version_compare( phpversion(), $VERSION_FNMATCH, "<") ) )
-			{
+	if( $cCLI->IsOptionSet("pattern") ) {
+		if( (version_compare(phpversion(), $VERSION_FNMATCH, "<")) ) {
 			printf("ERROR: pattern matching requires PHP %s or higher\n", $VERSION_FNMATCH);
 			printf("       Please upgrade or use 'ereg-pattern' instead.\n");
 			Abort();
-			}
-		else
-			{
+		} else {
 			$FILEMATCH_WRAPPER = 'filematch_fnmatch';
 			$FILEMATCH_DEF_PATTERN = "*";
-			}
 		}
+	}
 
-	if( $cCLI->IsOptionSet("ereg-pattern") )
-		{
+	if( $cCLI->IsOptionSet("ereg-pattern") ) {
 		$FILEMATCH_WRAPPER = 'filematch_ereg';
 		$FILEMATCH_DEF_PATTERN = ".*";
-		}
+	}
 
 
 	// geting user params...
 	$COPY_MODE			= ($cCLI->IsOptionSet("mode"))		? $cCLI->GetOptionArg("mode") : "test";
 	$source_dir_array	= $cCLI->GetOptionArg("source");
-	$DESTINATION		= ($cCLI->IsOptionSet("dest"))  		? $cCLI->GetOptionArg("dest")			: getenv("PWD");
+	$DESTINATION		= ($cCLI->IsOptionSet("dest"))  	? $cCLI->GetOptionArg("dest")		: getenv("PWD");
 	$ISO_DEST			= ($cCLI->IsOptionSet("iso-dest"))	? $cCLI->GetOptionArg('iso-dest')	: $DESTINATION;
 	$MEDIA 				= ($cCLI->IsOptionSet("media"))		? $cCLI->GetOptionArg("media") 		: $config["PDM"]["media"];
 	$OUT_CORE			= ($cCLI->IsOptionSet("out-core"))	? $cCLI->GetOptionArg("out-core")	: date("Ymd");
 	$DATA_DIR			= ($cCLI->IsOptionSet('data-dir'))	? $cCLI->GetOptionArg('data-dir')	: "backup";
 
 	// no defaults here, as in case of no option specified we got filematch_fake() wrapper in use
-	if( $cCLI->IsOptionSet("pattern") )
-		$PATTERN	= $cCLI->GetOptionArg("pattern");
-	else
-		if( $cCLI->IsOptionSet("ereg-pattern") )
-			$PATTERN = $cCLI->GetOptionArg("ereg-pattern");
-		else
-			$PATTERN = "";
+	if( $cCLI->IsOptionSet("pattern") ) {
+		$PATTERN = $cCLI->GetOptionArg("pattern");
+	} else if( $cCLI->IsOptionSet("ereg-pattern") ) {
+		$PATTERN = $cCLI->GetOptionArg("ereg-pattern");
+	} else {
+		$PATTERN = "";
+	}
 
-   // lets check user input
-   if( array_key_exists( $COPY_MODE, $KNOWN_MODES ) === FALSE ) {
-		printf("ERROR: Unknown mode: '%s'\n\n", $COPY_MODE );
+	// lets check user input
+	if( array_key_exists($COPY_MODE, $KNOWN_MODES) === false ) {
+		printf("ERROR: Unknown mode: '%s'\n\n", $COPY_MODE);
 		ShowModeHelp();
 		Abort();
 	}
 
-  if( array_key_exists( $MEDIA, $MEDIA_SPECS ) === FALSE ) {
-	  printf("ERROR: Unknown media type: '%s'\n\n", $MEDIA);
-	  ShowMediaHelp();
-	  Abort();
+	if( array_key_exists($MEDIA, $MEDIA_SPECS) === false ) {
+		printf("ERROR: Unknown media type: '%s'\n\n", $MEDIA);
+		ShowMediaHelp();
+		Abort();
 	}
 
 
 	// can we split in this mode?
-	if( $cCLI->IsOptionSet('split') && ($KNOWN_MODES[$COPY_MODE]['FileSplit'] == FALSE) )
-		{
+	if( $cCLI->IsOptionSet('split') && ($KNOWN_MODES[$COPY_MODE]['FileSplit'] == false) ) {
 		printf("ERROR: Splitting is not available for '%s' mode\n\n", $COPY_MODE);
 		Abort();
-		}
+	}
 
 	// let's check if we dont' have directory names clash (i.e. different "etc" and
 	// "/etc" would result in the same destination "etc" directory in the backup
 	// for now we complain and abort
 	$dest_roots = array();
-	foreach( $source_dir_array AS $source_dir )
-		{
-		$dir = MakePath( $source_dir );		// cleaning up, to avoid "/dir///dir" mess
+	foreach( $source_dir_array AS $source_dir ) {
+		$dir = MakePath($source_dir);        // cleaning up, to avoid "/dir///dir" mess
 		$tmp = explode('/', $dir);
 		$dir = ($source_dir{0} == '/') ? $tmp[1] : $tmp[0];
-		if( in_array( $dir, $dest_roots ) )
-			{
+		if( in_array($dir, $dest_roots) ) {
 			printf("ERROR: Source '%s' directory name clashes with other dir.\n", $source_dir);
-			printf("       Example: '/etc/...' and 'etc/...' produces the same 'etc'\n" );
-			printf("       for backup dir, which is a problem. Change one of these\n" );
-			printf("       names (even temporary) to avoid this.\n" );
+			printf("       Example: '/etc/...' and 'etc/...' produces the same 'etc'\n");
+			printf("       for backup dir, which is a problem. Change one of these\n");
+			printf("       names (even temporary) to avoid this.\n");
 			Abort();
-			}
-		else
+		} else {
 			$dest_roots[] = $dir;
 		}
+	}
 
 	// go to dest dir...
-//	chdir( $DESTINATION );
-
 
 	// let's check if source and dest are directories...
 	$dirs = array();
-	foreach(	$source_dir_array	AS $source_dir )
-		$dirs[ $source_dir ] = "r";
+	foreach(	$source_dir_array	AS $source_dir ) {
+		$dirs[$source_dir] = "r";
+	}
 
 	// uf copy mode requires any writting, we need to check if we
 	// would be able to write anything to given destdir
 	// otherwise we don't care if are write-enabled
-	if( $KNOWN_MODES[ $COPY_MODE ]['write'] == TRUE )
-		{
-		$dirs[ $DESTINATION ] = "w";
+	if( $KNOWN_MODES[$COPY_MODE]['write'] == true ) {
+		$dirs[$DESTINATION] = "w";
 
-		if( $KNOWN_MODES[ $COPY_MODE ][ 'SeparateDest' ] == TRUE )
-			if( $DESTINATION != $ISO_DEST )
-				$dirs[ $ISO_DEST ] = "w";
+		if( $KNOWN_MODES[$COPY_MODE]['SeparateDest'] == true ) {
+			if( $DESTINATION != $ISO_DEST ) {
+				$dirs[$ISO_DEST] = "w";
+			}
 		}
+	}
 
-	foreach( $dirs AS $dir=>$opt )
-		{
-		if( !(is_dir( $dir )) )
-			{
+	foreach( $dirs AS $dir=>$opt ) {
+		if( !(is_dir($dir)) ) {
 			printf("FATAL: '%s' is not a directory or doesn't exists\n", $dir);
 			Abort();
-			}
+		}
 
-		if( strstr( $opt, 'w' ) !== FALSE )
-			{
-			if( !(is_writable( $dir )) )
-				{
-				printf("FATAL: user '%s' can't write to '%s' directory.\n", USER, $dir );
+		if( strstr($opt, 'w') !== false ) {
+			if( !(is_writable($dir)) ) {
+				printf("FATAL: user '%s' can't write to '%s' directory.\n", USER, $dir);
 				Abort();
-				}
-			}
-
-		if( strstr( $opt, 'r' ) !== FALSE )
-			{
-			if( !(is_readable( $dir )) )
-				{
-				printf("FATAL: user '%s' can't read '%s' direcory.\n", USER, $dir);
-				Abort();
-				}
 			}
 		}
+
+		if( strstr($opt, 'r') !== false ) {
+			if( !(is_readable($dir)) ) {
+				printf("FATAL: user '%s' can't read '%s' direcory.\n", USER, $dir);
+				Abort();
+			}
+		}
+	}
 
 
 	// let's check if we can allow given mode
-	if( $KNOWN_MODES[$COPY_MODE]['mkisofs'] )
-		AbortIfNoTool( "mkisofs" );
+	if( $KNOWN_MODES[$COPY_MODE]['mkisofs'] ) {
+		AbortIfNoTool("mkisofs");
+	}
 
-	if( $KNOWN_MODES[$COPY_MODE]['cdrecord'] )
-		AbortIfNoTool( "cdrecord" );
+	if( $KNOWN_MODES[$COPY_MODE]['cdrecord'] ) {
+		AbortIfNoTool("cdrecord");
+	}
 
 	// lets check if there's no sets or ISO images here...
-	for($i=1; $i<10; $i++)
-		{
+	for($i=1; $i<10; $i++) {
 		$name = sprintf("%s/%s_%02d", $DESTINATION, $OUT_CORE, $i);
-		if( file_exists( $name ) )
-			{
+		if( file_exists($name) ) {
 			printf("Found old sets in '%s'.\n", $DESTINATION);
-			if( GetNo("Shall I remove them and proceed") != ANSWER_YES )
+			if( GetNo("Shall I remove them and proceed") != ANSWER_YES ) {
 				Abort();
-			else
-				{
-				CleanUp_RemoveSets( 99 );
+			} else {
+				CleanUp_RemoveSets(99);
 				break;
-				}
-			}
-
-		if( $KNOWN_MODES [$COPY_MODE]['mkisofs'] == "iso" )
-			{
-			if( file_exists( sprintf("%s.iso", $name) ) )
-				{
-				printf("FATAL: Found old image '%s.iso'.\n", $name);
-				printf("       Remove or rename them first or choose other destination.\n");
-				Abort();
-				}
 			}
 		}
 
+		if( $KNOWN_MODES [$COPY_MODE]['mkisofs'] == "iso" ) {
+			if( file_exists(sprintf("%s.iso", $name)) ) {
+				printf("FATAL: Found old image '%s.iso'.\n", $name);
+				printf("       Remove or rename them first or choose other destination.\n");
+				Abort();
+			}
+		}
+	}
 
 
 	// Go!
@@ -1503,15 +1394,16 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		printf("  Dir: '%s'... ", $source_dir);
 
 		// lets scan $source_dir and subdirectories and look for files...
-		$modes = array('f'=>'regular files','l'=>'symbolic links');
+		$modes = array('f' => 'regular files',
+		               'l' => 'symbolic links');
 
 		$empty_counter = count($modes);
-		foreach( $modes AS $scan_mode=>$scan_mode_name ) {
-			$a = trim( `find $source_dir/ -depth -type $scan_mode -print` );
+		foreach( $modes AS $scan_mode => $scan_mode_name ) {
+			$a = trim(`find $source_dir/ -depth -type $scan_mode -print`);
 
-			if( $a != "" ) 	{
+			if( $a != "" ) {
 				$files_tmp = explode("\n", $a);
-				$files = array_merge_recursive( $files, $files_tmp );
+				$files = array_merge_recursive($files, $files_tmp);
 			} else {
 				$empty_counter++;
 			}
@@ -1548,17 +1440,17 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		// is it our special file? if so, we should remember this dir for
 		// further processing...
 		if( $name == $config["PDM"]["ignore_file"] ) {
-			if( isset( $dirs_to_ommit[$dir] ) == FALSE ) {
+			if( isset($dirs_to_ommit[$dir]) == false ) {
 				$dirs_to_ommit[$dir] = $dir;
 			}
 		}
 
 		// if enabled, let's check if user can read this file
 		if( $config["PDM"]["check_files_readability"] ) {
-			if( !(is_readable( $val )) ) {
+			if( !(is_readable($val)) ) {
 				printf("  *** User '%s' can't read '%s' file...\n", USER, $val);
 				$fatal_errors++;
-			}	
+			}
 		}
 
 		// let's check if file matches our pattern finally
@@ -1566,12 +1458,12 @@ function CreateSet( &$stats, $current_cd, $capacity )
 		if( $FILEMATCH_WRAPPER( $PATTERN, $val ) ) {
 			$file_size = GetFileSize( $val );
 			$target[$i++] = array(	"name"		=> $name,
-											"path"		=> $dir,
-											"size"		=> $file_size,
-											"split"		=> FALSE,			// do we need to split this file?
-											"sectors"	=> round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 ),
-											"cd"			=> 0						// #of CD we move this file into
-										);
+									"path"		=> $dir,
+									"size"		=> $file_size,
+									"split"		=> FALSE,			// do we need to split this file?
+									"sectors"	=> round( (($file_size / SECTOR_CAPACITY) + 0.5), 0 ),
+									"cd"			=> 0						// #of CD we move this file into
+								);
 		} else {
 			$pattern_skipped_files++;
 		}
@@ -1597,10 +1489,11 @@ function CreateSet( &$stats, $current_cd, $capacity )
 			$dir_len = strlen( $dir );
 
 			foreach( $target AS $key=>$entry ) {
-				if( $config["PDM"]["ignore_subdirs"] == FALSE )
-					$match = ( $entry["path"] == $dir );
-				else
-					$match = ( substr($entry["path"], 0, $dir_len) == $dir );
+				if( $config["PDM"]["ignore_subdirs"] == false ) {
+					$match = ($entry["path"] == $dir);
+				} else {
+					$match = (substr($entry["path"], 0, $dir_len) == $dir);
+				}
 
 				if( $match ) {
 					$reduced_cnt++;
@@ -1769,41 +1662,35 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 	// tossing standard (non splitted files)
 	reset( $tossed );
-	while( list($key, $file) = each( $tossed ) )
-		{
+	while( list($key, $file) = each( $tossed ) ) {
 		if( $cnt > 2500 ) {
 			$base = 1000;
+		} else if( $cnt > 1000 ) {
+			$base = 400;
+		} else if( $cnt > 200 ) {
+			$base = 100;
 		} else {
-			if( $cnt > 1000 ) {
-				$base = 400;
-			} else {
-				if( $cnt > 200 ) {
-					$base = 100;
-				} else {
-					$base = 1;
-				}
-			}
+			$base = 1;
 		}
 
-		if( $file['split'] == FALSE )
-			{
-			if( ( $cnt % $base ) == 0 )
-				ProgressBarRaw( ProgressBarCalcPercent( $total_files, $cnt ), "Preparing" );
+		if( $file['split'] == false ) {
+			if( ($cnt % $base) == 0 ) {
+				ProgressBarRaw(ProgressBarCalcPercent($total_files, $cnt), "Preparing");
+			}
 
-			$src  = MakePath( $file['path'], $file["name"] );
-			$dest_dir = sprintf("%s/%s_%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"] );
-			$dest = MakePath( $dest_dir, $file["name"] );
+			$src = MakePath($file['path'], $file["name"]);
+			$dest_dir = sprintf("%s/%s_%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"]);
+			$dest = MakePath($dest_dir, $file["name"]);
 
-			MakeDir( $dest_dir );
+			MakeDir($dest_dir);
 
-			switch( $COPY_MODE )
-				{
+			switch($COPY_MODE) {
 				case "copy":
-					copy( $src, $dest );
+					copy($src, $dest);
 					break;
 
 				case "move":
-					rename( $src, $dest );
+					rename($src, $dest);
 					break;
 
 				case "link":
@@ -1814,275 +1701,224 @@ function CreateSet( &$stats, $current_cd, $capacity )
 
 					$prefix = "";
 					// absolute paths are absolute. period
-/*
-					if( $src{0} != '/' )
-						{
-						$prefix = "../";
-
-						for($i=0; $i<count($tmp); $i++)
-							{
-							if( $tmp[$i] != "" )
-								$prefix .= "../";
-							}
-						}
-
-					$_path = MakePath( $prefix, $src );
-*/
-					$_path = realpath( $src );
-					if( symlink( $_path, $dest ) == FALSE ) {
+					$_path = realpath($src);
+					if( symlink($_path, $dest) == false ) {
 						printf("symlink() failed: %s => %s\n", $_path, $dest);
 					}
 					break;
-				}
+			}
 
 			$cnt--;
-			}
 		}
+	}
 
 	ProgressBarRaw( 100, "Preparing" );
 	printf("\n");
 
-
-	reset( $tossed );
-	while( list($key, $file) = each( $tossed ) )
-		{
-		if( $file['split'] )
-			{
+	reset($tossed);
+	while(list($key, $file) = each($tossed)) {
+		if( $file['split'] ) {
 			$src_idx = $file['source_file_index'];
 
-			$src  = MakePath("%s%s", $file['path'], $files_to_split[ $src_idx ]["name"]);
-			$dest_dir = sprintf("%s/%s_%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"] );
+			$src = MakePath("%s%s", $file['path'], $files_to_split[$src_idx]["name"]);
+			$dest_dir = sprintf("%s/%s_%02d/%s/%s", $DESTINATION, $OUT_CORE, $file["cd"], $DATA_DIR, $file["path"]);
 
-			reset( $files_to_split );
-			while( list($spl_key, $spl_file) = each( $files_to_split ) )
-				{
-				if( $spl_key == $src_idx )
-					{
-					$files_to_split[ $src_idx ]['parts'][ $file['chunk'] ] = array('path' => $dest_dir,
-									 																	'name' => $spl_file['name']
-																										);
+			reset($files_to_split);
+			while(list($spl_key, $spl_file) = each($files_to_split)) {
+				if( $spl_key == $src_idx ) {
+					$files_to_split[$src_idx]['parts'][$file['chunk']] = array('path' => $dest_dir,
+					                                                           'name' => $spl_file['name']);
 
-					 }
 				}
 			}
 		}
+	}
 
 	// real choping...
-	reset( $files_to_split );
-	while( list($key, $file) = each( $files_to_split ) )
-		{
+	reset($files_to_split);
+	while(list($key, $file) = each($files_to_split)) {
 		$cnt--;
 
-		$src = MakeEntryPath( $file );
+		$src = MakeEntryPath($file);
 		$progress = sprintf("%3d:  Splitting '#NAME#' (#SIZE# to go)...\r", $cnt);
-		FileSplit( $src, $file['parts'],  $MEDIA_SPECS[ $MEDIA ]['max_file_size'], $progress );
-		}
-
+		FileSplit($src, $file['parts'], $MEDIA_SPECS[$MEDIA]['max_file_size'], $progress);
+	}
 
 
 	// let's write the index file, so it'd be easier to find given file later on
 	printf("Building index files...\n");
-	if( $KNOWN_MODES[$COPY_MODE]['write'] )
-		{
-		$data_header  = sprintf("\n Created by PDM v%s%s: %s\n", SOFTWARE_VERSION, ( SOFTWARE_VERSION_BETA ? SOFTWARE_VERSION_BETA_STR :""), SOFTWARE_URL );
+	if( $KNOWN_MODES[$COPY_MODE]['write'] ) {
+		$data_header = sprintf("\n Created by PDM v%s%s: %s\n", SOFTWARE_VERSION, (SOFTWARE_VERSION_BETA ? SOFTWARE_VERSION_BETA_STR : ""), SOFTWARE_URL);
 		$data_header .= sprintf(" Create date: %s, %s\n\n", date("Y.m.d"), date("H:m:s"));
 
-		$cdindex  = $data_header;
+		$cdindex = $data_header;
 		$cdindex .= sprintf("%3.3s | %s\n", $MEDIA_SPECS[$MEDIA]['type'], "Full path");
 		$cdindex .= "----+----------------------------------------------------\n";
-		for( $i=1; $i<=$total_cds; $i++ )
-			{
+		for( $i = 1; $i <= $total_cds; $i++ ) {
 			$tmp = array();
-			foreach( $tossed AS $file )
-				{
-				if( $file["cd"] == $i )
-					$tmp[] = MakePath( $file["path"], $file["name"] );
+			foreach( $tossed AS $file ) {
+				if( $file["cd"] == $i ) {
+					$tmp[] = MakePath($file["path"], $file["name"]);
 				}
+			}
 
-			asort( $tmp );
-			foreach( $tmp AS $entry )
+			asort($tmp);
+			foreach( $tmp AS $entry ) {
 				$cdindex .= sprintf("%3d | %s\n", $i, $entry);
+			}
 
 			$cdindex .= "\n";
-			}
+		}
 
 
-		// writting index and stamps...
-		for( $i=1; $i<=$total_cds; $i++ )
-			{
+		// writing index and stamps...
+		for( $i = 1; $i <= $total_cds; $i++ ) {
 			$set_name = sprintf("%s_%02d", $OUT_CORE, $i);
 
-			$fh = fopen( sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
-			if( $fh )
-				{
-				fputs( $fh, $cdindex );
-				fclose( $fh );
-				}
-			else
-				{
+			$fh = fopen(sprintf("%s/%s/index.txt", $DESTINATION, $set_name), "wb+");
+			if( $fh ) {
+				fputs($fh, $cdindex);
+				fclose($fh);
+			} else {
 				printf("*** Can't write index to '%s/%s'\n", $DESTINATION, $set_name);
-				}
+			}
 
 			// CD stamps
-			$fh = fopen( sprintf("%s/%s/THIS_IS_%s_%d_OF_%d", $DESTINATION, $set_name, $MEDIA_SPECS[$MEDIA]['type'], $i, $total_cds), "wb+");
-			if( $fh )
-				{
-				fputs( $fh, $data_header );
-				fputs( $fh, sprintf(" Out Core: %s", $OUT_CORE) );
-				fclose( $fh );
-				}
+			$fh = fopen(sprintf("%s/%s/THIS_IS_%s_%d_OF_%d", $DESTINATION, $set_name, $MEDIA_SPECS[$MEDIA]['type'], $i, $total_cds), "wb+");
+			if( $fh ) {
+				fputs($fh, $data_header);
+				fputs($fh, sprintf(" Out Core: %s", $OUT_CORE));
+				fclose($fh);
 			}
 		}
+	}
 
 
-	if( ($COPY_MODE=="iso") || ($COPY_MODE=="burn") || ($COPY_MODE=="burn-iso") )
-		{
+	if( ($COPY_MODE == "iso") || ($COPY_MODE == "burn") || ($COPY_MODE == "burn-iso") ) {
 		printf("\nI'm about to process %s sets (mode '%s') in '%s' directory\n", $MEDIA_SPECS[$MEDIA]['type'], $COPY_MODE, $DESTINATION);
-		if( GetYN(TRUE) != ANSWER_YES )
+		if( GetYN(true) != ANSWER_YES ) {
 			Abort();
+		}
 
+	$repeat_process = false;        // do we want to do all this again?
 
-		$repeat_process = FALSE;		// do we want to do all this again?
+	do {
+		for( $i = 1; $i <= $total_cds; $i++ ) {
+			$out_name = sprintf("%s_%s%02d.iso", $OUT_CORE, strtolower($MEDIA_SPECS[$MEDIA]['type']), $i);
+			$vol_name = sprintf("%s_%d_of_%d", $OUT_CORE, $i, $total_cds);
+			$src_name = sprintf("%s_%02d", $OUT_CORE, $i);
 
-		do
-			{
-			for( $i=1; $i<=$total_cds; $i++ )
-				{
-				$out_name = sprintf("%s_%s%02d.iso", $OUT_CORE, strtolower( $MEDIA_SPECS[ $MEDIA ][ 'type' ] ), $i);
-				$vol_name = sprintf("%s_%d_of_%d", $OUT_CORE, $i, $total_cds);
-				$src_name = sprintf("%s_%02d", $OUT_CORE, $i);
+			$MKISOFS_PARAMS = sprintf(" -R -A 'PDM BACKUP CREATOR  http://pdm.sf.net/' -follow-links -joliet-long -joliet -rock -full-iso9660-filenames " . " -allow-lowercase -allow-multidot -hide-joliet-trans-tbl -iso-level 2 " . " -overburn -V %s -volset %s ", $vol_name, $vol_name);
 
-				$MKISOFS_PARAMS = sprintf(	" -R -A 'PDM BACKUP CREATOR  http://pdm.sf.net/' -follow-links -joliet-long -joliet -rock -full-iso9660-filenames " .
-													" -allow-lowercase -allow-multidot -hide-joliet-trans-tbl -iso-level 2 " .
-													" -overburn -V %s -volset %s ",
-														$vol_name, $vol_name );
+			switch($COPY_MODE) {
+				case "iso": {
+					$cmd = sprintf("mkisofs %s -output %s/%s %s/%s 2>&1", $MKISOFS_PARAMS, $ISO_DEST, $out_name, $DESTINATION, $src_name);
+					ProgressBar($cmd, sprintf("ISO %s", $out_name));
+				}
+					break;
 
-				switch( $COPY_MODE )
-					{
-					case "iso":
-						{
-						$cmd = sprintf("mkisofs %s -output %s/%s %s/%s 2>&1", $MKISOFS_PARAMS, $ISO_DEST, $out_name, $DESTINATION, $src_name);
-						ProgressBar( $cmd, sprintf("ISO %s", $out_name) );
-						}
-						break;
+				case 'burn-iso':
+				case "burn": {
+					if( $COPY_MODE == "burn" )
+						$_type = "on-the-fly"; else
+						$_type = "via ISO image";
 
-					case 'burn-iso':
-					case "burn":
-						{
-						if( $COPY_MODE == "burn" )
-							$_type = "on-the-fly";
-						else
-							$_type = "via ISO image";
+					do {
+						printf("\nAttemting to burn %s (#%d of %d) %s (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds, $_type);
+						switch(GetYN(true)) {
+							case ANSWER_YES:
+								switch($COPY_MODE) {
+									case "burn-iso": {
+										// making temporary iso image 1st
+										$cmd = sprintf("mkisofs %s -output %s %s/%s 2>&1", $MKISOFS_PARAMS, $out_name, $DESTINATION, $src_name);
+										ProgressBar($cmd, sprintf("ISO %s", $out_name));
 
-						do
-							{
-							printf("\nAttemting to burn %s (#%d of %d) %s (choosing 'N' skips burning of this directory).\n", $src_name, $i, $total_cds, $_type);
-							switch( GetYN(TRUE) )
-								{
-								case ANSWER_YES:
-									switch( $COPY_MODE )
-										{
-										case "burn-iso":
-											{
-											// making temporary iso image 1st
-											$cmd = sprintf("mkisofs %s -output %s %s/%s 2>&1", $MKISOFS_PARAMS, $out_name, $DESTINATION, $src_name);
-											ProgressBar( $cmd, sprintf("ISO %s", $out_name) );
-
-											switch( $MEDIA_SPECS[ $MEDIA ]['handler'] )
-												{
-												case 'cd':
+										switch($MEDIA_SPECS[$MEDIA]['handler']) {
+											case 'cd':
 //													$burn_cmd = sprintf(
-													break;
+												break;
 
-												case 'dvd':
-													$burn_cmd = sprintf( "growisofs -dvd-compat -Z %s=%s", $config['GROWISOFS']['device'], $out_name );
-													break;
-												}
-											}
+											case 'dvd':
+												$burn_cmd = sprintf("growisofs -dvd-compat -Z %s=%s", $config['GROWISOFS']['device'], $out_name);
+												break;
+										}
+									}
+									break;
+
+									case 'burn':
+									default: {
+										// burn baby! burn!
+										switch($MEDIA_SPECS[$MEDIA]['handler']) {
+											case 'cd':
+												$mkisofs = sprintf("mkisofs %s %s/%s", $MKISOFS_PARAMS, $DESTINATION, $src_name);
+												$cdrecord = sprintf("cdrecord -fs=%dm -v driveropts=burnfree speed=0 gracetime=2 -eject -dev=%s - ", $config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
+												$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord);
+												break;
+
+											case 'dvd':
+												///usr/bin/growisofs -Z /dev/hdc -use-the-force-luke=dao -overburn -V wizfon_01 -volset  -A K3B THE CD KREATOR VERSION 0.11.9 (C) 2003 SEBASTIAN TRUEG AND THE K3B TEAM -P  -p K3b - Version 0.11.9 -sysid LINUX -volset-size 1 -volset-seqno 1 -sort /tmp/kde-carlos/k3baTJhza.tmp -R -hide-list /tmp/kde-carlos/k3b9sWkDb.tmp -J -joliet-long -hide-joliet-list /tmp/kde-carlos/k3bOaDqVb.tmp -L -l -allow-lowercase -allow-multidot -hide-joliet-trans-tbl -iso-level 2 -path-list /tmp/kde-carlos/k3b8GFe0a.tmp
+												$burn_cmd = sprintf(" growisofs -f -Z %s %s ", $config["GROWISOFS"]["device"], $src_name);
+												break;
+										}
+									}
+								}
+
+								// Go!
+
+								ProgressBar($burn_cmd, "Burning");
+								printf("\nThe '%s' has been burnt.\n\n", $src_name);
+
+								$burn_again = GetYN(false, sprintf("Do you want to burn '%s' again?", $src_name));
+
+								switch($burn_again) {
+									case ANSWER_YES:
 										break;
 
-										case 'burn':
-										default:
-											{
-											// burn baby! burn!
-											switch( $MEDIA_SPECS[ $MEDIA ][ 'handler' ] )
-												{
-												case 'cd':
-													$mkisofs  = sprintf("mkisofs %s %s/%s", $MKISOFS_PARAMS, $DESTINATION, $src_name);
-													$cdrecord = sprintf("cdrecord -fs=%dm -v driveropts=burnfree speed=0 gracetime=2 -eject -dev=%s - ",
-															$config["CDRECORD"]["fifo_size"], $config["CDRECORD"]["device"]);
-													$burn_cmd = sprintf("%s | %s", $mkisofs, $cdrecord );
-													break;
+									case ANSWER_NO:
+										if( file_exists($out_name) )
+											unlink($out_name);
+										break;
 
-												case 'dvd':
-													///usr/bin/growisofs -Z /dev/hdc -use-the-force-luke=dao -overburn -V wizfon_01 -volset  -A K3B THE CD KREATOR VERSION 0.11.9 (C) 2003 SEBASTIAN TRUEG AND THE K3B TEAM -P  -p K3b - Version 0.11.9 -sysid LINUX -volset-size 1 -volset-seqno 1 -sort /tmp/kde-carlos/k3baTJhza.tmp -R -hide-list /tmp/kde-carlos/k3b9sWkDb.tmp -J -joliet-long -hide-joliet-list /tmp/kde-carlos/k3bOaDqVb.tmp -L -l -allow-lowercase -allow-multidot -hide-joliet-trans-tbl -iso-level 2 -path-list /tmp/kde-carlos/k3b8GFe0a.tmp
-													$burn_cmd = sprintf( " growisofs -f -Z %s %s ", $config["GROWISOFS"]["device"], $src_name );
-													break;
-												}
-											}
-										}
-
-											// Go!
-
-									ProgressBar( $burn_cmd, "Burning" );
-									printf("\nThe '%s' has been burnt.\n\n", $src_name);
-
-									$burn_again = GetYN( FALSE, sprintf("Do you want to burn '%s' again?", $src_name) );
-
-									switch( $burn_again )
-										{
-										case ANSWER_YES:
-											break;
-
-										case ANSWER_NO:
-											if( file_exists( $out_name ) )
-												unlink( $out_name );
-											break;
-
-										case ANSWER_ABORT:
-											if( file_exists( $out_name ) )
-												unlink( $out_name );
-											Abort();
-											break;
-										}
-									break;
-
-								case ANSWER_NO:
-									printf(" ** Skipped...\n");
-									$burn_again = FALSE;
-									break;
-
-								case ANSWER_ABORT:
-									Abort();
+									case ANSWER_ABORT:
+										if( file_exists($out_name) )
+											unlink($out_name);
+										Abort();
+										break;
 								}
-							}
-							while( $burn_again );
+								break;
+
+							case ANSWER_NO:
+								printf(" ** Skipped...\n");
+								$burn_again = false;
+								break;
+
+							case ANSWER_ABORT:
+								Abort();
 						}
-						break;
-					}
+					} while($burn_again);
 				}
-
-
-			printf("\n\nOperation done.\n");
-			switch( $COPY_MODE )
-				{
-				case "burn":
-					$repeat_process = GetYN(FALSE, sprintf("\nDo you want to %s all the %d sets again?", $COPY_MODE, $total_cds) );
 					break;
-
-				default:
-					$repeat_process = FALSE;
-					break;
-				}
-
-
 			}
-			while( $repeat_process == ANSWER_YES );
-
-		if( $repeat_process == ANSWER_ABORT )
-			Abort();
-
 		}
+
+		printf("\n\nOperation done.\n");
+		switch($COPY_MODE) {
+			case "burn":
+				$repeat_process = GetYN(false, sprintf("\nDo you want to %s all the %d sets again?", $COPY_MODE, $total_cds));
+				break;
+
+			default:
+				$repeat_process = false;
+				break;
+		}
+
+
+	} while($repeat_process == ANSWER_YES);
+
+	if( $repeat_process == ANSWER_ABORT ) {
+		Abort();
+	}
+}
 
 	// cleaning temporary data files...
 	if( $KNOWN_MODES[$COPY_MODE]['RemoveSets'] )
@@ -2091,79 +1927,72 @@ function CreateSet( &$stats, $current_cd, $capacity )
 	printf("\nDone.\n\n");
 
 
-
-function ProgressBarRaw( $percent, $msg="Working" )
-{
+function ProgressBarRaw($percent, $msg = "Working") {
 	$progress_bar = "##################################################";
 
-	printf( "%s: [%-50s] %.1f%%\r", $msg, substr($progress_bar, 0, $percent/2 ), $percent );
+	printf("%s: [%-50s] %.1f%%\r", $msg, substr($progress_bar, 0, $percent / 2), $percent);
 }
 
-function ProgressBarCalcPercent( $total, $current )
-{
-	$percent = 100.0-(float)round( 100-(($total-$current)*100 / $total) );
+function ProgressBarCalcPercent($total, $current) {
+	$percent = 100.0 - (float)round(100 - (($total - $current) * 100 / $total));
 
-	return( $percent );
+	return $percent;
 }
 
-function ProgressBar( $cmd, $msg )
-{
+function ProgressBar($cmd, $msg) {
 	$pattern = '\'(\ [0-9]{1,2})*\.([0-9]{2})*% done, estimate finish (.*)+\'siU';
 
-	$ph = popen( $cmd, "r" );
-	while (!feof($ph))
-		{
+	$ph = popen($cmd, "r");
+	while(!feof($ph)) {
 		$buffer = fgets($ph, 256);
-		if( preg_match( $pattern, $buffer, $match ) )
-			{
-			ProgressBarRaw( (float)sprintf("%s.%s" , $match[1], $match[2]), $msg );
-			}
+		if( preg_match($pattern, $buffer, $match) ) {
+			ProgressBarRaw((float)sprintf("%s.%s", $match[1], $match[2]), $msg);
 		}
-	pclose( $ph );
+	}
+	pclose($ph);
 
-	ProgressBarRaw( 100, $msg );
+	ProgressBarRaw(100, $msg);
 	printf("\n");
 }
 
 
-// filesize wrapper to solve >2GB size issue 
+// filesize wrapper to solve >2GB size issue
 function GetFileSize($file) {
 
 	static $iswin;
-	if (!isset($iswin)) {
-	    $iswin = (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN');
+
+	if( !isset($iswin) ) {
+		$iswin = (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN');
 	}
-	
+
 	static $exec_works;
-	if (!isset($exec_works)) {
-	    $exec_works = (function_exists('exec') && !ini_get('safe_mode') && @exec('echo EXEC') == 'EXEC');
+	if( !isset($exec_works) ) {
+		$exec_works = (function_exists('exec') && !ini_get('safe_mode') && @exec('echo EXEC') == 'EXEC');
 	}
-	
+
 	// try a shell command
-	if ($exec_works) {
-	    $cmd = ($iswin) ? "for %F in (\"$file\") do @echo %~zF" : "stat -c%s \"$file\"";
-	    @exec($cmd, $output);
-	    if (is_array($output) && ctype_digit($size = trim(implode("\n", $output)))) {
-	        return $size;
-	    }
+	if( $exec_works ) {
+		$cmd = ($iswin) ? "for %F in (\"$file\") do @echo %~zF" : "stat -c%s \"$file\"";
+		@exec($cmd, $output);
+		if( is_array($output) && ctype_digit($size = trim(implode("\n", $output))) ) {
+			return $size;
+		}
 	}
-	
+
 	// try the Windows COM interface
-	if ($iswin && class_exists("COM")) {
-	    try {
-	        $fsobj = new COM('Scripting.FileSystemObject');
-	        $f = $fsobj->GetFile( realpath($file) );
-	        $size = $f->Size;
-	    } catch (Exception $e) {
-	        $size = null;
-	    }
-	    if (ctype_digit($size)) {
-	        return $size;
-	    }
+	if( $iswin && class_exists("COM") ) {
+		try {
+			$fsobj = new COM('Scripting.FileSystemObject');
+			$f = $fsobj->GetFile(realpath($file));
+			$size = $f->Size;
+		} catch( Exception $e ) {
+			$size = null;
+		}
+		if( ctype_digit($size) ) {
+			return $size;
+		}
 	}
-	
+
 	// if all else fails
 	return filesize($file);
-
-
 }
