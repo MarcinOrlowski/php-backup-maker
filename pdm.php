@@ -71,83 +71,81 @@ class CLI
 
 	var	$page_width=74;
 
-function CLI( $args="" )
-{
-	if( is_array( $args ) )
-		$this->_InitSourceArgsArray( $args );
-
-	$this->found_args = array();
-	$this->errors = array();
-}
-
-
-function Parse( $argc, $argv, $args="" )
-{
-	$result = TRUE;
-
-	$this->help_command_name = $argv[0];
-
-	if( is_array( $args ) )
-		$this->CLI( $args );
-
-	// let's get user args...
-	$result = ($result & $this->_GetArgs( $argc, $argv ));
-
-	// if no errors found, lets check'em...
-	$result = ($result & $this->_ValidateArgs());
-
-	return( $result );
-}
-
-// returns BOOL if the $key was specified...
-function IsOptionSet( $key )
-{
-	$result = FALSE;
-
-	if( isset( $this->args[$key] ) )
-		$result = $this->args[$key]['set'];
-
-	return( $result );
-}
-
-
-// returns option argument. Default is '', so it's safe
-// to call this function even against $key is a switch
-// not a regular option
-//
-// NOTE: for arguments with 'multi' == TRUE, you will
-//       get Array back! See the demo...
-function GetOptionArg( $key )
-{
-	$result = "";
-
-	if( isset( $this->args[$key] ) )
-		{
-		if( $this->args[$key]['multi'] )
-			$result = $this->args[$key]['param'];
-		else
-			$result = $this->args[$key]['param'][0];
+	function CLI($args = "") {
+		if( is_array($args) ) {
+			$this->_InitSourceArgsArray($args);
 		}
 
-	return( $result );
-}
+		$this->found_args = array();
+		$this->errors = array();
+	}
 
-// returns numer of values assigned to the option. Usually
-// it can be 0 (if no option or it's valueless) or X
-function GetOptionArgCount( $key )
-{
-	$result = 0;
 
-	if( isset( $this->args[$key] ) )
-		{
-		if( is_array( $this->args[$key]['param'] ) )
-			$result = count( $this->args[$key]['param'] );
-		else
-			$result = 1;
+	function Parse($argc, $argv, $args = "") {
+		$result = true;
+
+		$this->help_command_name = $argv[0];
+
+		if( is_array($args) ) {
+			$this->CLI($args);
 		}
 
-	return( $result );
-}
+		// let's get user args...
+		$result = ($result & $this->_GetArgs($argc, $argv));
+
+		// if no errors found, lets check'em...
+		$result = ($result & $this->_ValidateArgs());
+
+		return $result;
+	}
+
+	// returns BOOL if the $key was specified...
+	function IsOptionSet($key) {
+		$result = false;
+
+		if( isset($this->args[$key]) ) {
+			$result = $this->args[$key]['set'];
+		}
+
+		return ($result);
+	}
+
+
+	// returns option argument. Default is '', so it's safe
+	// to call this function even against $key is a switch
+	// not a regular option
+	//
+	// NOTE: for arguments with 'multi' == TRUE, you will
+	//       get Array back! See the demo...
+	function GetOptionArg($key) {
+		$result = "";
+
+		if( isset($this->args[$key]) ) {
+			if( $this->args[$key]['multi'] ) {
+				$result = $this->args[$key]['param'];
+			} else {
+				$result = $this->args[$key]['param'][0];
+			}
+		}
+
+		return $result;
+	}
+
+	// returns numer of values assigned to the option. Usually
+	// it can be 0 (if no option or it's valueless) or X
+	function GetOptionArgCount($key) {
+		$result = 0;
+
+		if( isset($this->args[$key]) ) {
+			if( is_array($this->args[$key]['param']) ) {
+				$result = count($this->args[$key]['param']);
+			} else {
+				$result = 1;
+			}
+		}
+
+		return $result;
+	}
 
 //outputs errors
 function ShowErrors()
@@ -216,180 +214,156 @@ function ShowHelpPage()
 
 /***************** PRIVATE FUNCTIONS BELOW ***********************/
 
-// here we check if source array gave by the application
-// is valid. If any filed is missing, we add it with default
-// value. The only fields that have to be specified are
-// eiher 'short' or 'long' (or both). Do NOT specify 'set'
-// or you will be punished by non-working application ;)
-function _InitSourceArgsArray( $args )
-{
-	$this->args = array();
+	// here we check if source array gave by the application
+	// is valid. If any filed is missing, we add it with default
+	// value. The only fields that have to be specified are
+	// eiher 'short' or 'long' (or both). Do NOT specify 'set'
+	// or you will be punished by non-working application ;)
+	function _InitSourceArgsArray($args) {
+		$this->args = array();
 
-	foreach( $args AS $key=>$val )
-		{
-		$tmp = $val;
+		foreach( $args AS $key => $val ) {
+			$tmp = $val;
 
-		foreach( $this->default_fields AS $d_key => $d_val )
-			if( isset( $tmp[ $d_key ] ) === FALSE )
-				$tmp[ $d_key ] = $d_val;
-
-		if( ($tmp['short'] === FALSE) && ($tmp['long'] === FALSE) )
-			{
-			// bad, bad developer!
-			printf("*** FATAL: Missing 'short' or 'long' definition for '%s'.\n", $key);
-			exit(10);
+			foreach( $this->default_fields AS $d_key => $d_val ) {
+				if( isset($tmp[$d_key]) === false ) {
+					$tmp[$d_key] = $d_val;
+				}
 			}
 
-		if( ($tmp['multi'] == TRUE) && ($tmp['switch'] == TRUE) )
-			{
-			printf("*** FATAL: '%s' cannot be both 'switch' and 'multi' argument.\n", $key);
-			exit(10);
+			if( ($tmp['short'] === false) && ($tmp['long'] === false) ) {
+				// bad, bad developer!
+				printf("*** FATAL: Missing 'short' or 'long' definition for '%s'.\n", $key);
+				exit(10);
 			}
 
-		// some measures for dynamically layouted help page
-		if( $tmp['short'] !== FALSE )
-			$this->help_short_len = max( $this->help_short_len, strlen( $tmp['short'] ) );
+			if( ($tmp['multi'] == true) && ($tmp['switch'] == true) ) {
+				printf("*** FATAL: '%s' cannot be both 'switch' and 'multi' argument.\n", $key);
+				exit(10);
+			}
 
-		if( $tmp['long'] !== FALSE )
-			$this->help_long_len = max( $this->help_long_len, strlen( $tmp['long'] ) );
+			// some measures for dynamically layouted help page
+			if( $tmp['short'] !== false ) {
+				$this->help_short_len = max($this->help_short_len, strlen($tmp['short']));
+			}
 
-		// arg entry is fine. Load it up
-		$this->args[ $key ] = $tmp;
+			if( $tmp['long'] !== false ) {
+				$this->help_long_len = max($this->help_long_len, strlen($tmp['long']));
+			}
+
+			// arg entry is fine. Load it up
+			$this->args[$key] = $tmp;
 		}
-}
+	}
 
-// checks if given argumens are known, unique (precheck
-// was made in GetArgs, but we still need to check against
-// non 'multi' arguments given twice
-function _ValidateArgs()
-{
-	$result = TRUE;
+	// checks if given argumens are known, unique (precheck
+	// was made in GetArgs, but we still need to check against
+	// non 'multi' arguments given twice
+	function _ValidateArgs() {
+		$result = true;
 
-	foreach( $this->args AS $key=>$entry )
-		{
-		$found = 0;
-		$found_as_key = FALSE;
+		foreach( $this->args AS $key => $entry ) {
+			$found = 0;
+			$found_as_key = false;
 
-		if( $entry['short'] !== FALSE )
-			{
-			if( array_key_exists( $entry['short'], $this->found_args ) )
-				{
-				$found++;
-				$found_as_key = $entry['short'];
+			if( $entry['short'] !== false ) {
+				if( array_key_exists($entry['short'], $this->found_args) ) {
+					$found++;
+					$found_as_key = $entry['short'];
 				}
 			}
 
-		if( $entry['long'] !== FALSE )
-			{
-			if( array_key_exists( $entry['long'], $this->found_args ) )
-				{
-				$found++;
-				$found_as_key = $entry['long'];
+			if( $entry['long'] !== false ) {
+				if( array_key_exists($entry['long'], $this->found_args) ) {
+					$found++;
+					$found_as_key = $entry['long'];
 				}
 			}
 
-		if( ($entry["multi"] != TRUE) && (count($entry['param'])>0) )
-			{
-			$this->errors[] = sprintf("Argument '-%s' was already specified.", $entry['long']);
-			$result = FALSE;
+			if( ($entry["multi"] != true) && (count($entry['param']) > 0) ) {
+				$this->errors[] = sprintf("Argument '-%s' was already specified.", $entry['long']);
+				$result = false;
 			}
 
-		// haven't found anything like this yet
-		if( $found == 0 )
-			{
-			if( $entry["required"] == TRUE )
-				{
-				$this->errors[] = sprintf("Missing required option '-%s'.", $entry['long']);
-				$result = FALSE;
+			// haven't found anything like this yet
+			if( $found == 0 ) {
+				if( $entry["required"] == true ) {
+					$this->errors[] = sprintf("Missing required option '-%s'.", $entry['long']);
+					$result = false;
 				}
-			}
-		else
-			{
-			// either short or long keyword was previously found...
-			if( $entry["multi"] != TRUE )
-				{
-				if( $found == 2 )
-					{
-					printf("s: %d\n", $entry["multi"] );
-					$this->errors[] = sprintf("Argument '-%s' was already specified.", $entry['long']);
-					$result = FALSE;
+			} else {
+				// either short or long keyword was previously found...
+				if( $entry["multi"] != true ) {
+					if( $found == 2 ) {
+						printf("s: %d\n", $entry["multi"]);
+						$this->errors[] = sprintf("Argument '-%s' was already specified.", $entry['long']);
+						$result = false;
 					}
 				}
 
-			if( $entry["switch"] === FALSE )
-				{
-				if( $this->found_args[ $found_as_key ]["val"] === FALSE )
-					{
-					$this->errors[] = sprintf("Argument '-%s' requires value (i.e. -%s=something).", $found_as_key, $found_as_key);
-					$result = FALSE;
+				if( $entry["switch"] === false ) {
+					if( $this->found_args[$found_as_key]["val"] === false ) {
+						$this->errors[] = sprintf("Argument '-%s' requires value (i.e. -%s=something).", $found_as_key, $found_as_key);
+						$result = false;
 					}
-				}
-			else
-				{
-				if( count($this->found_args[ $found_as_key ]["val"]) == 0 )
-					{
-					printf( "'%s' '%s'", $this->found_args[ $found_as_key ]["val"], $entry["long"] );
-					$this->errors[] = sprintf("'-%s' is just a switch, and does not require any value.", $found_as_key);
-					$result = FALSE;
+				} else {
+					if( count($this->found_args[$found_as_key]["val"]) == 0 ) {
+						printf("'%s' '%s'", $this->found_args[$found_as_key]["val"], $entry["long"]);
+						$this->errors[] = sprintf("'-%s' is just a switch, and does not require any value.", $found_as_key);
+						$result = false;
 					}
 				}
 
-			// let's put it back...
-			$this->args[ $key ]['set'] = TRUE;
-			if( $entry["switch"] == FALSE )
-				$this->args[ $key ]['param'] = $this->found_args[ $found_as_key ]['val'];
+				// let's put it back...
+				$this->args[$key]['set'] = true;
+				if( $entry["switch"] == false ) {
+					$this->args[$key]['param'] = $this->found_args[$found_as_key]['val'];
+				}
 
-			// remove it from found args...
-			unset( $this->found_args[ $found_as_key ] );
+				// remove it from found args...
+				unset($this->found_args[$found_as_key]);
 			}
 		}
 
 
-	// let's check if we got any unknown args...
-	if( count( $this->found_args ) > 0 )
-		{
-		$msg = "Unknown options found: ";
-		$comma = "";
-		foreach( $this->found_args AS $key=>$val )
-			{
-			$msg .= sprintf("%s-%s", $comma, $key );
-			$comma = ", ";
+		// let's check if we got any unknown args...
+		if( count($this->found_args) > 0 ) {
+			$msg = "Unknown options found: ";
+			$comma = "";
+			foreach( $this->found_args AS $key => $val ) {
+				$msg .= sprintf("%s-%s", $comma, $key);
+				$comma = ", ";
 			}
 
-		$this->errors[] = $msg;
+			$this->errors[] = $msg;
 
-		return( FALSE );
+			$result = false;
 		}
 
-	return( $result );
-}
+		return $result;
+	}
 
-// scans user input and builds array of given arguments
-function _GetArgs( $argc, $argv )
-{
-	$result = TRUE;
+	// scans user input and builds array of given arguments
+	function _GetArgs($argc, $argv) {
+		$result = true;
 
-if( $argc >= 1 )
-	{
-	for( $i = 1; $i<$argc; $i++ )
-		{
-		$valid = TRUE;
+		if( $argc >= 1 ) {
+			for( $i = 1; $i < $argc; $i++ ) {
+				$valid = true;
 
-		$tmp = explode("=", $argv[$i]);
+				$tmp = explode("=", $argv[$i]);
 
-		if( $tmp[0][0] != '-' )
-			{
-			$this->errors[] = sprintf("Syntax error. Arguments start with dash (i.e. -%s).", $tmp[0]);
-			$result = FALSE;
-			}
+				if( $tmp[0][0] != '-' ) {
+					$this->errors[] = sprintf("Syntax error. Arguments start with dash (i.e. -%s).", $tmp[0]);
+					$result = false;
+				}
 
-		$arg_key = substr(str_replace( array(" "), "", $tmp[0]), 1);
+				$arg_key = substr(str_replace(array(" "), "", $tmp[0]), 1);
 
-		if( strlen( $tmp[0] ) <= 0 )
-			{
-			$this->errors[] = sprintf("Bad argument '%s'.", $tmp[0]);
-			$valid = $result = FALSE;
-			}
+				if( strlen($tmp[0]) <= 0 ) {
+					$this->errors[] = sprintf("Bad argument '%s'.", $tmp[0]);
+					$valid = $result = false;
+				}
 
 //		if( array_key_exists( $arg_key, $this->found_args ) )
 //			{
@@ -397,193 +371,158 @@ if( $argc >= 1 )
 //			$valid = $result = FALSE;
 //			}
 
-		if( $valid )
-			{
-			switch( count( $tmp ) )
-				{
-				case 2:
-					$arg_val = $tmp[1];
-					break;
+				if( $valid ) {
+					switch(count($tmp)) {
+						case 2:
+							$arg_val = $tmp[1];
+							break;
 
-				case 1:
-					$arg_val = FALSE;
-					break;
+						case 1:
+							$arg_val = false;
+							break;
 
-				default:
-					unset( $tmp[0] );
-					$arg_val = implode("=", $tmp);
-					break;
+						default:
+							unset($tmp[0]);
+							$arg_val = implode("=", $tmp);
+							break;
+					}
+
+					if( !(isset($this->found_args[$arg_key])) ) {
+						$this->found_args[$arg_key] = array("key" => $arg_key, "val" => array());
+					}
+					if( !(in_array($arg_val, $this->found_args[$arg_key]['val'])) ) {
+						$this->found_args[$arg_key]['val'][] = $arg_val;
+					}
 				}
-
-			if( !(isset($this->found_args[ $arg_key ])) )
-				$this->found_args[ $arg_key ] = array("key"	=> $arg_key,
-													 				"val"	=> array()
-													 			);
-			if( !(in_array( $arg_val, $this->found_args[ $arg_key ]['val'] )) )
-				$this->found_args[ $arg_key ]['val'][] = $arg_val;
 			}
 		}
-	}
 
-	return( $result );
-}
+		return $result;
+	}
 
 // ond of class
 }
 
+
 // Command Line Options Array		.
-		$args = array(
-					"source"		=> array( "short"		=> 's',
-												 "long"		=> "src",
-												 "required"	=> TRUE,
-												 "multi"		=> TRUE,
-												 "info"		=> 'Source directory (i.e. "data/") which you are going to process and backup.'
-												 ),
+$args = array("source"       => array("short"    => 's',
+                                      "long"     => "src",
+                                      "required" => true,
+                                      "multi"    => true,
+                                      "info"     => 'Source directory (i.e. "data/") which you are going to process and backup.'),
 
-					"dest"		=> array("short"		=> 'd',
-												"long"		=> "dest",
-												"info"		=> 'Destination directory where CD sets will be created. ' .
-																	'If ommited, your current working directory will be used.'
-												),
+              "dest"         => array("short" => 'd',
+                                      "long"  => "dest",
+                                      "info"  => 'Destination directory where CD sets will be created. ' .
+	                                             'If ommited, your current working directory will be used.'),
 
-					"media"      => array("long"	=> "media",
-												 "info"	=> "Specifies destination media type to be used. See help-media for details. Default media capacity is 8,5GB (DVD SingleLayer)."
-												 ),
+              "media"        => array("long" => "media",
+                                      "info" => "Specifies destination media type to be used. See help-media for details. Default media capacity is 8,5GB (DVD SingleLayer)."),
 
-					"mode"		=> array("short"		=> 'm',
-												"long"		=> 'mode',
-												"info"		=> 'Specifies working mode. See help-mode for details. Default mode is "test".'
-												),
-					"out-core"	=> array("short"		=> 'c',
-												"long"		=> 'out-core',
-												"info"		=> 'Specifies name prefix used for CD sets directories. ' .
-																	'If not specified, Current date in YYYYMMDD format will be taken.'
-												),
-					"iso-dest"	=> array("short"		=> 't',
-												'long'		=> 'iso-dest',
-												'info'		=> 'Specifies target directory PDM should use for storing ISO images ' .
-																	'(for "iso" and "burn-iso" modes only). '.
-																	'If not specified, "dest" value will be used. This option is mostly of no ' .
-																	'use unless you want ISO images to be stored over NFS. See "Working over NFS" in README'
-												),
-					"split"		=> array('short'		=> 'p',
-												'long'		=> 'split',
-												'info'		=> 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).',
-												'switch'		=> TRUE
-												),
-					"data-dir"		=>	array('long'	=> 'data-dir',
-													'info'	=> 'All backuped data is stored inside of "data-dir" on each set. Defaults is "backup"'
-													),
+              "mode"         => array("short" => 'm',
+                                      "long"  => 'mode',
+                                      "info"  => 'Specifies working mode. See help-mode for details. Default mode is "test".'),
+              "out-core"     => array("short" => 'c',
+                                      "long"  => 'out-core',
+                                      "info"  => 'Specifies name prefix used for CD sets directories. ' .
+	                                             'If not specified, Current date in YYYYMMDD format will be taken.'),
+              "iso-dest"     => array("short" => 't',
+                                      'long'  => 'iso-dest',
+                                      'info'  => 'Specifies target directory PDM should use for storing ISO images ' .
+	                                             '(for "iso" and "burn-iso" modes only). If not specified, "dest" value will be used. This option is mostly of no ' .
+	                                             'use unless you want ISO images to be stored over NFS. See "Working over NFS" in README'),
+              "split"        => array('short'  => 'p',
+                                      'long'   => 'split',
+                                      'info'   => 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).',
+                                      'switch' => true),
+              "data-dir"     => array('long' => 'data-dir',
+                                      'info' => 'All backed up data is stored inside of "data-dir" on each set. Defaults is "backup"'),
 
-					"pattern"		=>	array('long'	=> 'pattern',
-													'info'	=> 'Specifies regular expression pattern for files to be processed. ' .
-																	'Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'
-													),
-					"ereg-pattern"	=> array('long'	=> 'ereg-pattern',
-													'info'	=> 'Simmilar to "pattern" but uses plain regular expression without any shell pattern support.'
-													),
-					'update-check'	=> array('long'	=> 'update',
-													'short'	=> 'u',
-													'info'	=> 'Checks for available updates (requires internet connection)',
-													'switch'	=> TRUE
-													),
+              "pattern"      => array('long' => 'pattern',
+                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'),
+              "ereg-pattern" => array('long' => 'ereg-pattern',
+                                      'info' => 'Similar to "pattern" but uses plain regular expression without any shell pattern support.'),
+              'update-check' => array('long'   => 'update',
+                                      'short'  => 'u',
+                                      'info'   => 'Checks for available updates (requires internet connection)',
+                                      'switch' => true),
 
-					"help-mode"		=> array('long'	=> 'help-mode',
-													'info'	=> 'Shows more information about available work modes.',
-													'switch'	=> TRUE
-													),
-					"help-media"	=>	array("long"	=> "help-media",
-													"info"	=> "Show media type related help page.",
-													"switch"	=> TRUE
-													),
+              "help-mode"    => array('long'   => 'help-mode',
+                                      'info'   => 'Shows more information about available work modes.',
+                                      'switch' => true),
+              "help-media"   => array("long"   => "help-media",
+                                      "info"   => "Show media type related help page.",
+                                      "switch" => true),
 
-					"help"      	=> array("short"  => 'h',
-													"long"   => "help",
-													"info"   => "Shows this help page.",
-													"switch" => TRUE
-													)
-					);
+              "help"         => array("short"  => 'h',
+                                      "long"   => "help",
+                                      "info"   => "Shows this help page.",
+                                      "switch" => true));
 
 
 /******************************************************************************/
 
 	// DON'T touch this! Create ~/.pdm/pdm.ini to override defaults!
 	$min_config_version = 21;
-	$config_default = array(
-						"CONFIG"		=> array("version"							=> 0
-												  ),
-						"PDM"			=> array("media"								=> 8500,
-													"ignore_file"						=> ".pdm_ignore",
-													"ignore_subdirs"					=> TRUE,
-													"check_files_readability"		=> TRUE
-													),
-						"CDRECORD"	=>	array("device"				=> "1,0,0",
-													"fifo_size"			=> 10
-													),
-						"GROWISOFS"	=>	array("device"				=> "/dev/dvd"
-													),
-						"MKISOFS"	=> array(
-													),
-						"SPLIT"		=> array('buffer_size'		=> 0
-													),
-						);
+	$config_default = array("CONFIG"    => array("version" => 0),
+	                        "PDM"       => array("media"                   => 8500,
+	                                             "ignore_file"             => ".pdm_ignore",
+	                                             "ignore_subdirs"          => true,
+	                                             "check_files_readability" => true),
+	                        "CDRECORD"  => array("device"    => "1,0,0",
+	                                             "fifo_size" => 10),
+	                        "GROWISOFS" => array("device" => "/dev/dvd"),
+	                        "MKISOFS"   => array(),
+	                        "SPLIT"     => array('buffer_size' => 0),);
 	$config = array();
 
 	$OUT_CORE = date("Ymd");		// the CD directory prefix (today's date by default)
-											// Note: it can't be empty (due to CleanUp() conditions)!
+									// Note: it can't be empty (due to CleanUp() conditions)!
 
-/** No modyfications below this line are definitely required ******************/
+	/** No modifications below this line allowed ******************/
 
-	$KNOWN_MODES = array("test"		=> array("write"			=> FALSE,
-															"mkisofs"		=> FALSE,
-															"cdrecord"		=> FALSE,
-															"FileSplit"		=> TRUE,
-															"RemoveSets"	=> FALSE,
-															'SeparateDest'	=> FALSE
-															),
-								"link"		=> array("write"			=> TRUE,
-															"mkisofs"		=> FALSE,
-															"cdrecord"		=> FALSE,
-															"FileSplit"    => TRUE,
-															"RemoveSets"	=> FALSE,
-															'SeparateDest'	=> FALSE
-															),
-								"copy"		=> array("write"			=> TRUE,
-															"mkisofs"		=>	FALSE,
-															"cdrecord"		=> FALSE,
-															"FileSplit"    => FALSE,
-															"RemoveSets"	=> FALSE,
-															'SeparateDest'	=> FALSE
-															),
-								"move"		=> array("write"			=> TRUE,
-															"mkisofs"		=> FALSE,
-															"cdrecord"		=> FALSE,
-															"FileSplit"    => FALSE,
-															"RemoveSets"	=> FALSE,
-															'SeparateDest'	=> FALSE
-															),
-								"iso"			=> array("write"			=> TRUE,
-															"mkisofs"		=> TRUE,
-															"cdrecord"		=> FALSE,
-															"FileSplit"    => TRUE,
-															"RemoveSets"	=> TRUE,
-															'SeparateDest'	=> TRUE
-															),
-								"burn"		=> array("write"			=> TRUE,
-															"mkisofs"		=> TRUE,
-															"cdrecord"		=> FALSE,
-															"FileSplit"    => TRUE,
-															"RemoveSets"	=> TRUE,
-															'SeparateDest'	=> FALSE,
-															),
-								"burn-iso"	=> array("write"			=> TRUE,
-															"mkisofs"		=> TRUE,
-															"cdrecord"		=> TRUE,
-															"FileSplit"    => TRUE,
-															"RemoveSets"	=> TRUE,
-															'SeparateDest'	=> FALSE
-															)
-								);
+	$KNOWN_MODES = array("test"     => array("write"        => false,
+	                                         "mkisofs"      => false,
+	                                         "cdrecord"     => false,
+	                                         "FileSplit"    => true,
+	                                         "RemoveSets"   => false,
+	                                         'SeparateDest' => false),
+	                     "link"     => array("write"        => true,
+	                                         "mkisofs"      => false,
+	                                         "cdrecord"     => false,
+	                                         "FileSplit"    => true,
+	                                         "RemoveSets"   => false,
+	                                         'SeparateDest' => false),
+	                     "copy"     => array("write"        => true,
+	                                         "mkisofs"      => false,
+	                                         "cdrecord"     => false,
+	                                         "FileSplit"    => false,
+	                                         "RemoveSets"   => false,
+	                                         'SeparateDest' => false),
+	                     "move"     => array("write"        => true,
+	                                         "mkisofs"      => false,
+	                                         "cdrecord"     => false,
+	                                         "FileSplit"    => false,
+	                                         "RemoveSets"   => false,
+	                                         'SeparateDest' => false),
+	                     "iso"      => array("write"        => true,
+	                                         "mkisofs"      => true,
+	                                         "cdrecord"     => false,
+	                                         "FileSplit"    => true,
+	                                         "RemoveSets"   => true,
+	                                         'SeparateDest' => true),
+	                     "burn"     => array("write"        => true,
+	                                         "mkisofs"      => true,
+	                                         "cdrecord"     => false,
+	                                         "FileSplit"    => true,
+	                                         "RemoveSets"   => true,
+	                                         'SeparateDest' => false,),
+	                     "burn-iso" => array("write"        => true,
+	                                         "mkisofs"      => true,
+	                                         "cdrecord"     => true,
+	                                         "FileSplit"    => true,
+	                                         "RemoveSets"   => true,
+	                                         'SeparateDest' => false));
 
 /******************************************************************************/
 
@@ -600,77 +539,65 @@ if( $argc >= 1 )
 	// each sector is 2352 bytes, but only 2048 bytes can be used for data
 
 	// As for DVDs: http://www.osta.org/technology/dvdqa/dvdqa6.htm
-	define( "SECTOR_SIZE"					, 2352 );
-	define( "SECTOR_CAPACITY"				, 2048 );
-	define( "AVG_BYTES_PER_TOC_ENTRY"	,  400 );	// bytes per file entry in filesystem TOC
-																	// this is rough average. I don't want
-																	// AI here if CDs are that cheap now...
+	define("SECTOR_SIZE", 2352);
+	define("SECTOR_CAPACITY", 2048);
+	define("AVG_BYTES_PER_TOC_ENTRY", 400);     // bytes per file entry in filesystem TOC
+												// this is rough average. I don't want AI here if CDs are that cheap now...
 
 	// we reserve some space for internal CD stuff
 	define( "RESERVED_CAPACITY", (5*MB) );
 	define( "RESERVED_SECTORS"	, round( (RESERVED_CAPACITY/SECTOR_CAPACITY)+0.5), 0 );
 
-	$MEDIA_SPECS = array(	184	=> array("capacity"			=> 184.6 * MB,
-														"max_file_size"	=> (184.6 * MB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 94500 - RESERVED_SECTORS,
-														'type'				=> 'CD',
-														'handler'			=> 'cd'
-														),
-									553	=>	array("capacity"			=> 553.7 * MB,
-														"max_file_size"   => (553.7 * MB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 283500 - RESERVED_SECTORS,
-														'type'				=> 'CD',
-														'handler'			=> 'cd'
-														),
-									650	=> array("capacity"			=> 650.3 * MB,
-														"max_file_size"   => (650.3 * MB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 333000 - RESERVED_SECTORS,
-														'type'				=> 'CD',
-														'handler'			=> 'cd'
-														),
-									700	=> array("capacity"			=> 703.1 * MB,
-														"max_file_size"   => (703.1 * MB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 360000 - RESERVED_SECTORS,
-														'type'				=> 'CD',
-														'handler'			=> 'cd'
-														),
-									800	=> array("capacity"			=> 791.0 * MB,
-														"max_file_size"   => (791.0 * MB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 405000 - RESERVED_SECTORS,
-														'type'				=> 'CD',
-														'handler'			=> 'cd'
-														),
-									870	=> array("capacity"			=> 870.1 * MB,
-														"max_file_size"   => (870.1 * MB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 445500 - RESERVED_SECTORS,
-														'type'				=> 'CD',
-														'handler'			=> 'cd'
-														),
+	$MEDIA_SPECS = array(184  => array("capacity"      => 184.6 * MB,
+	                                   "max_file_size" => (184.6 * MB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 94500 - RESERVED_SECTORS,
+	                                   'type'          => 'CD',
+	                                   'handler'       => 'cd'),
+	                     553  => array("capacity"      => 553.7 * MB,
+	                                   "max_file_size" => (553.7 * MB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 283500 - RESERVED_SECTORS,
+	                                   'type'          => 'CD',
+	                                   'handler'       => 'cd'),
+	                     650  => array("capacity"      => 650.3 * MB,
+	                                   "max_file_size" => (650.3 * MB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 333000 - RESERVED_SECTORS,
+	                                   'type'          => 'CD',
+	                                   'handler'       => 'cd'),
+	                     700  => array("capacity"      => 703.1 * MB,
+	                                   "max_file_size" => (703.1 * MB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 360000 - RESERVED_SECTORS,
+	                                   'type'          => 'CD',
+	                                   'handler'       => 'cd'),
+	                     800  => array("capacity"      => 791.0 * MB,
+	                                   "max_file_size" => (791.0 * MB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 405000 - RESERVED_SECTORS,
+	                                   'type'          => 'CD',
+	                                   'handler'       => 'cd'),
+	                     870  => array("capacity"      => 870.1 * MB,
+	                                   "max_file_size" => (870.1 * MB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 445500 - RESERVED_SECTORS,
+	                                   'type'          => 'CD',
+	                                   'handler'       => 'cd'),
 
-									// DVD
-									1460	=> array("capacity"			=> 1.4 * GB,
-														"max_file_size"   => (1.4 * GB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 712891 - RESERVED_SECTORS,
-														'type'				=> 'DVD',
-														'handler'			=> 'dvd',
-														'notes'				=> 'DVD-RW/DVD-R 8cm'
-														),
-									4700	=> array("capacity"			=> 4.7 * GB,
-														"max_file_size"   => (4.7 * GB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 2294922 - RESERVED_SECTORS,
-														'type'				=> 'DVD',
-														'handler'			=> 'dvd',
-														'notes'				=> 'DVD-RW/DVD-R 12cm'
-														),
-									8500	=> array("capacity"			=> 8.5 * GB,
-														"max_file_size"   => (8.5 * GB) - (RESERVED_CAPACITY * 2),
-														"sectors"			=> 4171712 - RESERVED_SECTORS,
-														'type'				=> 'DVD+R',
-														'handler'			=> 'dvd',
-														'notes'				=> 'DVD+R Double Layer'
-														),
-								);
-
+	                     // DVD
+	                     1460 => array("capacity"      => 1.4 * GB,
+	                                   "max_file_size" => (1.4 * GB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 712891 - RESERVED_SECTORS,
+	                                   'type'          => 'DVD',
+	                                   'handler'       => 'dvd',
+	                                   'notes'         => 'DVD-RW/DVD-R 8cm'),
+	                     4700 => array("capacity"      => 4.7 * GB,
+	                                   "max_file_size" => (4.7 * GB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 2294922 - RESERVED_SECTORS,
+	                                   'type'          => 'DVD',
+	                                   'handler'       => 'dvd',
+	                                   'notes'         => 'DVD-RW/DVD-R 12cm'),
+	                     8500 => array("capacity"      => 8.5 * GB,
+	                                   "max_file_size" => (8.5 * GB) - (RESERVED_CAPACITY * 2),
+	                                   "sectors"       => 4171712 - RESERVED_SECTORS,
+	                                   'type'          => 'DVD+R',
+	                                   'handler'       => 'dvd',
+	                                   'notes'         => 'DVD+R Double Layer'),);
 
 
 	define("ANSWER_NO"		, 0 );
@@ -686,12 +613,12 @@ function GetYN($defaultResponse = false, $prompt = "", $appendKeys = true) {
 }
 
 function GetNo($prompt = "", $appendKeys = true) {
+	$result = ANSWER_ABORT;
+
 	if( $prompt == "" ) {
 		$prompt = "Do you want to proceed [N]o/[y]es/[a]bort: ";
-	} else {
-		if( $appendKeys ) {
-			$prompt = $prompt . " [N]o/[y]es/[a]bort]: ";
-		}
+	} else if( $appendKeys ) {
+		$prompt = $prompt . " [N]o/[y]es/[a]bort]: ";
 	}
 
 	while(true) {
@@ -699,48 +626,53 @@ function GetNo($prompt = "", $appendKeys = true) {
 		$answer = strtolower(GetInput());
 
 		if( $answer == 'y' ) {
-			return (ANSWER_YES);
+			$result = ANSWER_YES;
 		} else if( ($answer == 'n') || ($answer == "") ) {
-			return (ANSWER_NO);
+			$result = ANSWER_NO;
 		} else if( $answer == 'a' ) {
-			return (ANSWER_ABORT);
+			$result = ANSWER_ABORT;
 		}
 	}
+
+	return $result;
 }
 
 function GetYes($prompt = "", $appendKeys = true) {
+	$result = ANSWER_ABORT;
+
 	if( $prompt == "" ) {
 		$prompt = "Do you want to proceed [Y]es/[n]o/[a]bort: ";
-	} else {
-		if( $appendKeys ) {
-			$prompt = $prompt . " [Y]es/[n]o/[a]bort: ";
-		}
+	} else if( $appendKeys ) {
+		$prompt = $prompt . " [Y]es/[n]o/[a]bort: ";
 	}
 
 	while(true) {
 		echo $prompt;
 		$answer = strtolower(GetInput());
 
-		if( ($answer == 'y') || ($answer == "") ) {
-			return (ANSWER_YES);
-		} else if( $answer == 'n' ) {
-			return (ANSWER_NO);
+		if( ($answer == 'y' )  || ($answer == "") ) {
+			$result = ANSWER_YES;
+		} else if( ($answer == 'n') ) {
+			$result = ANSWER_NO;
 		} else if( $answer == 'a' ) {
-			return (ANSWER_ABORT);
+			$result = ANSWER_ABORT;
 		}
 	}
+
+	return $result;
 }
 
+/** @noinspection PhpInconsistentReturnPointsInspection */
 function GetInput() {
 	if( $fh = fopen("php://stdin", "rb") ) {
 		$result = chop(fgets($fh, 4096));
 		fclose($fh);
+
+		return $result;
 	} else {
 		echo "\n*** FATAL ERROR: Can't open STDIN for reading!\n";
 		Abort();
 	}
-
-	return $result;
 }
 
 function MakeDir($path) {
@@ -749,22 +681,19 @@ function MakeDir($path) {
 	}
 }
 
-function SizeStr($file_size, $precision = -1) {
-	if( $file_size >= GB ) {
-		$file_size = round($file_size / GB * 100, $precision) / 100 . " GB";
+function SizeStr($fileSize, $precision = -1) {
+
+	if( $fileSize >= GB ) {
+		$fileSize = round($fileSize / GB * 100, $precision) / 100 . " GB";
+	} else if( $fileSize >= MB ) {
+		$fileSize = round($fileSize / MB * 100, $precision) / 100 . " MB";
+	} else if( $fileSize >= KB ) {
+		$fileSize = round($fileSize / KB * 100, $precision) / 100 . " KB";
 	} else {
-		if( $file_size >= MB ) {
-			$file_size = round($file_size / MB * 100, $precision) / 100 . " MB";
-		} else {
-			if( $file_size >= KB ) {
-				$file_size = round($file_size / KB * 100, $precision) / 100 . " KB";
-			} else {
-				$file_size = $file_size . " B";
-			}
-		}
+		$fileSize = $fileSize . " B";
 	}
 
-	return $file_size;
+	return $fileSize;
 }
 
 
@@ -777,8 +706,7 @@ function GetConfig() {
 	                "config_file" => "none",
 	                "config"      => array());
 
-	$locations = array(sprintf("%s/.pdm", getenv("HOME")),
-	                   "/etc/pdm");
+	$locations = array(sprintf("%s/.pdm", getenv("HOME")), "/etc/pdm");
 	foreach( $locations AS $path ) {
 		$config = sprintf("%s/%s", $path, "pdm.ini");
 		if( file_exists($config) ) {
@@ -896,8 +824,9 @@ function CleanUp($force = false) {
 	global $KNOWN_MODES, $COPY_MODE, $total_cds, $OUT_CORE;
 
 	// probably not set yet?
-	if( ($total_cds < 1) || ($OUT_CORE == "") )
+	if( ($total_cds < 1) || ($OUT_CORE == "") ) {
 		return;
+	}
 
 	if( $KNOWN_MODES[$COPY_MODE]['write'] ) {
 		switch($force) {
@@ -911,8 +840,9 @@ function CleanUp($force = false) {
 				break;
 		}
 
-		if( $do_clean )
+		if( $do_clean ) {
 			CleanUp_RemoveSets($total_cds);
+		}
 	}
 }
 
@@ -927,10 +857,10 @@ function CleanUp_RemoveSets($total_cds) {
 			system($cmd);
 		}
 
-		ProgressBarRaw(ProgressBarCalcPercent($total_cds, $i), " Cleaning");
+		printProgressBarRaw(calculateProgressBarPercent($total_cds, $i), " Cleaning");
 	}
 
-	ProgressBarRaw(100, " Cleaning");
+	printProgressBarRaw(100, " Cleaning");
 	printf("\n");
 }
 
@@ -971,7 +901,7 @@ function AbortIfNoTool($tool) {
 }
 
 function filematch_fake($pattern, $str) {
-	return (true);
+	return true;
 }
 
 function filematch_fnmatch($pattern, $str) {
@@ -1015,9 +945,8 @@ function FileSplit($in, $out_array, $chunk_size, $progress_meter = "") {
 						fwrite($fh_out, $buffer);
 
 						if( $progress_meter != "" ) {
-							printf(str_replace(array("#NAME#",
-							                         "#SIZE#"), array(basename($in),
-							                                          SizeStr($file_size)), $progress_meter));
+							printf(str_replace( array("#NAME#", "#SIZE#"),
+												array(basename($in), SizeStr($file_size)), $progress_meter));
 						}
 
 						unset($buffer);
@@ -1073,10 +1002,9 @@ function MakeEntryPath($entry) {
 function Toss(&$src, &$tossed, &$stats) {
 	global $MEDIA_SPECS, $MEDIA;
 
-	$cnt = count($src);
-
-	if( count($stats) == 0 )
+	if( count($stats) == 0 ) {
 		CreateSet($stats, 1, $MEDIA_SPECS[$MEDIA]["sectors"]);
+	}
 	$next_id = count($stats) + 1;
 
 	reset($src);
@@ -1252,9 +1180,9 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	}
 
 
-	// geting user params...
+	// getting user params...
 	$COPY_MODE			= ($cCLI->IsOptionSet("mode"))		? $cCLI->GetOptionArg("mode") : "test";
-	$source_dir_array	= $cCLI->GetOptionArg("source");
+	$source_dir_array	= (array)$cCLI->GetOptionArg("source");
 	$DESTINATION		= ($cCLI->IsOptionSet("dest"))  	? $cCLI->GetOptionArg("dest")		: getenv("PWD");
 	$ISO_DEST			= ($cCLI->IsOptionSet("iso-dest"))	? $cCLI->GetOptionArg('iso-dest')	: $DESTINATION;
 	$MEDIA 				= ($cCLI->IsOptionSet("media"))		? $cCLI->GetOptionArg("media") 		: $config["PDM"]["media"];
@@ -1290,7 +1218,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		Abort();
 	}
 
-	// let's check if we dont' have directory names clash (i.e. different "etc" and
+	// let's check if we don't' have directory names clash (i.e. different "etc" and
 	// "/etc" would result in the same destination "etc" directory in the backup
 	// for now we complain and abort
 	$dest_roots = array();
@@ -1313,7 +1241,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 	// let's check if source and dest are directories...
 	$dirs = array();
-	foreach(	$source_dir_array	AS $source_dir ) {
+	foreach( $source_dir_array as $source_dir ) {
 		$dirs[$source_dir] = "r";
 	}
 
@@ -1388,7 +1316,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	$files = array();
 
 	printf("Scanning. Please wait...\n");
-	foreach( $source_dir_array AS $source_dir ) {
+	foreach( $source_dir_array as $source_dir ) {
 		$soure_dir = preg_replace('#\/+#', '/', $source_dir);
 
 		printf("  Dir: '%s'... ", $source_dir);
@@ -1675,7 +1603,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 		if( $file['split'] == false ) {
 			if( ($cnt % $base) == 0 ) {
-				ProgressBarRaw(ProgressBarCalcPercent($total_files, $cnt), "Preparing");
+				printProgressBarRaw(calculateProgressBarPercent($total_files, $cnt), "Preparing");
 			}
 
 			$src = MakePath($file['path'], $file["name"]);
@@ -1712,7 +1640,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		}
 	}
 
-	ProgressBarRaw( 100, "Preparing" );
+	printProgressBarRaw( 100, "Preparing" );
 	printf("\n");
 
 	reset($tossed);
@@ -1813,7 +1741,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 			switch($COPY_MODE) {
 				case "iso": {
 					$cmd = sprintf("mkisofs %s -output %s/%s %s/%s 2>&1", $MKISOFS_PARAMS, $ISO_DEST, $out_name, $DESTINATION, $src_name);
-					ProgressBar($cmd, sprintf("ISO %s", $out_name));
+					printProgressBar($cmd, sprintf("ISO %s", $out_name));
 				}
 					break;
 
@@ -1831,7 +1759,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 									case "burn-iso": {
 										// making temporary iso image 1st
 										$cmd = sprintf("mkisofs %s -output %s %s/%s 2>&1", $MKISOFS_PARAMS, $out_name, $DESTINATION, $src_name);
-										ProgressBar($cmd, sprintf("ISO %s", $out_name));
+										printProgressBar($cmd, sprintf("ISO %s", $out_name));
 
 										switch($MEDIA_SPECS[$MEDIA]['handler']) {
 											case 'cd':
@@ -1865,7 +1793,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 								// Go!
 
-								ProgressBar($burn_cmd, "Burning");
+								printProgressBar($burn_cmd, "Burning");
 								printf("\nThe '%s' has been burnt.\n\n", $src_name);
 
 								$burn_again = GetYN(false, sprintf("Do you want to burn '%s' again?", $src_name));
@@ -1927,31 +1855,28 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	printf("\nDone.\n\n");
 
 
-function ProgressBarRaw($percent, $msg = "Working") {
+function printProgressBarRaw($percent, $msg = "Working") {
 	$progress_bar = "##################################################";
-
 	printf("%s: [%-50s] %.1f%%\r", $msg, substr($progress_bar, 0, $percent / 2), $percent);
 }
 
-function ProgressBarCalcPercent($total, $current) {
-	$percent = 100.0 - (float)round(100 - (($total - $current) * 100 / $total));
-
-	return $percent;
+function calculateProgressBarPercent($total, $current) {
+	return 100.0 - (float)round(100 - (($total - $current) * 100 / $total));
 }
 
-function ProgressBar($cmd, $msg) {
+function printProgressBar($cmd, $msg) {
 	$pattern = '\'(\ [0-9]{1,2})*\.([0-9]{2})*% done, estimate finish (.*)+\'siU';
 
 	$ph = popen($cmd, "r");
 	while(!feof($ph)) {
 		$buffer = fgets($ph, 256);
 		if( preg_match($pattern, $buffer, $match) ) {
-			ProgressBarRaw((float)sprintf("%s.%s", $match[1], $match[2]), $msg);
+			printProgressBarRaw((float)sprintf("%s.%s", $match[1], $match[2]), $msg);
 		}
 	}
 	pclose($ph);
 
-	ProgressBarRaw(100, $msg);
+	printProgressBarRaw(100, $msg);
 	printf("\n");
 }
 
@@ -1982,7 +1907,9 @@ function GetFileSize($file) {
 	// try the Windows COM interface
 	if( $iswin && class_exists("COM") ) {
 		try {
+			/** @noinspection PhpUndefinedClassInspection */
 			$fsobj = new COM('Scripting.FileSystemObject');
+			/** @noinspection PhpUndefinedMethodInspection */
 			$f = $fsobj->GetFile(realpath($file));
 			$size = $f->Size;
 		} catch( Exception $e ) {
