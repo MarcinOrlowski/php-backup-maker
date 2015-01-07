@@ -765,41 +765,7 @@ function ShowMediaHelp() {
 }
 
 function UpdateCheck() {
-	$site = 'http://wfmh.org.pl/carlos/files/soft/pdm/pdm-latest-version.txt';
-
-	printf("\n");
-
-	if( ini_get('allow_url_fopen') == "1" ) {
-		printf("Checking for available updates... Wait...\n");
-
-		$fh = @fopen($site, 'rb');
-		if( $fh ) {
-			$version = trim(fgets($fh));
-			fclose($fh);
-
-			printf("\n   Your version: %s\n", SOFTWARE_VERSION);
-			printf("      Available: %s\n", $version);
-			printf("         Status: ");
-
-			if( version_compare(sprintf("%s.0", $version), sprintf("%s.0", SOFTWARE_VERSION), ">") ) {
-				printf("Upgrade! You're using OLD version.");
-			} else {
-				printf("OK. You're using most recent version.");
-			}
-
-			printf("\n");
-		} else {
-			printf("FATAL: Can't open '%s'.\n", $site);
-		}
-	} else {
-		printf("FATAL: This option requires allow_fopen_url be enabled.\n");
-		printf("       Check your php.ini and enable it (it's no security\n");
-		printf("       issue to have it enabled for CLI PHP version\n");
-		printf("       Alternatively, please check the following URL by hand:\n");
-		printf("       %s\n");
-	}
-
-	printf("\n");
+	printf("For software updates check: " . SOFTWARE_URL ."\n");
 }
 
 function CleanUp($force = false) {
