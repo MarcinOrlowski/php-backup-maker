@@ -37,7 +37,7 @@ if( !(isset( $argv )) )	$argv = $_SERVER['argv'];
 ** Function: (C)command (L)ine (I)nterface - shell argument parsing
 **           and handling class. Features automatic required arguments
 **           detection, valueless switches handling, automatic help
-**           page display, unlimited argumens support and more
+**           page display, unlimited arguments support and more
 **
 ***************************************************************************/
 
@@ -52,18 +52,17 @@ class CLI
 
 	// this array describes all the fields args array should define
 	// In any of these is missing, we sert up this defaults instead
-	var	$default_fields	=	array(	"short"		=> FALSE,
-													"long"		=> FALSE,
-													"info"		=> "--- No description. Complain! ---",
-													"required"	=> FALSE,
-													"switch"	=>	FALSE,
-													"multi"		=> FALSE,
-													"param"		=> array(),
+	var $default_fields = array("short"    => false,
+	                            "long"     => false,
+	                            "info"     => "--- No description. Complain! ---",
+	                            "required" => false,
+	                            "switch"   => false,
+	                            "multi"    => false,
+	                            "param"    => array(),
 
-													// DON'T set any of these by hand!
-													"set"			=> FALSE,
-													"valid"		=> FALSE
-												);
+	                            // DON'T set any of these by hand!
+	                            "set"      => false,
+	                            "valid"    => false);
 
 	var	$help_command_name = "";
 	var	$help_short_len = 0;
@@ -147,69 +146,57 @@ class CLI
 		return $result;
 	}
 
-//outputs errors
-function ShowErrors()
-{
-	$cnt = count( $this->errors );
+	//outputs errors
+	function ShowErrors() {
+		$cnt = count($this->errors);
 
-	if( $cnt > 0 )
-		{
-		printf("%d errors found:\n", $cnt);
-		foreach( $this->errors AS $error )
-			printf("  %s\n", $error);
+		if( $cnt > 0 ) {
+			printf("%d errors found:\n", $cnt);
+			foreach( $this->errors AS $error )
+				printf("  %s\n", $error);
+		} else {
+			printf("No errors found\n");
 		}
-	else
-		{
-		printf("No errors found\n");
-		}
-}
+	}
 
-// produces usge page, based on $args
-function ShowHelpPage()
-{
-	$fmt = sprintf("  %%-%ds %%-%ds ", ($this->help_short_len+1), ($this->help_long_len+1) );
+	// produces usge page, based on $args
+	function ShowHelpPage() {
+		$fmt = sprintf("  %%-%ds %%-%ds ", ($this->help_short_len + 1), ($this->help_long_len + 1));
 
-	$msg = sprintf("\nUsage: %s -opt=val -switch ...\n" .
-						"\nKnown options and switches are detailed below.\n" .
-						" [R] means the option is required,\n" .
-						" [S] stands for valueless switch, otherwise option requires an value,\n" .
-						" [M] means you can use this option as many times, as you need,\n" .
-						"\n", $this->help_command_name );
+		$msg = sprintf("\nUsage: %s -opt=val -switch ...\n" . "\nKnown options and switches are detailed below.\n" . " [R] means the option is required,\n" . " [S] stands for valueless switch, otherwise option requires an value,\n" . " [M] means you can use this option as many times, as you need,\n" . "\n", $this->help_command_name);
 
-	foreach( $this->args AS $entry )
-		{
-		$flags  = ($entry['required']) ? "R" : "";
-		$flags .= ($entry['switch'])   ? "S" : "";
-		$flags .= ($entry['multi'])    ? "M" : "";
-		if( $flags != "" )
-			$flags = sprintf("[%s] ", $flags );
+		foreach( $this->args AS $entry ) {
+			$flags = ($entry['required']) ? "R" : "";
+			$flags .= ($entry['switch']) ? "S" : "";
+			$flags .= ($entry['multi']) ? "M" : "";
+			if( $flags != "" )
+				$flags = sprintf("[%s] ", $flags);
 
-		$short	= ($entry['short'] !== FALSE) ? (sprintf("-%s", $entry['short'])) : "";
-		$long		= ($entry['long']  !== FALSE) ? (sprintf("-%s", $entry['long']))  : "";
+			$short = ($entry['short'] !== false) ? (sprintf("-%s", $entry['short'])) : "";
+			$long = ($entry['long'] !== false) ? (sprintf("-%s", $entry['long'])) : "";
 
-		$tmp = sprintf( $fmt, $short, $long );
-		$indent = strlen( $tmp );
-		$offset = $this->page_width - $indent;
+			$tmp = sprintf($fmt, $short, $long);
+			$indent = strlen($tmp);
+			$offset = $this->page_width - $indent;
 
-		$desc = sprintf("%s%s", $flags, $entry['info'] );
+			$desc = sprintf("%s%s", $flags, $entry['info']);
 
-		$msg .= sprintf("%s%s\n", $tmp, substr( $desc, 0, $offset ));
+			$msg .= sprintf("%s%s\n", $tmp, substr($desc, 0, $offset));
 
-		// does it fit?
-		if( strlen( $entry['info'] ) > $offset )
-			{
-			$_fmt = sprintf("%%-%ds%%s\n", $indent);
-			$_text = substr( $desc, $offset );
-			$_lines = explode( "\n", wordwrap($_text, $offset ));
+			// does it fit?
+			if( strlen($entry['info']) > $offset ) {
+				$_fmt = sprintf("%%-%ds%%s\n", $indent);
+				$_text = substr($desc, $offset);
+				$_lines = explode("\n", wordwrap($_text, $offset));
 
-			foreach( $_lines AS $_line )
-				$msg .= sprintf( $_fmt, "", trim($_line) );
+				foreach( $_lines AS $_line )
+					$msg .= sprintf($_fmt, "", trim($_line));
 			}
 		}
 
-	$msg .= "\n";
-	echo $msg;
-}
+		$msg .= "\n";
+		echo $msg;
+	}
 
 
 /***************** PRIVATE FUNCTIONS BELOW ***********************/
@@ -365,12 +352,6 @@ function ShowHelpPage()
 					$valid = $result = false;
 				}
 
-//		if( array_key_exists( $arg_key, $this->found_args ) )
-//			{
-//			$this->errors[] = sprintf("Argument '%s' was already specified.", $tmp[0]);
-//			$valid = $result = FALSE;
-//			}
-
 				if( $valid ) {
 					switch(count($tmp)) {
 						case 2:
@@ -388,7 +369,8 @@ function ShowHelpPage()
 					}
 
 					if( !(isset($this->found_args[$arg_key])) ) {
-						$this->found_args[$arg_key] = array("key" => $arg_key, "val" => array());
+						$this->found_args[$arg_key] = array("key" => $arg_key,
+						                                    "val" => array());
 					}
 					if( !(in_array($arg_val, $this->found_args[$arg_key]['val'])) ) {
 						$this->found_args[$arg_key]['val'][] = $arg_val;
@@ -400,64 +382,64 @@ function ShowHelpPage()
 		return $result;
 	}
 
-// ond of class
+// end of CLI class
 }
 
 
-// Command Line Options Array		.
-$args = array("source"       => array("short"    => 's',
-                                      "long"     => "src",
-                                      "required" => true,
-                                      "multi"    => true,
-                                      "info"     => 'Source directory (i.e. "data/") which you are going to process and backup.'),
+	// Command Line Options Array		.
+	$args = array("source"       => array("short"    => 's',
+	                                      "long"     => "src",
+	                                      "required" => true,
+	                                      "multi"    => true,
+	                                      "info"     => 'Source directory (i.e. "data/") which you are going to process and backup.'),
 
-              "dest"         => array("short" => 'd',
-                                      "long"  => "dest",
-                                      "info"  => 'Destination directory where CD sets will be created. ' .
-	                                             'If ommited, your current working directory will be used.'),
+	              "dest"         => array("short" => 'd',
+	                                      "long"  => "dest",
+	                                      "info"  => 'Destination directory where CD sets will be created. ' .
+		                                             'If ommited, your current working directory will be used.'),
 
-              "media"        => array("long" => "media",
-                                      "info" => "Specifies destination media type to be used. See help-media for details. Default media capacity is 8,5GB (DVD SingleLayer)."),
+	              "media"        => array("long" => "media",
+	                                      "info" => "Specifies destination media type to be used. See help-media for details. Default media capacity is 8,5GB (DVD SingleLayer)."),
 
-              "mode"         => array("short" => 'm',
-                                      "long"  => 'mode',
-                                      "info"  => 'Specifies working mode. See help-mode for details. Default mode is "test".'),
-              "out-core"     => array("short" => 'c',
-                                      "long"  => 'out-core',
-                                      "info"  => 'Specifies name prefix used for CD sets directories. ' .
-	                                             'If not specified, Current date in YYYYMMDD format will be taken.'),
-              "iso-dest"     => array("short" => 't',
-                                      'long'  => 'iso-dest',
-                                      'info'  => 'Specifies target directory PDM should use for storing ISO images ' .
-	                                             '(for "iso" and "burn-iso" modes only). If not specified, "dest" value will be used. This option is mostly of no ' .
-	                                             'use unless you want ISO images to be stored over NFS. See "Working over NFS" in README'),
-              "split"        => array('short'  => 'p',
-                                      'long'   => 'split',
-                                      'info'   => 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).',
-                                      'switch' => true),
-              "data-dir"     => array('long' => 'data-dir',
-                                      'info' => 'All backed up data is stored inside of "data-dir" on each set. Defaults is "backup"'),
+	              "mode"         => array("short" => 'm',
+	                                      "long"  => 'mode',
+	                                      "info"  => 'Specifies working mode. See help-mode for details. Default mode is "test".'),
+	              "out-core"     => array("short" => 'c',
+	                                      "long"  => 'out-core',
+	                                      "info"  => 'Specifies name prefix used for CD sets directories. ' .
+		                                             'If not specified, Current date in YYYYMMDD format will be taken.'),
+	              "iso-dest"     => array("short" => 't',
+	                                      'long'  => 'iso-dest',
+	                                      'info'  => 'Specifies target directory PDM should use for storing ISO images ' .
+		                                             '(for "iso" and "burn-iso" modes only). If not specified, "dest" value will be used. This option is mostly of no ' .
+		                                             'use unless you want ISO images to be stored over NFS. See "Working over NFS" in README'),
+	              "split"        => array('short'  => 'p',
+	                                      'long'   => 'split',
+	                                      'info'   => 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).',
+	                                      'switch' => true),
+	              "data-dir"     => array('long' => 'data-dir',
+	                                      'info' => 'All backed up data is stored inside of "data-dir" on each set. Defaults is "backup"'),
 
-              "pattern"      => array('long' => 'pattern',
-                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'),
-              "ereg-pattern" => array('long' => 'ereg-pattern',
-                                      'info' => 'Similar to "pattern" but uses plain regular expression without any shell pattern support.'),
-              'update-check' => array('long'   => 'update',
-                                      'short'  => 'u',
-                                      'info'   => 'Checks for available updates (requires internet connection)',
-                                      'switch' => true),
+	              "pattern"      => array('long' => 'pattern',
+	                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'),
+	              "ereg-pattern" => array('long' => 'ereg-pattern',
+	                                      'info' => 'Similar to "pattern" but uses plain regular expression without any shell pattern support.'),
+	              'update-check' => array('long'   => 'update',
+	                                      'short'  => 'u',
+	                                      'info'   => 'Checks for available updates (requires internet connection)',
+	                                      'switch' => true),
 
-              "help-mode"    => array('long'   => 'help-mode',
-                                      'info'   => 'Shows more information about available work modes.',
-                                      'switch' => true),
-              "help-media"   => array("long"   => "help-media",
-                                      "info"   => "Show media type related help page.",
-                                      "switch" => true),
+	              "help-mode"    => array('long'   => 'help-mode',
+	                                      'info'   => 'Shows more information about available work modes.',
+	                                      'switch' => true),
+	              "help-media"   => array("long"   => "help-media",
+	                                      "info"   => "Show media type related help page.",
+	                                      "switch" => true),
 
-              "help"         => array("short"  => 'h',
-                                      "long"   => "help",
-                                      "info"   => "Shows this help page.",
-                                      "switch" => true));
+	              "help"         => array("short"  => 'h',
+	                                      "long"   => "help",
+	                                      "info"   => "Shows this help page.",
+	                                      "switch" => true));
 
 
 /******************************************************************************/
