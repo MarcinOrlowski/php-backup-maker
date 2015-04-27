@@ -424,8 +424,6 @@ class CLI
 
 	              "pattern"      => array('long' => 'pattern',
 	                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'),
-	              "ereg-pattern" => array('long' => 'ereg-pattern',
-	                                      'info' => 'Similar to "pattern" but uses plain regular expression without any shell pattern support.'),
 
 	              "help-mode"    => array('long'   => 'help-mode',
 	                                      'info'   => 'Shows more information about available work modes.',
@@ -867,9 +865,6 @@ function filematch_fnmatch($pattern, $str) {
 	return (fnmatch($pattern, $str));
 }
 
-function filematch_ereg($pattern, $str) {
-	return (ereg($pattern, $str));
-}
 
 // setting up fake wrapper - using wrapper speeds upi further processing
 // as we don't need any comparisons for each call, which would punish
@@ -1116,28 +1111,17 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	// let's check if we can use pattern features with user PHP
 	$VERSION_FNMATCH = "4.3.0";
 
-	if( $cCLI->IsOptionSet("ereg-pattern") && $cCLI->IsOptionSet("pattern") ) {
-		printf("ERROR: You can use one type of pattern matching at a time.\n");
-		Abort();
-	}
-
 	// pattern uses fnmatch() which is PHP 4.3.0+ enabled only
 	if( $cCLI->IsOptionSet("pattern") ) {
 		if( (version_compare(phpversion(), $VERSION_FNMATCH, "<")) ) {
 			printf("ERROR: pattern matching requires PHP %s or higher\n", $VERSION_FNMATCH);
-			printf("       Please upgrade or use 'ereg-pattern' instead.\n");
+			printf("       Please upgrade your PHP environment.\n");
 			Abort();
 		} else {
 			$FILEMATCH_WRAPPER = 'filematch_fnmatch';
 			$FILEMATCH_DEF_PATTERN = "*";
 		}
 	}
-
-	if( $cCLI->IsOptionSet("ereg-pattern") ) {
-		$FILEMATCH_WRAPPER = 'filematch_ereg';
-		$FILEMATCH_DEF_PATTERN = ".*";
-	}
-
 
 	// getting user params...
 	$COPY_MODE			= ($cCLI->IsOptionSet("mode"))		? $cCLI->GetOptionArg("mode") : "test";
@@ -1152,8 +1136,6 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	// no defaults here, as in case of no option specified we got filematch_fake() wrapper in use
 	if( $cCLI->IsOptionSet("pattern") ) {
 		$PATTERN = $cCLI->GetOptionArg("pattern");
-	} else if( $cCLI->IsOptionSet("ereg-pattern") ) {
-		$PATTERN = $cCLI->GetOptionArg("ereg-pattern");
 	} else {
 		$PATTERN = "";
 	}

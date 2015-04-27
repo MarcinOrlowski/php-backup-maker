@@ -2,17 +2,22 @@
  PDM - PHP Backup Maker
  --------------------------------------------------
  Written by Marcin Orlowski <carlos@wfmh.org.pl>
- Home page: http://freshmeat.net/projects/pdm/
+ Home page: https://bitbucket.org/borszczuk/php-backup-maker/
 
 
  NOTE: However I did my best to make sure each release contain non
        big bugs, they may still lurk inside. Whenever you notice
-       PDM to malfunction report this immediately! Thanks.
+       PDM to malfunction please report! Thanks.
 
 
 
  Development history:
  ------------------------
+ 2015.04.27 - v5.1.0 - added ability to use LF or CRLFs in index files
+                     - default .pdm.ini is now set to use 8,5GB DVDs
+                     - removed all updateChecker related left-overs
+                     - ereg_pattern option removed
+
  2015.01.08 - v5.0.1 - removed updateChecker
                      - code cleanup
                      
