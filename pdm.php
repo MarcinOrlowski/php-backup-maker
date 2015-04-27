@@ -1634,22 +1634,30 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		$data_header .= sprintf(" Create date: %s, %s{$LF_CODE}{$LF_CODE}", date("Y.m.d"), date("H:m:s"));
 
 		$cdindex = $data_header;
-		$cdindex .= sprintf("%3.3s | %s{$LF_CODE}", $MEDIA_SPECS[$MEDIA]['type'], "Full path");
-		$cdindex .= "----+----------------------------------------------------{$LF_CODE}";
+		$cdindex .= sprintf("%3.3s | %10.10s | %s{$LF_CODE}", $MEDIA_SPECS[$MEDIA]['type'], "Size", "Full path");
+		$cdindex .= "----+------------+----------------------------------------------------{$LF_CODE}";
 		for( $i = 1; $i <= $total_cds; $i++ ) {
 			$tmp = array();
 			foreach( $tossed AS $file ) {
 				if( $file["cd"] == $i ) {
-					$tmp[] = makePath($file["path"], $file["name"]);
+					$tmp[] = array('size' => SizeStr($file['size']),
+										'path' => makePath($file["path"], $file["name"])
+									);
 				}
 			}
 
-			asort($tmp);
+			usort($tmp, function($a, $b) {
+				if($a['path'] == $b['path'] ) {
+					return 0;
+				} else {
+					return (strcasecmp($a['path'], $b['path']) < 0) ? -1 : 1;
+				}
+			});
 			foreach( $tmp AS $entry ) {
-				$cdindex .= sprintf("%3d | %s{$LF_CODE}", $i, $entry);
+				$cdindex .= sprintf("%3d | %10.10s | %s{$LF_CODE}", $i, $entry['size'], $entry['path']);
 			}
 
-			$cdindex .= "\n";
+			$cdindex .= $LF_CODE;
 		}
 
 
