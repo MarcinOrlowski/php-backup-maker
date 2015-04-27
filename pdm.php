@@ -426,10 +426,6 @@ class CLI
 	                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'),
 	              "ereg-pattern" => array('long' => 'ereg-pattern',
 	                                      'info' => 'Similar to "pattern" but uses plain regular expression without any shell pattern support.'),
-	              'update-check' => array('long'   => 'update',
-	                                      'short'  => 'u',
-	                                      'info'   => 'Checks for available updates (requires internet connection)',
-	                                      'switch' => true),
 
 	              "help-mode"    => array('long'   => 'help-mode',
 	                                      'info'   => 'Shows more information about available work modes.',
@@ -783,10 +779,6 @@ function showMediaHelp() {
 	printf("\n");
 }
 
-function updateCheck() {
-	printf("For software updates check: " . SOFTWARE_URL ."\n");
-}
-
 function cleanUp($force = false) {
 	global $KNOWN_MODES, $COPY_MODE, $total_cds, $OUT_CORE;
 
@@ -1062,11 +1054,6 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 	if( $cCLI->IsOptionSet("help-mode") ) {
 		showModeHelp();
-		Abort(0);
-	}
-
-	if( $cCLI->IsOptionSet('update-check') ) {
-		updateCheck();
 		Abort(0);
 	}
 
