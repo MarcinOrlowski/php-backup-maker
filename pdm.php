@@ -509,6 +509,9 @@ class CLI
 
 /******************************************************************************/
 
+	// PHP requirement
+	define('PHP_MIN_VERSION', '5.3.0');
+
 	// user name we run under
 	define("USER", getenv("USER"));
 
@@ -1028,6 +1031,12 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		printf("\n*** This is BETA version. May crash, trash, splash... Be warned!\n");
 	}
 
+
+	if( (version_compare(phpversion(), PHP_MIN_VERSION, "<")) ) {
+		printf("This script requires PHP %s or newer. Please update your environment\n", PHP_MIN_VERSION);
+		Abort(0);
+	}
+
 	$cCLI = new CLI( $args );
 
 	$args_result = $cCLI->Parse( $argc, $argv );
@@ -1108,19 +1117,10 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		}
 	}
 
-	// let's check if we can use pattern features with user PHP
-	$VERSION_FNMATCH = "4.3.0";
-
 	// pattern uses fnmatch() which is PHP 4.3.0+ enabled only
 	if( $cCLI->IsOptionSet("pattern") ) {
-		if( (version_compare(phpversion(), $VERSION_FNMATCH, "<")) ) {
-			printf("ERROR: pattern matching requires PHP %s or higher\n", $VERSION_FNMATCH);
-			printf("       Please upgrade your PHP environment.\n");
-			Abort();
-		} else {
-			$FILEMATCH_WRAPPER = 'filematch_fnmatch';
-			$FILEMATCH_DEF_PATTERN = "*";
-		}
+		$FILEMATCH_WRAPPER = 'filematch_fnmatch';
+		$FILEMATCH_DEF_PATTERN = "*";
 	}
 
 	// getting user params...
