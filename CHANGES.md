@@ -14,6 +14,7 @@
  Development history:
  ------------------------
  2015.04.27 - v5.1.0 - added ability to use LF or CRLFs in index files
+                     - added files sizes to index files
                      - default .pdm.ini is now set to use 8,5GB DVDs
                      - removed all updateChecker related left-overs
                      - ereg_pattern option removed
