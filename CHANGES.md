@@ -17,6 +17,7 @@
                      - default .pdm.ini is now set to use 8,5GB DVDs
                      - removed all updateChecker related left-overs
                      - ereg_pattern option removed
+                     - removed shortcut for "split" argument
 
  2015.01.08 - v5.0.1 - removed updateChecker
                      - code cleanup
