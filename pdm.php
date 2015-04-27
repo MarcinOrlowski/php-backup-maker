@@ -412,8 +412,7 @@ class CLI
 	                                      'info'  => 'Specifies target directory PDM should use for storing ISO images ' .
 		                                             '(for "iso" and "burn-iso" modes only). If not specified, "dest" value will be used. This option is mostly of no ' .
 		                                             'use unless you want ISO images to be stored over NFS. See "Working over NFS" in README'),
-	              "split"        => array('short'  => 'p',
-	                                      'long'   => 'split',
+	              "split"        => array('long'   => 'split',
 	                                      'info'   => 'Enables file splitting (files bigger than media size will be splitted into smaller blocks).',
 	                                      'switch' => true),
 	              "data-dir"     => array('long' => 'data-dir',
