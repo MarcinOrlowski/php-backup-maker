@@ -1,15 +1,12 @@
 ;
-; $Id: pdm.ini.orig,v 1.6 2004/08/02 06:35:00 carl-os Exp $
-;
 ; Default config file for PDM script.
 ; 
-; INSTALLATION: Rename to 'pdm.ini' and put to ~/.pdm/
+; INSTALLATION: Rename to 'pdm.ini' and put into ~/.pdm/
 ;               directory
 ;
 ; Author: Marcin Orlowski <carlos@wfmh.org.pl>
 ;
-; Project home: http://pdm.sf.net/
-;               http://wfmh.org.pl/~carlos/
+; Project home: https://bitbucket.org/borszczuk/php-backup-maker/
 ;
 [CONFIG]
 ; version of the config file [v2.1+]
@@ -19,7 +16,7 @@
 ; detect and inform you about new features you can configure. 
 ; NOTE: however you can put a BIG number here to quiet version notifier
 ; forever, I suggest not to do so. Just leave this as in pdm.config.orig
-version = 22
+version = 23
 
 ;
 ; PDM - general settings...
@@ -28,10 +25,8 @@ version = 22
 
 ; media - media type [v2.2+]
 ; all files will be placed in sets containing of max. capacity MB of data
-; depending of media type. Known types (which also means capacity in MB)
-; are: 184, 553, 650, 700, 800, 870. Default is 700
-; this option replaces 'capacity' and 'reserved' which are no longer used
-media = 700
+; depending of media type. Use help-media to list all supported types
+media = 8500
 
 ; ignore_file [v2.1+]
 ; 'ignore' marker file - name of the file that indicates directory which
@@ -56,6 +51,12 @@ ignore_subdirs = On
 ;         is when running PDM as root, so PDM will automatically turn
 ;         this off when launched as root
 check_files_readability = On
+
+; line_feed [v5.1.0]
+; defines type of line feed code used for all generated text files.
+; See help-line-feed option to see all supported types
+line_feed = "crlf"
+
 ;
 ; CDRECORD
 ;

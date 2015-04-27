@@ -12,10 +12,9 @@ error_reporting(E_ALL);
 //
 // Author: Marcin Orlowski <carlos@wfmh.org.pl>
 //
-// Project home: http://pdm.sf.net/
-//               http://wfmh.org.pl/carlos/
+// Project home: https://bitbucket.org/borszczuk/php-backup-maker/
 //
-define( "SOFTWARE_VERSION"			, "5.0.1" );
+define( "SOFTWARE_VERSION"			, "5.1.0" );
 define( "SOFTWARE_VERSION_BETA"		, false );
 define( "SOFTWARE_VERSION_BETA_STR"	, " beta");
 define( "SOFTWARE_URL"				, "https://bitbucket.org/borszczuk/php-backup-maker/" );
@@ -399,7 +398,7 @@ class CLI
 		                                             'If ommited, your current working directory will be used.'),
 
 	              "media"        => array("long" => "media",
-	                                      "info" => "Specifies destination media type to be used. See help-media for details. Default media capacity is 8,5GB (DVD SingleLayer)."),
+	                                      "info" => "Specifies destination media type to be used. See help-media for details. Default media capacity is 8,5GB (DVD DoubleLayer)."),
 
 	              "mode"         => array("short" => 'm',
 	                                      "long"  => 'mode',
@@ -419,6 +418,9 @@ class CLI
 	                                      'switch' => true),
 	              "data-dir"     => array('long' => 'data-dir',
 	                                      'info' => 'All backed up data is stored inside of "data-dir" on each set. Defaults is "backup"'),
+					  "line-feed"    => array('long'  => 'line-feed',
+													  'short' => 'lf',
+													  'info' => 'Specifies type of new line codes used in generated text files. Use "help-line-feed" to list all modes. Default is "crlf"'),
 
 	              "pattern"      => array('long' => 'pattern',
 	                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'),
@@ -435,6 +437,10 @@ class CLI
 	              "help-media"   => array("long"   => "help-media",
 	                                      "info"   => "Show media type related help page.",
 	                                      "switch" => true),
+					 'help-line-feed'=> array('long' => 'help-line-feed',
+                									'short' => 'help-lf',
+														'info' => 'Shows all supported line feed modes',
+														'switch' => true),
 
 	              "help"         => array("short"  => 'h',
 	                                      "long"   => "help",
@@ -450,7 +456,8 @@ class CLI
 	                        "PDM"       => array("media"                   => 8500,
 	                                             "ignore_file"             => ".pdm_ignore",
 	                                             "ignore_subdirs"          => true,
-	                                             "check_files_readability" => true),
+	                                             "check_files_readability" => true,
+																"line_feed"               => LINE_FEED_MODE_CRLF),
 	                        "CDRECORD"  => array("device"    => "1,0,0",
 	                                             "fifo_size" => 10),
 	                        "GROWISOFS" => array("device" => "/dev/dvd"),
@@ -515,6 +522,10 @@ class CLI
 	define("GB",	pow(1024,3));
 	define("MB",	pow(1024,2));
 	define("KB",	pow(1024,1));
+
+	// line feed modes
+	define('LINE_FEED_MODE_LF', 'lf');
+	define('LINE_FEED_MODE_CRLF', 'crlf');
 
 
 	// As for CDs: according to http://www.cdrfaq.org/faq07.html#S7-6
@@ -608,15 +619,13 @@ function getNo($prompt = "", $appendKeys = true) {
 		$answer = strtolower(getInput());
 
 		if( $answer == 'y' ) {
-			$result = ANSWER_YES;
+			return ANSWER_YES;
 		} else if( ($answer == 'n') || ($answer == "") ) {
-			$result = ANSWER_NO;
+			return ANSWER_NO;
 		} else if( $answer == 'a' ) {
-			$result = ANSWER_ABORT;
+			return ANSWER_ABORT;
 		}
 	}
-
-	return $result;
 }
 
 function getYes($prompt = "", $appendKeys = true) {
@@ -633,15 +642,13 @@ function getYes($prompt = "", $appendKeys = true) {
 		$answer = strtolower(getInput());
 
 		if( ($answer == 'y' )  || ($answer == "") ) {
-			$result = ANSWER_YES;
+			return ANSWER_YES;
 		} else if( ($answer == 'n') ) {
-			$result = ANSWER_NO;
+			return ANSWER_NO;
 		} else if( $answer == 'a' ) {
-			$result = ANSWER_ABORT;
+			return ANSWER_ABORT;
 		}
 	}
-
-	return $result;
 }
 
 /** @noinspection PhpInconsistentReturnPointsInspection */
@@ -713,6 +720,18 @@ function getConfig() {
 	}
 
 	return $result;
+}
+
+function showLineFeedModeHelp() {
+	global $argv;
+
+	printf('
+line-feed - speficy line break code used in generated text files. 
+
+       "lf"       - LF (0xA) code used on Linux/Unix systems
+       "crlf"     - CRLF (0xD, 0xA) used on Windows (default)
+
+');
 }
 
 function showModeHelp() {
@@ -1031,6 +1050,11 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		Abort(0);
 	}
 
+	if( $cCLI->isOptionSet('help-line-feed')) {
+		showLineFeedModeHelp();
+		Abort(0);
+	}
+
 	if( $cCLI->IsOptionSet("help-media") ) {
 		showMediaHelp();
 		Abort(0);
@@ -1136,6 +1160,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	$MEDIA 				= ($cCLI->IsOptionSet("media"))		? $cCLI->GetOptionArg("media") 		: $config["PDM"]["media"];
 	$OUT_CORE			= ($cCLI->IsOptionSet("out-core"))	? $cCLI->GetOptionArg("out-core")	: date("Ymd");
 	$DATA_DIR			= ($cCLI->IsOptionSet('data-dir'))	? $cCLI->GetOptionArg('data-dir')	: "backup";
+	$LF_MODE				= ($cCLI->isOptionSet('line-feed')) ? $cCLI->GetOptionArg('line-feed')  : $config['PDM']['line_feed'];
 
 	// no defaults here, as in case of no option specified we got filematch_fake() wrapper in use
 	if( $cCLI->IsOptionSet("pattern") ) {
@@ -1144,6 +1169,19 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 		$PATTERN = $cCLI->GetOptionArg("ereg-pattern");
 	} else {
 		$PATTERN = "";
+	}
+
+	// line feed code
+	$LF_CODE = "\r\n";
+	switch( $LF_MODE ) {
+		case LINE_FEED_MODE_LF:
+			$LF_CODE = "\n";
+			break;
+
+		default:
+			$LF_MODE = LINE_FEED_MODE_CRLF;		// in case of garbage passed by user
+			$LF_CODE = "\r\n";
+			break;
 	}
 
 	// lets check user input
@@ -1624,12 +1662,12 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	// let's write the index file, so it'd be easier to find given file later on
 	printf("Building index files...\n");
 	if( $KNOWN_MODES[$COPY_MODE]['write'] ) {
-		$data_header = sprintf("\n Created by PDM v%s%s: %s\n", SOFTWARE_VERSION, (SOFTWARE_VERSION_BETA ? SOFTWARE_VERSION_BETA_STR : ""), SOFTWARE_URL);
-		$data_header .= sprintf(" Create date: %s, %s\n\n", date("Y.m.d"), date("H:m:s"));
+		$data_header = sprintf("{$LF_CODE} Created by PDM v%s%s: %s{$LF_CODE}", SOFTWARE_VERSION, (SOFTWARE_VERSION_BETA ? SOFTWARE_VERSION_BETA_STR : ""), SOFTWARE_URL);
+		$data_header .= sprintf(" Create date: %s, %s{$LF_CODE}{$LF_CODE}", date("Y.m.d"), date("H:m:s"));
 
 		$cdindex = $data_header;
-		$cdindex .= sprintf("%3.3s | %s\n", $MEDIA_SPECS[$MEDIA]['type'], "Full path");
-		$cdindex .= "----+----------------------------------------------------\n";
+		$cdindex .= sprintf("%3.3s | %s{$LF_CODE}", $MEDIA_SPECS[$MEDIA]['type'], "Full path");
+		$cdindex .= "----+----------------------------------------------------{$LF_CODE}";
 		for( $i = 1; $i <= $total_cds; $i++ ) {
 			$tmp = array();
 			foreach( $tossed AS $file ) {
@@ -1640,7 +1678,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 
 			asort($tmp);
 			foreach( $tmp AS $entry ) {
-				$cdindex .= sprintf("%3d | %s\n", $i, $entry);
+				$cdindex .= sprintf("%3d | %s{$LF_CODE}", $i, $entry);
 			}
 
 			$cdindex .= "\n";
@@ -1684,7 +1722,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 			$vol_name = sprintf("%s_%d_of_%d", $OUT_CORE, $i, $total_cds);
 			$src_name = sprintf("%s_%02d", $OUT_CORE, $i);
 
-			$MKISOFS_PARAMS = sprintf(" -R -A 'PDM BACKUP CREATOR  http://pdm.sf.net/' -follow-links -joliet-long -joliet -rock -full-iso9660-filenames " . " -allow-lowercase -allow-multidot -hide-joliet-trans-tbl -iso-level 2 " . " -overburn -V %s -volset %s ", $vol_name, $vol_name);
+			$MKISOFS_PARAMS = sprintf(" -R -A 'PDM BACKUP CREATOR  https://bitbucket.org/borszczuk/php-backup-maker/' -follow-links -joliet-long -joliet -rock -full-iso9660-filenames " . " -allow-lowercase -allow-multidot -hide-joliet-trans-tbl -iso-level 2 " . " -overburn -V %s -volset %s ", $vol_name, $vol_name);
 
 			switch($COPY_MODE) {
 				case "iso": {
