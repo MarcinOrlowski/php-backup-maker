@@ -57,6 +57,12 @@ check_files_readability = On
 ; See help-line-feed option to see all supported types
 line_feed = "crlf"
 
+; no_stamps [v5.2.0]
+; prevents PDM from writting any date stamps into generated files (index,
+; volume markers etc). It's enabled by default. Does not affect "prefix"
+; switch
+no_stamps = Off
+
 ;
 ; CDRECORD
 ;

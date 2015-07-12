@@ -420,7 +420,10 @@ class CLI
 					  "line-feed"    => array('long'  => 'line-feed',
 													  'short' => 'lf',
 													  'info' => 'Specifies type of new line codes used in generated text files. Use "help-line-feed" to list all modes. Default is "crlf"'),
-
+					  'no-stamps'		=> array('long' => 'no-stamps',
+														'short' => 'n',
+														'info' => 'Prevents PDM from writting any time stamps (like creation date markers) in generated files. Does not affect "prefix" option',
+														'switch' => true),
 	              "pattern"      => array('long' => 'pattern',
 	                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns.'),
 
@@ -450,7 +453,9 @@ class CLI
 	                                             "ignore_file"             => ".pdm_ignore",
 	                                             "ignore_subdirs"          => true,
 	                                             "check_files_readability" => true,
-																"line_feed"               => LINE_FEED_MODE_CRLF),
+																"line_feed"               => LINE_FEED_MODE_CRLF,
+																'no_stamps'						=> false,
+									),
 	                        "CDRECORD"  => array("device"    => "1,0,0",
 	                                             "fifo_size" => 10),
 	                        "GROWISOFS" => array("device" => "/dev/dvd"),
@@ -1130,7 +1135,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	$MEDIA 				= ($cCLI->IsOptionSet("media"))		? $cCLI->GetOptionArg("media") 		: $config["PDM"]["media"];
 	$OUT_CORE			= ($cCLI->IsOptionSet("prefix"))	? $cCLI->GetOptionArg("prefix")	: date("Ymd");
 	$DATA_DIR			= ($cCLI->IsOptionSet('data-dir'))	? $cCLI->GetOptionArg('data-dir')	: "backup";
-	$LF_MODE				= ($cCLI->isOptionSet('line-feed')) ? $cCLI->GetOptionArg('line-feed')  : $config['PDM']['line_feed'];
+	$NO_STAMPS			= ($cCLI->isOptionSet('no-stamps')) ? $cCLI->GetOptionArg('no-stamps')  : $config['PDF']['no_stamps'];
 
 	// no defaults here, as in case of no option specified we got filematch_fake() wrapper in use
 	if( $cCLI->IsOptionSet("pattern") ) {
@@ -1140,6 +1145,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	}
 
 	// line feed code
+	$LF_MODE				= ($cCLI->isOptionSet('line-feed')) ? $cCLI->GetOptionArg('line-feed')  : $config['PDM']['line_feed'];
 	$LF_CODE = "\r\n";
 	switch( $LF_MODE ) {
 		case LINE_FEED_MODE_LF:
@@ -1631,7 +1637,9 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	printf("Building index files...\n");
 	if( $KNOWN_MODES[$COPY_MODE]['write'] ) {
 		$data_header = sprintf("{$LF_CODE} Created by PDM v%s%s: %s{$LF_CODE}", SOFTWARE_VERSION, (SOFTWARE_VERSION_BETA ? SOFTWARE_VERSION_BETA_STR : ""), SOFTWARE_URL);
-		$data_header .= sprintf(" Create date: %s, %s{$LF_CODE}{$LF_CODE}", date("Y.m.d"), date("H:m:s"));
+		if( $NO_STAMPS === false ) {
+			$data_header .= sprintf(" Create date: %s, %s{$LF_CODE}{$LF_CODE}", date("Y.m.d"), date("H:m:s"));
+		}
 
 		$cdindex = $data_header;
 		$cdindex .= sprintf("%3.3s | %10.10s | %s{$LF_CODE}", $MEDIA_SPECS[$MEDIA]['type'], "Size", "Full path");
