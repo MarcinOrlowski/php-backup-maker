@@ -1,3 +1,9 @@
+Author
+-------------------------------------
+
+Written by Marcin Orlowski <carlos (--) wfmh (dot) org (dot) pl>
+Home: https://bitbucket.org/borszczuk/php-backup-maker/
+
 What is it?
 -------------------------------------
 
@@ -37,14 +43,11 @@ Mandatory:
 
 Optional:
 
- - mkisofs <http://freshmeat.net/projects/mkisofs/>
-   if you want to create ISO images or burn CDs
- - cdrecord <http://freshmeat.net/projects/cdrecord>
-   if you want to burn any CDs with this script
+ - mkisofs if you want to create ISO images or burn CDs
+ - cdrecord if you want to burn any CDs with PDM
    (you need to configure your kernel first and config
    the script - see inside for details)
- - growisofs
-   if you want to burn DVDs you would need this software
+ - growisofs if you want to burn DVDs with PDM
 
 
 Configuration
@@ -59,133 +62,10 @@ is not required). Let's create customised pdm.ini from our template:
   cp PATH_TO_PDM_UNPACKED/pdm.ini.orig ~/.pdm/pdm.ini
 
 Then use any text editor, and open the pdm.ini file, and configure
-whatever you wish (please note, that the script does NOT validate
-these values. If you put "abcd" as i.e. capacity you will get
-unexpected errors in the script (I am not going to fix this in near
-future).
+whatever you wish. Detailed information is provided as comments
+in default ini file.
 
-
-General settings (PDM section):
-----------------------------------
-
- media = 700
-
-Specify how many megabytes (MB) fits on your CDRs. 700MB are most
-widely used. Check the booklet for details. This can be overwritten
-with -media option
-
-
- ignore_file = .pdm_ignore
-
-This is ignore marker. Ignore marker is a file that tells PDM to skip
-the directory it resides in from being processed. It can be 0 bytes
-large (content just does not matter, so you can create it by calling:
-    
- echo -n >.pdm_ignore
-
- ignore_subdirs = On
-
-If ignore_file is found PDM may also skip all subdirs that can be
-found in this directory too (this is default behaviour). Set it to
-Off, to avoid this (you'll have to put ignore_file in each subdir if
-you would like it to be skipped
-
- check_files_readability = On
-
-By default PDM checks if each file can be read. This prevents i.e.
-mkisofs from terminating in the middle of its work with error "Can't
-read file". However this option slows file processing a bit, I
-strongly suggest to keep it on for safety. If PDM is called by root,
-check_files_readability is automatically deactivated (as it makes no
-sense for might root).
-
-
-CD recording (CDRECORD section)
------------------------------------
-Please note that if you don't plan to burn nor produce ISO images, you
-can ignore most of these settings. Check NOTEs below for more details
-about what to keep eye on mostly.
-
- enabled = On
-
-If you want to make burning available switch this to "On" (w/o
-quotes). Make sure you got external software like cdrecord and mkisofs
-installed and available.
-
- device = "1,0,0"
-
-if you want to burn anything you need to tell on which device your CDR
-burner is. Use "cdrecord -scanbus" to find this out, and put the 1st
-column value as shown on above example. If you don't plan to burn, nor
-have any burner, leave it as is.
-
- fifo_size = 10
-
-FIFO queue is used when you burn on-the-fly. It's memory buffer used
-to communicate between mkisofs that creates CD structures and cdrecord
-that burns your data. If it's too small, cdrecord may burn faster than
-mkisofs is able to deliver the data (this mostly happens if you burn
-thousands of millions small files on-the-fly). Unless you use
-burn-proof device, you get "Buffer underrun" if this happen, and in
-result broken CD. By default, 10MB is used, which shall be fine for
-99,9% of uses. Most probably you won't ever need to touch this.
-
-
-DVD recording (GROWISOFS section)
------------------------------------
-Please note that if you don't plan to burn DVDs, you can ignore most
-of these settings. Check NOTEs below for more details about what to
-keep eye on mostly.
-
- enabled = On
-
-If you want to make burning available switch this to "On" (w/o
-quotes). Make sure you got external software like cdrecord and mkisofs
-installed and available.
-
- device = "/dev/hdc"
-
-if you want to burn anything you need to tell on which device your
-DVD burner is. In contrast to cdrecord, growisofs uses standard
-device notation.
-
- fifo_size = 10
-
-same as FIFO queue described above
-
-
-
-File splitting
-------------------
-
- buffer_size = 0
-
-PDM is able to split files exceeding media capacity into smaller
-chunks to fit the media (and only such - read NOTES). For some reasons
-I decided not to use any external splitting tools and wrote my own
-function to handle that. The only problem I've encountered is PHP
-memory management model or its limits to be exact. PDM deals with this
-as follow. If buffer_size is set to 0 or is not specified, we take 3rd
-part of chunk size or php.ini/memory_limit value, picking the smaller
-value. For example, we got 200MB file to split into 100MB chunks and
-current memory limit is set to 30MB, PDM will use 10MB for splitting
-buffer (1/3rd of 30MB). This slows us a bit as we have to do 10
-reads/writes per chunk, but prevents against memory exhausting
-problem. Alternate approach is to specify buffer_size manually. Write
-how many MB you want PDM to *always* use (ie. to set it up to 22MB,
-set buffer_size = 22). If you got memory_limit set high enough (i.e
-200MB) 4th part of it is only 50MB. However PDM is memory hungry tool
-sometimes, it safely deals with 50000 files even with 64MB
-memory_limit. If you do not backup zillions of files, specifying
-buffer_size = 100 looks quite safe in this example.
-
- NOTE: splitting is NOT used for files smaller than
-       media capacity. This means PDM does NOT optimise
-       media usage by using each byte of its capacity.
-
-If you rarely need splitting, you can leave default settings.
-
-
+ 
 Configuring PHP
 -------------------------------------
 
@@ -193,11 +73,9 @@ No special configuration is needed, but please make sure you don't
 have command line scripts working in Safe Mode (most probably you have
 this option turned off), as it needs to disable script timeout limits
 (it takes some time to process all the data). You also should check if
-memory_limit in your config file (/etc/php4/CGI/php.ini) is high
-enough. I don't believe default 8MB will do for anything. If PHP
-aborts while processing your files throwing memory related errors,
-edit your config and increase it. I usually got 30MB (but even that
-wasn't enough for 45000 file set).
+memory_limit in your config file (/etc/php5/cli/php.ini) is high
+enough. If PHP aborts while processing your files throwing memory related errors,
+edit your config and increase it.
 
 
 Usage
@@ -207,9 +85,6 @@ Run it without arguments or with -help switch
 to get detailed usage information:
 
  ./pdm.php -help
-
-Each option is described, so no need to repeat myself
-here.
 
 
 How it works:
@@ -312,9 +187,8 @@ Visit a great source of practical information at:
 Bugs? Suggestions?
 -------------------------------------
 
-If you got any bug report or feature request, PLEASE, PLEASE
-USE SOURCEFORGE.NET bugtracker or forum for this. DO NOT
-mail me directly!
+If you got any bug report or feature request. Links to right
+place for doing so are placed below.
 
 
 PDM? What a jerky name...
@@ -328,12 +202,7 @@ public release, to both help one having similar problems I had and to
 give my small contribution to Open Source movement from which I
 benefit now and before. The name of the tool had to be changed from
 PBM as there was another project named PBM on SourceForge.net. That's
-the whole story behind.
+the whole story behind. As I no longer use sourceforge for this
+project, I will most likely rename the script back to PBM at some
+point
 
-
-Author
--------------------------------------
-
-Written by Marcin Orlowski <carlos@wfmh.org.pl>
-Home page: http://freshmeat.net/projects/pdm/
-Repo: https://bitbucket.org/borszczuk/php-backup-maker/
