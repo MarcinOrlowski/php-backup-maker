@@ -13,6 +13,8 @@
 
  Development history:
  ------------------------
+ 2015.07.12 - v5._.0 - changed volume marker file name
+
  2015.04.27 - v5.1.0 - added ability to use LF or CRLFs in index files
                      - added files sizes to index files
                      - default .pdm.ini is now set to use 8,5GB DVDs

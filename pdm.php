@@ -1674,7 +1674,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 			}
 
 			// CD stamps
-			$fh = fopen(sprintf("%s/%s/THIS_IS_%s_%d_OF_%d", $DESTINATION, $set_name, $MEDIA_SPECS[$MEDIA]['type'], $i, $total_cds), "wb+");
+			$fh = fopen(sprintf('%s/%s/VOLUME_%03d_OF_%03d', $DESTINATION, $set_name, $i, $total_cds), "wb+");
 			if( $fh ) {
 				fputs($fh, $data_header);
 				fputs($fh, sprintf(" Out Core: %s", $OUT_CORE));
