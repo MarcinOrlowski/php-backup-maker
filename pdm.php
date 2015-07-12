@@ -422,7 +422,7 @@ class CLI
 													  'info' => 'Specifies type of new line codes used in generated text files. Use "help-line-feed" to list all modes. Default is "crlf"'),
 
 	              "pattern"      => array('long' => 'pattern',
-	                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns. Needs PHP 4.3.0+'),
+	                                      'info' => 'Specifies regular expression pattern for files to be processed. Supports shell "?" and "*" patterns.'),
 
 	              "help-mode"    => array('long'   => 'help-mode',
 	                                      'info'   => 'Shows more information about available work modes.',
