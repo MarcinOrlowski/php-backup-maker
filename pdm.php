@@ -1686,7 +1686,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 			if( $fh ) {
 				fputs($fh, $data_header);
 				fputs($fh, sprintf(" Volume: %d of %d{$LF_CODE}", $i, $total_cds));
-				fputs($fh, sprintf(" Dataset Prefix: %s", $OUT_CORE));
+				fputs($fh, sprintf(" Dataset Prefix: %s${LF_CODE}", $OUT_CORE));
 				fclose($fh);
 			}
 		}
