@@ -1685,6 +1685,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 			$fh = fopen(sprintf('%s/%s/VOLUME_%03d_OF_%03d', $DESTINATION, $set_name, $i, $total_cds), "wb+");
 			if( $fh ) {
 				fputs($fh, $data_header);
+				fputs($fh, sprintf(" Volume: %d of %d{$LF_CODE}", $i, $total_cds));
 				fputs($fh, sprintf(" Dataset Prefix: %s", $OUT_CORE));
 				fclose($fh);
 			}
