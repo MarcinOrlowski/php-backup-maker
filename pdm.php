@@ -403,8 +403,8 @@ class CLI
 	              "mode"         => array("short" => 'm',
 	                                      "long"  => 'mode',
 	                                      "info"  => 'Specifies working mode. See help-mode for details. Default mode is "test".'),
-	              "out-core"     => array("short" => 'c',
-	                                      "long"  => 'out-core',
+	              "prefix"       => array("short" => 'c',
+	                                      "long"  => 'prefix',
 	                                      "info"  => 'Specifies name prefix used for CD sets directories. ' .
 		                                             'If not specified, Current date in YYYYMMDD format will be taken.'),
 	              "iso-dest"     => array("short" => 't',
@@ -1128,7 +1128,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 	$DESTINATION		= ($cCLI->IsOptionSet("dest"))  	? $cCLI->GetOptionArg("dest")		: getenv("PWD");
 	$ISO_DEST			= ($cCLI->IsOptionSet("iso-dest"))	? $cCLI->GetOptionArg('iso-dest')	: $DESTINATION;
 	$MEDIA 				= ($cCLI->IsOptionSet("media"))		? $cCLI->GetOptionArg("media") 		: $config["PDM"]["media"];
-	$OUT_CORE			= ($cCLI->IsOptionSet("out-core"))	? $cCLI->GetOptionArg("out-core")	: date("Ymd");
+	$OUT_CORE			= ($cCLI->IsOptionSet("prefix"))	? $cCLI->GetOptionArg("prefix")	: date("Ymd");
 	$DATA_DIR			= ($cCLI->IsOptionSet('data-dir'))	? $cCLI->GetOptionArg('data-dir')	: "backup";
 	$LF_MODE				= ($cCLI->isOptionSet('line-feed')) ? $cCLI->GetOptionArg('line-feed')  : $config['PDM']['line_feed'];
 
@@ -1677,7 +1677,7 @@ function CreateSet(&$stats, $current_cd, $capacity) {
 			$fh = fopen(sprintf('%s/%s/VOLUME_%03d_OF_%03d', $DESTINATION, $set_name, $i, $total_cds), "wb+");
 			if( $fh ) {
 				fputs($fh, $data_header);
-				fputs($fh, sprintf(" Out Core: %s", $OUT_CORE));
+				fputs($fh, sprintf(" Dataset Prefix: %s", $OUT_CORE));
 				fclose($fh);
 			}
 		}
