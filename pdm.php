@@ -14,7 +14,7 @@ error_reporting(E_ALL);
 //
 // Project home: https://bitbucket.org/borszczuk/php-backup-maker/
 //
-define( "SOFTWARE_VERSION"			, "5.1.0" );
+define( "SOFTWARE_VERSION"			, "5.2.0" );
 define( "SOFTWARE_VERSION_BETA"		, false );
 define( "SOFTWARE_VERSION_BETA_STR"	, " beta");
 define( "SOFTWARE_URL"				, "https://bitbucket.org/borszczuk/php-backup-maker/" );
