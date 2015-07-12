@@ -13,7 +13,7 @@
 
  Development history:
  ------------------------
- 2015.07.12 - v5._.0 - changed volume marker file name
+ 2015.07.12 - v5.2.0 - changed volume marker file name
                      - renamed "out-core" ("-c") switch to "prefix" ("-p")
                      - added "no-stamps" switch to disable index date stamps
                      - added volume number to volume marker file content
